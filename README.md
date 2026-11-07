@@ -87,4 +87,19 @@ node scripts/check-routing.mjs
 
 The preparation script downloads Franche-Comté OSM data from `download.geofabrik.de`, verifies its provider-published checksum over HTTPS, and starts the pinned upstream Valhalla scripted image with two build threads. The local `.data/valhalla` directory retains the graph and is ignored by Git. Regional build time and storage depend on the current extract. `VALHALLA_URL` overrides the default local engine at port 8002. Do not expose the engine port publicly.
 
-**Current validation limit:** cloud network policy still denies `tiles.openfreemap.org`, `data.geopf.fr`, and `download.geofabrik.de`. All three domains are saved in the environment draft; apply them with Save draft in environment settings. Saving via the agent tool alone does not apply runtime policy. Until applied, live maps, actual IGN results and a real regional route cannot be verified. Adapter tests use a controlled HTTP engine, and routing UI tests use controlled responses; these are not evidence of a real OSM route. The Valhalla image itself has been successfully downloaded.
+**Validation:** The deployed database-backed directory, IGN search, and real walking/cycling routes have been checked through the Vercel API proxy. Controlled adapter tests are separate from the opt-in live browser suite. Live tests now also check the rendered map container's dimensions to catch layout failures even when tile requests succeed. Accessibility remains unverified. Self-hosted Valhalla graph validation is separate from hosted OpenRouteService routing.
+
+## Saved places and live checks
+
+Visitors can save up to 50 pilot places or supported IGN addresses from the place detail card, reopen them with mouse or keyboard, and remove them. The list persists in this browser's local storage. It is device-local, can be cleared by browser settings, and is not an account or cross-device sync feature. Storage failures keep the interface usable for the current visit. Invalid/out-of-region stored records are filtered.
+
+```sh
+# Deterministic desktop/mobile browser suite, with local services running:
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test
+# Opt-in real-service checks (uses a few free routing requests):
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test --config=playwright.live.config.ts
+# Validate a local frontend against real upstream services instead:
+LIVE_BASE_URL=http://127.0.0.1:3000 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium pnpm exec playwright test --config=playwright.live.config.ts
+```
+
+The live suite checks actual API responses, IGN search, route instructions, map asset loading and nonzero map/canvas dimensions on desktop and mobile. It is excluded from the default browser suite so ordinary tests do not consume external service quotas.

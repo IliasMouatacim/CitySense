@@ -7,7 +7,9 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @citysense/api test",
-    "db:migrate": "pnpm --filter @citysense/api db:migrate"
+    "db:migrate": "pnpm --filter @citysense/api db:migrate",
+    "test:e2e": "playwright test",
+    "test:live": "playwright test --config=playwright.live.config.ts"
   },
   "engines": {
     "node": ">=24 <25"
