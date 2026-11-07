@@ -36,7 +36,7 @@ The deployed API uses `ROUTING_PROVIDER=ors`. It sends requests to the official 
 5. Copy the public HTTPS service origin Render assigns, such as `https://citysense-api-xxxx.onrender.com`. The actual suffix is chosen by Render.
 6. Open `/health` on that origin. It must return `database: "connected"`. `/places` should list the four pilot places. Swagger is at `/docs`.
 
-If importing manually as **New → Web Service**, select Docker, root directory **repository root** (leave blank), Dockerfile `apps/api/Dockerfile`, **Free** instance, health check `/health`, and Docker command `sh -c 'node dist/migrate.js && exec node dist/main.js'`. Set the two secrets above plus `NODE_ENV=production` and `ROUTING_PROVIDER=ors`.
+If importing manually as **New → Web Service**, select Docker, root directory **repository root** (leave blank), Dockerfile `apps/api/Dockerfile`, **Free** instance, health check `/health`, and Docker command left blank (uses the image’s migration-and-start bootstrap). Set the two secrets above plus `NODE_ENV=production` and `ROUTING_PROVIDER=ors`.
 
 ## 4. Deploy the frontend on Vercel
 

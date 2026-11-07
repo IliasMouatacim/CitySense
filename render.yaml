@@ -7,7 +7,6 @@ services:
     region: frankfurt
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
-    dockerCommand: sh -c 'node dist/migrate.js && exec node dist/main.js'
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
