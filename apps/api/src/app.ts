@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {fetch as proxyFetch,EnvHttpProxyAgent} from 'undici';
 import {calculateRoute} from './routing';
+import {calculateOrsRoute} from './ors';
 const proxyDispatcher=new EnvHttpProxyAgent();
 import { Controller, Get, Module, Query, Inject, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import {Pool} from 'pg';
@@ -28,7 +29,7 @@ class AppController {
   }
   return this.directoryResult(filter);
  }
- @Get('routes') route(@Query('from') from?:string,@Query('to') to?:string,@Query('mode') mode='pedestrian'){return calculateRoute(from,to,mode);}
+ @Get('routes') route(@Query('from') from?:string,@Query('to') to?:string,@Query('mode') mode='pedestrian'){return process.env.ROUTING_PROVIDER==='ors'?calculateOrsRoute(from,to,mode):calculateRoute(from,to,mode);}
  @Get('search') async search(@Query('q') raw?: string, @Query('source') source?: string) {
   if (typeof raw !== 'string' || raw.trim().length < 2 || raw.length > 120) throw new BadRequestException('q must contain 2–120 characters');
   if (source && !['local','address'].includes(source)) throw new BadRequestException('source must be local or address');

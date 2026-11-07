@@ -2,12 +2,13 @@ import {Pool,PoolConfig} from 'pg';
 import {config} from 'dotenv';
 import {resolve} from 'node:path';
 config({path:resolve(__dirname,'../../../.env'),quiet:true});
-export function createPool(overrides:PoolConfig={}){return new Pool({connectionString:process.env.DATABASE_URL,host:process.env.PGHOST||'127.0.0.1',port:Number(process.env.PGPORT||5432),database:process.env.PGDATABASE||'citysense',user:process.env.PGUSER||'citysense',password:process.env.POSTGRES_PASSWORD,connectionTimeoutMillis:3000,query_timeout:5000,max:5,...overrides});}
+export function createPool(overrides:PoolConfig={}){return new Pool({connectionString:process.env.DATABASE_URL,host:process.env.PGHOST||'127.0.0.1',port:Number(process.env.PGPORT||5432),database:process.env.PGDATABASE||'citysense',user:process.env.PGUSER||'citysense',password:process.env.POSTGRES_PASSWORD,connectionTimeoutMillis:10000,query_timeout:15000,max:5,...overrides});}
 // Explicit migration command; never run migrations during request handling.
 export async function migrate(pool:Pool){
  const client=await pool.connect();
  try {
   await client.query('BEGIN');
+  await client.query('CREATE EXTENSION IF NOT EXISTS postgis');
   const current=await client.query('SELECT current_schema() AS name');
   const schema='"'+String(current.rows[0].name).replaceAll('"','""')+'"';
   await client.query("SELECT pg_advisory_xact_lock(25388, 1)");

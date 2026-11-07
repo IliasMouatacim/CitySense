@@ -1,0 +1,20 @@
+# Free API only. No paid databases, private services, disks, or pre-deploy jobs.
+services:
+  - type: web
+    name: citysense-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    dockerCommand: sh -c 'node dist/migrate.js && exec node dist/main.js'
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ROUTING_PROVIDER
+        value: ors
+      - key: ORS_API_KEY
+        sync: false

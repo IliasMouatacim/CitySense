@@ -12,6 +12,10 @@ Montbéliard urban exploration prototype, starting the supplied final-year proje
 
 Pilot landmark coordinates are approximate. Building extrusions use provider heights where available, with an illustrative 8 m fallback. Neither is survey-grade. Accessibility is unknown; this prototype never claims that a route or venue is accessible.
 
+## Deploy for free
+
+See [the student deployment guide](docs/DEPLOYMENT.md): Vercel Hobby, one Render Free API, Neon Free PostGIS, and the free OpenRouteService plan. No paid services or disks are declared. Hosted deployment requires your provider accounts and secure secret entry.
+
 ## Develop
 
 Use Node.js 24 LTS and pnpm 11.25.0. From this directory:
@@ -28,7 +32,7 @@ The environment helper creates a random local database password only if `.env` i
 
 The frontend runs on port 3000; API on 4000. Frontend `/api/*` requests proxy to the API. Set `API_URL` for another API host. Set `PORT` for another API port and adjust `API_URL` accordingly. No public credentials are required. Keep the API behind the frontend proxy for development.
 
-The map needs HTTPS access to `tiles.openfreemap.org` and address search to `data.geopf.fr`. Map attribution is displayed by MapLibre. These services require network access from the browser/API respectively. Do not bulk-download tiles. IGN requests use Node's inherited HTTPS proxy when `NODE_USE_ENV_PROXY=1` is set.
+The map needs HTTPS access to `tiles.openfreemap.org` and address search to `data.geopf.fr`. Map attribution is displayed by MapLibre. These services require network access from the browser/API respectively. Do not bulk-download tiles. IGN and hosted routing requests use the inherited HTTPS proxy through an explicit client dispatcher.
 
 In the managed cloud sandbox, place package-manager caches in writable directories:
 
