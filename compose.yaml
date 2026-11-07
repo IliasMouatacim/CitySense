@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgis/postgis:17-3.5@sha256:01a6a70e41e6c4467c8f55f6063555ed72db2d6662cd0d571040d42eadaeb6f6
+    environment:
+      POSTGRES_DB: citysense
+      POSTGRES_USER: citysense
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - citysense-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U citysense -d citysense']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  valhalla:
+    profiles: ['routing']
+    image: ghcr.io/valhalla/valhalla-scripted@sha256:8e996e613cff67f2f01d33bbd023a76df460e85427f82dc5cfaba331a6acdc62
+    ports:
+      - '127.0.0.1:8002:8002'
+    volumes:
+      - ./.data/valhalla:/custom_files
+    environment:
+      server_threads: '2'
+      build_admins: 'False'
+      build_time_zones: 'False'
+      use_default_speeds_config: 'False'
+      build_elevation: 'False'
+volumes:
+  citysense-db:
