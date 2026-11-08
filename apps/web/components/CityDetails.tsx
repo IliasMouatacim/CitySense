@@ -12,7 +12,7 @@ export default function CityDetails({map,mood,scale,dimensional,walking}:{map:Ma
   const [photo,setPhoto]=useState(true),[photoError,setPhotoError]=useState(false);
   const [status,setStatus]=useState<DetailStatus>({buildings:0,windows:0,signs:0,pois:[],street:''});
   const controller=useRef<ReturnType<typeof createCityDetails>|null>(null);
-  const options=useRef({mood,scale,enabled:enabled&&dimensional,walking,photo});options.current={mood,scale,enabled:enabled&&dimensional,walking,photo};
+  const options=useRef({mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo});options.current={mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo};
   useEffect(()=>{
     setPhotoGround(map,photo,mood==='night');
     const failed=(event:{sourceId?:string})=>{if(event.sourceId===PHOTO_SOURCE){setPhotoError(true);setPhoto(false);}};
@@ -35,7 +35,7 @@ export default function CityDetails({map,mood,scale,dimensional,walking}:{map:Ma
     setOpen(false);
   }
   const list=status.pois.filter(p=>`${p.name} ${p.category}`.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr')));
-  return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0}>
+  return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0} data-route-segments={status.routeSegments||0}>
     {walking&&status.street&&<div className="street-name"><MapPin size={14}/>{status.street}</div>}
     <div className="architecture-actions"><button aria-pressed={enabled} disabled={!dimensional} onClick={()=>setEnabled(!enabled)}><Building2 size={15}/> Façades {enabled?'détaillées':'simples'}</button><button aria-expanded={open} aria-controls="city-businesses" onClick={()=>setOpen(!open)}><Store size={15}/> Noms et commerces <ChevronDown size={13}/></button></div>
     <label className="photo-choice"><span>Sol et toits</span><select aria-label="Style de la ville" value={photo?'photo':'map'} onChange={e=>{setPhoto(e.target.value==='photo');setPhotoError(false);if(walking)map.getCanvas().focus({preventScroll:true});}}><option value="photo">Photo + 3D</option><option value="map">Carte 3D</option></select></label>

@@ -117,6 +117,8 @@ The live scene tests cover all three lighting controls, height scaling, actual c
 
 ## First-person walking mode
 
+The center-city terrain, IGN building geometry, Rapier physics, textured street surfaces, and photo viewer upgrade are documented in [the walking world notes](docs/WALKING-WORLD.md), including the currently blocked OSM2World conversion and unverified live Panoramax coverage.
+
 Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a pedestrian-height camera (1.8 m above the flat map ground), spawns near a loaded street, and opens an immersive view.
 
 - **WASD / ZQSD**: forward, back and strafe. Up/down arrows also move; left/right arrows turn.

@@ -3,6 +3,7 @@ import {useEffect,useRef,useState} from 'react';
 import {CITY_VIEWS,styleCity,type SceneMood} from '../lib/city-scene';
 import WalkingMode from './WalkingMode';
 import CityDetails from './CityDetails';
+import {installCityWorld} from '../lib/city-world';
 import type {Position} from '../lib/walk-geometry';
 import SavedPlaces from './SavedPlaces';
 import {useSavedPlaces} from './useSavedPlaces';
@@ -31,7 +32,7 @@ export default function Explorer(){
    const first=CITY_VIEWS[0];
    const m=new maplibregl.Map({container:container.current,style:'https://tiles.openfreemap.org/styles/liberty',center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
    m.addControl(new maplibregl.NavigationControl({visualizePitch:true}),matchMedia('(max-width:700px)').matches?'bottom-left':'bottom-right');
-   m.on('load',()=>{styleCity(m,'golden');setMapReady(true);setMapError('');});
+   m.on('load',async()=>{try{await installCityWorld(m);styleCity(m,'golden');setMapReady(true);setMapError('');}catch{styleCity(m,'golden');setMapReady(true);setMapError('Le relief IGN est indisponible. La carte standard reste disponible.');}});
    m.on('moveend',()=>{if(walkingRef.current)return;const pitch=Math.round(m.getPitch()),bearing=Math.round(m.getBearing());setCamera(previous=>previous.pitch===pitch&&previous.bearing===bearing?previous:{pitch,bearing});setTilted(m.getPitch()>10);});
    m.on('dragstart',()=>{setTour(false);setViewId('');});
    m.on('zoomstart',event=>{if(event.originalEvent)setTour(false);});
