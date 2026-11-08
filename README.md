@@ -131,6 +131,8 @@ Buildings and water from currently loaded map tiles block movement; mapped bridg
 
 ## Detailed streets and mapped businesses
 
+The default **Photo + 3D** view now adds real IGN ground imagery and photographic roof surfaces to the playable city. Use **Carte 3D** to return to the vector view. See [hybrid view data, limitations and checks](docs/HYBRID-CITY.md).
+
 Nearby buildings now have a shared-depth Three.js detail layer with varied facade colors, windows, frames, shutters, doors, cornices, tiled roof caps, and storefront glazing. Mapped `colour` values take priority where available; other colors and facade arrangements are illustrative. Roof shapes, window/door locations, sign graphics and facade placement are **stylized**, not a survey or photographic reconstruction.
 
 Named shops, cafés, restaurants, pharmacies and other supported places come directly from the currently loaded OpenStreetMap/OpenFreeMap tiles. No business names are fabricated. **Noms et commerces** opens a local filterable list; selecting an entry focuses the aerial map or turns the walking camera toward its mapped position. The nearby mapped street name appears in walking mode. Map data may omit businesses or lag closures; the display does not claim current opening or accessibility status.

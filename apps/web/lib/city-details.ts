@@ -2,9 +2,10 @@ import {MercatorCoordinate,type Map as CityMap,type CustomLayerInterface} from '
 import {BufferGeometry,Float32BufferAttribute,Mesh,MeshBasicMaterial,Scene,Camera,WebGLRenderer,Matrix4,Color,Vector3,DoubleSide,CanvasTexture,SRGBColorSpace,RepeatWrapping,ShapeUtils,Vector2} from 'three';
 import {readCityPois,mappedHeight,stableVariant,metersBetween,nearbyFootprints,outwardUv,type CityPoi} from './city-details-data';
 import type {SceneMood} from './city-scene';
+import {roofPhotoRequest} from './photo-city';
 
-export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;walking:boolean};
-export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string};
+export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;walking:boolean;photo:boolean};
+export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number};
 type Point=[number,number];
 type Wall={a:Point;b:Point;normal:Point;length:number;height:number;base:number;variant:number};
 type Batch={positions:number[];colors:number[];uvs:number[]};
@@ -26,6 +27,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
   const color=new Color();
   const resources:{dispose:()=>void}[]=[];
+  let photoImage:HTMLImageElement|undefined,photoBounds:ReturnType<typeof roofPhotoRequest>['bounds']|undefined,photoKey='',pendingImage:HTMLImageElement|undefined;
+  function requestPhoto(center:[number,number]){
+    if(!options.photo)return;
+    const request=roofPhotoRequest(...center);if(request.key===photoKey)return;
+    photoKey=request.key;
+    if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}
+    const image=new Image();pendingImage=image;image.crossOrigin='anonymous';
+    image.onload=()=>{if(disposed||pendingImage!==image)return;photoImage=image;photoBounds=request.bounds;pendingImage=undefined;force=true;schedule();};
+    image.onerror=()=>{if(pendingImage===image)pendingImage=undefined;};
+    image.src=request.url;
+  }
   function clear(){scene.clear();resources.splice(0).forEach(r=>r.dispose());}
   function tint(hex:string,shade=1){color.set(hex);color.multiplyScalar(shade*(options.mood==='night'?.46:options.mood==='golden'?.94:1));return [color.r,color.g,color.b];}
   function triangle(target:Batch,a:number[],b:number[],c:number[],rgb:number[],uv?:number[][]){
@@ -56,13 +68,14 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   function rebuild(){
     timer=undefined;if(disposed||!renderer)return;
     const center:[number,number]=options.walking&&walkPosition?walkPosition:[map.getCenter().lng,map.getCenter().lat];
+    if(options.enabled&&map.getZoom()>=15.5)requestPhoto(center);
     const pois=readCityPois(map.querySourceFeatures('openmaptiles',{sourceLayer:'poi'}),center);
     if(!options.enabled||map.getZoom()<15.5){if(scene.children.length)clear();lastCenter=undefined;onStatus({buildings:0,windows:0,signs:0,pois,street:''});return;}
     const features=map.querySourceFeatures('openmaptiles',{sourceLayer:'building'});
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),roofs=batch(),signs=batch();let count=0,windows=0;
+    const walls:Wall[]=[],details=batch(),roofs=batch(),photoRoofs=batch(),signs=batch();let count=0,windows=0;
     // OpenMapTiles can merge hundreds of equal-height buildings into one MultiPolygon.
     // Cull and deduplicate individual footprints, never the feature's first polygon.
     const footprints=nearbyFootprints(features,center,options.walking?240:420);
@@ -77,7 +90,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         const vertices=rings.flat();const roofColor=roofColors[variant%roofColors.length];
         for(const indices of ShapeUtils.triangulateShape(outer,holes)){
           const points=indices.map(i=>[...vertices[i],height+.045]);
-          triangle(roofs,points[0],points[1],points[2],tint(roofColor),points.map(p=>[p[0]/2,p[1]/2]));
+          const uv=photoBounds?points.map(p=>[(origin.x+p[0]*unit-photoBounds!.west)/(photoBounds!.east-photoBounds!.west),1-(origin.y-p[1]*unit-photoBounds!.north)/(photoBounds!.south-photoBounds!.north)]):[];
+          if(options.photo&&photoImage&&uv.length&&uv.every(p=>p.every(v=>v>=0&&v<=1)))triangle(photoRoofs,points[0],points[1],points[2],tint('#ffffff'),uv);
+          else triangle(roofs,points[0],points[1],points[2],tint(roofColor),points.map(p=>[p[0]/2,p[1]/2]));
         }
         for(const [ringIndex,ring] of rings.entries()){
           const area=ring.reduce((s,a,i)=>{const b=ring[(i+1)%ring.length];return s+a[0]*b[1]-b[0]*a[1];},0);
@@ -143,6 +158,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       signCount++;
     }
     mesh(details);mesh(roofs,roofTexture());
+    if(photoRoofs.positions.length&&photoImage){const canvas=document.createElement('canvas');canvas.width=canvas.height=2048;canvas.getContext('2d')!.drawImage(photoImage,0,0);const texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;resources.push(texture);mesh(photoRoofs,texture);}
     if(signCount){const texture=new CanvasTexture(atlas);texture.colorSpace=SRGBColorSpace;resources.push(texture);mesh(signs,texture);}
     let street='',closest=Infinity;const position=local(center);
     for(const feature of map.querySourceFeatures('openmaptiles',{sourceLayer:'transportation_name'})){
@@ -155,7 +171,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(d<closest&&d<65){closest=d;street=String(name);}
       }
     }
-    onStatus({buildings:count,windows,signs:signCount,pois,street});map.triggerRepaint();
+    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9});map.triggerRepaint();
   }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={
@@ -166,7 +182,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix).multiply(transform);
       renderer.resetState();renderer.render(scene,camera);renderer.resetState();
     },
-    onRemove(){disposed=true;if(timer)clearTimeout(timer);map.off('moveend',schedule);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();}
+    onRemove(){disposed=true;if(timer)clearTimeout(timer);if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}photoImage=undefined;map.off('moveend',schedule);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();}
   };
   function source(event:{sourceId?:string;isSourceLoaded?:boolean}){if(event.sourceId==='openmaptiles'&&event.isSourceLoaded)schedule();}
   const layers=map.getStyle().layers;

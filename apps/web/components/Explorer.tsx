@@ -9,6 +9,7 @@ import {useSavedPlaces} from './useSavedPlaces';
 import type {Place} from '../lib/saved-places';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '../app/photo-city.css';
 import {ArrowUpRight,Search,MapPin,Layers,Navigation,Accessibility,ArrowRight,TrainFront,Trees,Landmark,Compass,X,Sun,Sunset,Moon,Play,Pause,RotateCcw,Maximize2,Minimize2,Footprints} from 'lucide-react';
 type Route={engine:string;attribution?:string;distanceMeters:number;durationSeconds:number;geometry:{type:'LineString';coordinates:number[][]};instructions:{text:string;distanceMeters:number}[]};
 export default function Explorer(){
@@ -36,7 +37,7 @@ export default function Explorer(){
    m.on('zoomstart',event=>{if(event.originalEvent)setTour(false);});
    m.on('pitchstart',event=>{if(event.originalEvent)setTour(false);});
    m.getCanvas().addEventListener('pointerdown',()=>setTour(false));
-   m.on('error',()=>setMapError('Le fond de carte ne peut pas être chargé. Les lieux restent accessibles dans la liste.'));
+   m.on('error',event=>{if('sourceId' in event&&event.sourceId==='citysense-ign-photo')return;setMapError('Le fond de carte ne peut pas être chargé. Les lieux restent accessibles dans la liste.');});
    return()=>{m.remove();map.current=null;};
   }catch{setMapError('La carte nécessite WebGL. Explorez les lieux avec la liste ci-contre.');}
  },[]);

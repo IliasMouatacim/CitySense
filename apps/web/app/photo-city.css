@@ -1,0 +1,5 @@
+.photo-choice{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:7px 4px;color:#48685a;font-size:9px}
+.photo-choice select{min-width:0;max-width:115px;padding:5px 3px;border:1px solid #cad8cd;border-radius:6px;background:#f6f9f1;color:#264f42;font-size:10px}
+.walk-active .photo-choice{color:#d4e1d7}
+.walk-active .photo-choice select{background:#28464b;color:#fff;border-color:#55716e}
+@media(max-width:700px){.map-section{height:560px}.photo-choice{flex-wrap:wrap;margin:5px 0}.photo-choice>span{display:none}.photo-choice select{width:100%;max-width:none;font-size:9px}.immersive>.map-section{height:100dvh}.map-section .city-views{bottom:60px}.map-section .maplibregl-ctrl-bottom-left{bottom:185px}}
