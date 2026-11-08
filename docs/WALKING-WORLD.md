@@ -12,6 +12,8 @@ The IGN footprints replace grouped native building polygons in the detailed area
 
 Local 512 px plaster, asphalt, and paving textures are CC0 derivatives from OSM2World-default-style / ambientCG. See `public/materials/README.md`. Facades and textured road surfaces use Three.js standard materials with diffuse lighting. These are generic materials, not photographic reproductions of the actual facades.
 
+Nearby facades also have solid window surrounds and projecting sills, door frames and thresholds, cornices, storey bands, and alternating corner masonry. This geometry is limited to buildings within 85 m to bound rendering cost. Window panes vary deterministically. These architectural details are illustrative; IGN footprints/heights do not supply the real window positions, facade colors, roofs, or shopfront designs.
+
 ## Walking and physics
 
 Rapier is loaded when entering walking mode. Its world contains the sampled terrain mesh, IGN building walls, and simplified colliders for mapped benches, trees, and lamps. A capsule character controller resolves movement, with stepping, ground snapping, and slope limits. OSM water/building checks remain an additional movement constraint. Walking is bounded to the detailed terrain grid.
@@ -43,3 +45,5 @@ After the environment network update, the converter's core and JVM modules built
 `node --import ./apps/api/node_modules/tsx/dist/loader.mjs --test tests/unit/city-world.test.ts` checks terrain bounds/samples and actual Rapier movement. Live browser tests cover camera elevation, photo-mode movement, control restoration, and controlled Panoramax success/empty/error responses. Inspect the saved `ign-grounded-*` screenshots as well as test results: successful control tests alone do not guarantee a visually correct camera.
 
 Validation on 2026-11-08: production web build and both workspace type checks passed; all eight geometry/physics checks passed; all 28 browser tests passed against the local production build and PostGIS API in desktop and mobile Chromium. The browser run used the actual generated OSM2World asset and live map, IGN imagery, address search, and routing services. Panoramax image rendering, HD selection, and outage recovery used controlled fixtures because the actual image host remains blocked by the cloud network policy. Desktop and mobile walking screenshots were also inspected for terrain/camera alignment and control overlap. These results validate the local upgrade branch, not a deployment of it to the public website.
+
+After adding solid facade trim, the production build, seven geometry/detail checks, and eight focused desktop/mobile browser checks passed again. The focused run covered grounded walking, facade/shop controls, lighting, visual height scale, viewpoint changes, orbit controls, and reduced motion. The resulting street screenshot was visually inspected before releasing the renderer.

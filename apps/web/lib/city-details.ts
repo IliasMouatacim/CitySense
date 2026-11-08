@@ -65,6 +65,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const a=[x-dx*width/2,y-dy*width/2,bottom],b=[x+dx*width/2,y+dy*width/2,bottom];
     quad(target,a,b,[b[0],b[1],top],[a[0],a[1],top],hex,.83+Math.max(0,wall.normal[0]*-.6+wall.normal[1]*-.8)*.17,uv&&outwardUv(uv,dx,dy,wall.normal));
   }
+  // Actual solid trim near the camera: side and underside faces make sills,
+  // frames and cornices read as architecture rather than decals on a box.
+  function wallBox(target:Batch,wall:Wall,along:number,width:number,bottom:number,top:number,hex:string,front:number,back=.03){
+    const dx=(wall.b[0]-wall.a[0])/wall.length,dy=(wall.b[1]-wall.a[1])/wall.length;
+    const point=(at:number,z:number,depth:number)=>[wall.a[0]+dx*at+wall.normal[0]*depth,wall.a[1]+dy*at+wall.normal[1]*depth,z];
+    const l=along-width/2,r=along+width/2;
+    const a=point(l,bottom,front),b=point(r,bottom,front),c=point(r,top,front),d=point(l,top,front);
+    const e=point(l,bottom,back),f=point(r,bottom,back),g=point(r,top,back),h=point(l,top,back);
+    quad(target,a,b,c,d,hex,.92);quad(target,e,a,d,h,hex,.64);quad(target,b,f,g,c,hex,.72);
+    quad(target,d,c,g,h,hex,1);quad(target,e,f,b,a,hex,.5);
+  }
   function mesh(data:Batch,texture?:Texture,physical=false){
     if(!data.positions.length)return;
     const geometry=new BufferGeometry();geometry.setAttribute('position',new Float32BufferAttribute(data.positions,3));geometry.setAttribute('color',new Float32BufferAttribute(data.colors,3));
@@ -91,7 +102,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     force=false;lastCenter=center;lastKey=key;clear();
     const walls:Wall[]=[],details=batch(),facades=batch(),asphalt=batch(),paving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0;
     const city=getCityWorld();
-    scene.add(new AmbientLight(options.mood==='night'?'#9db5d0':'#fff4dd',1.5));const sun=new DirectionalLight('#fff5df',1.7);sun.position.set(-100,-100,300);scene.add(sun);
+    scene.add(new AmbientLight(options.mood==='night'?'#9db5d0':'#fff4dd',1.05));const sun=new DirectionalLight('#fff5df',1.5);sun.position.set(-100,-100,300);scene.add(sun);
     if(city?.streets&&!cityModel){
       for(const road of city.streets.roads){
         const tags=road.tags,kind=tags.highway;if(['motorway','motorway_link','trunk','trunk_link','steps','construction','proposed'].includes(kind)||tags.tunnel==='yes')continue;
@@ -178,6 +189,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             if(distance>(options.walking?155:260)||length<2.5)continue;
             // Small masonry plinth and floor bands give depth without changing mapped walls.
             panel(details,wall,length/2,length,base+.05,base+.38,'#948b79',.055);
+            const close=distance<85;
+            if(close){
+              wallBox(details,wall,length/2,length,height-.28,height-.12,'#887b65',.22);
+              wallBox(details,wall,length/2,length+.12,height-.12,height+.1,'#dfd5c0',.34);
+              // Alternating corner stones and storey string courses remain illustrative.
+              for(let z=base+.45,course=0;z<height-.5;z+=.5,course++){
+                const width=course%2?.32:.52;
+                for(const at of [width/2,length-width/2])panel(details,wall,at,width,z,z+.46,'#d8ccaf',.065);
+              }
+              for(let z=base+3;z<height-.8;z+=3)wallBox(details,wall,length/2,length,z-.1,z+.05,'#c9bea7',.13);
+            }
             const slots=Math.min(18,Math.floor(length/2.9)),spacing=length/(slots+1),floors=Math.min(12,Math.floor((height-base)/3));
             for(let floor=0;floor<floors;floor++){
               const bottom=base+.95+floor*3,top=Math.min(bottom+1.45,height-.45);if(top-bottom<.8)continue;
@@ -185,10 +207,26 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 const at=spacing*slot,width=Math.min(1.15,spacing*.52);
                 // Ground-floor middle bay becomes a door; upper bays have shutters and sills.
                 if(floor===0&&slot===Math.ceil(slots/2)){
-                  panel(details,wall,at,1.25,base+.1,base+2.45,'#dacdb8',.09);panel(details,wall,at,1.02,base+.12,base+2.28,'#584b3c',.12);panel(details,wall,at,.73,base+1.12,base+2.1,'#76949b',.14);continue;
+                  panel(details,wall,at,1.25,base+.1,base+2.45,'#dacdb8',.09);panel(details,wall,at,1.02,base+.12,base+2.28,'#584b3c',.12);panel(details,wall,at,.73,base+1.12,base+2.1,'#76949b',.14);
+                  if(close){
+                    wallBox(details,wall,at-.59,.12,base+.1,base+2.45,'#d5c9af',.24);
+                    wallBox(details,wall,at+.59,.12,base+.1,base+2.45,'#d5c9af',.24);
+                    wallBox(details,wall,at,1.3,base+2.32,base+2.48,'#d5c9af',.28);
+                    wallBox(details,wall,at,1.35,base+.04,base+.13,'#a39987',.36);
+                    panel(details,wall,at+.31,.045,base+.92,base+1.12,'#c4b583',.18);
+                    for(const z of [base+.25,base+.62])panel(details,wall,at,.62,z,z+.25,'#433a31',.15);
+                  }
+                  continue;
                 }
-                panel(details,wall,at,width+.2,bottom-.12,top+.12,'#ddd4bf',.09);
-                panel(details,wall,at,width,bottom,top,options.mood==='night'&&(slot+floor+variant)%3!==0?'#ffe1a0':'#547582',.115);
+                panel(details,wall,at,width+.2,bottom-.12,top+.12,'#766f61',.065);
+                const lit=options.mood==='night'&&(slot+floor+variant)%3!==0;
+                panel(details,wall,at,width,bottom,top,lit?'#ffe1a0':['#354a53','#526773','#435b64','#687a80'][(slot+floor+variant)%4],.08);
+                if(close){
+                  panel(details,wall,at-width*.25,width*.42,bottom+.05,top-.05,lit?'#e9c487':'#879393',.09);
+                  for(const edge of [-1,1])wallBox(details,wall,at+edge*(width/2+.055),.11,bottom-.1,top+.1,'#dfd6c2',.2);
+                  wallBox(details,wall,at,width+.22,top,top+.12,'#e4dac5',.22);
+                  wallBox(details,wall,at,width+.38,bottom-.2,bottom-.08,'#c8bea8',.36);
+                }
                 panel(details,wall,at,.055,bottom,top,'#e8e1d0',.13);panel(details,wall,at,width,(bottom+top)/2-.025,(bottom+top)/2+.025,'#e8e1d0',.13);
                 panel(details,wall,at,width+.3,bottom-.19,bottom-.1,'#bab09c',.19);
                 if(floor>0&&spacing>2.5){const shutter=shutterColors[variant%shutterColors.length];panel(details,wall,at-width*.5-.23,.34,bottom,top,shutter,.1);panel(details,wall,at+width*.5+.23,.34,bottom,top,shutter,.1);}
