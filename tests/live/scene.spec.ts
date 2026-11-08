@@ -10,6 +10,11 @@ test('3D lighting, height scale, viewpoints and orbit controls',async({page})=>{
  await expect(map).toHaveAttribute('data-scene','night');
  await page.screenshot({path:`test-results/scene-night-${test.info().project.name}.png`,fullPage:true});
  await page.getByRole('button',{name:'Doré',exact:true}).click();
+ if(test.info().project.name==='mobile'){
+  const zoom=await page.locator('.maplibregl-ctrl-group').boundingBox(),tray=await page.locator('.city-views').boundingBox();
+  expect(zoom).not.toBeNull();expect(tray).not.toBeNull();
+  expect(zoom!.y+zoom!.height<=tray!.y||zoom!.x+zoom!.width<=tray!.x).toBe(true);
+ }
  const scale=page.getByRole('slider',{name:'Échelle visuelle des bâtiments'});await scale.focus();
  for(let i=0;i<5;i++)await page.keyboard.press('ArrowRight');
  await expect(scale).toHaveValue('1.5');

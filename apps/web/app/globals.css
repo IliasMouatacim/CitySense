@@ -12,4 +12,5 @@
 @media(max-width:700px){.scene-panel{top:128px;right:16px;width:166px;padding:11px;border-radius:12px}.scene-heading{font-size:7px;letter-spacing:.7px;margin-bottom:8px}.scene-moods button{padding:8px 2px;font-size:9px;gap:4px}.scene-scale{font-size:9px;margin-top:10px}.scene-panel>small{font-size:7px}.city-views{left:16px;right:16px;bottom:16px;width:auto;padding:12px;border-radius:12px}.city-views>div>button{font-size:9px;padding:9px 4px}.city-views .tour-toggle{font-size:10px;margin-top:9px;padding-top:9px}.city-views .views-label{font-size:7px;margin-bottom:8px}.map-section:has(.detail) .scene-panel,.map-section:has(.detail) .city-views{display:none}}
 
 .city-views{bottom:145px}.immersive{position:fixed;inset:0;height:100dvh;min-height:0;z-index:30}.immersive>.rail,.immersive>.panel{display:none}.immersive>.map-section{height:100dvh;width:100%;flex:1}
-@media(max-width:700px){.city-views{bottom:16px}.maplibregl-ctrl-bottom-right{right:auto;left:6px;bottom:145px}.maplibregl-ctrl-bottom-right .maplibregl-ctrl{margin:0 0 0 4px}}
+.map-section .maplibregl-ctrl-bottom-left{bottom:105px;left:6px}
+@media(max-width:700px){.city-views{bottom:40px}.map-section .maplibregl-ctrl-bottom-left{bottom:175px;left:6px}}
