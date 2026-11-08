@@ -114,3 +114,17 @@ Landmark viewpoints focus the historic center, Château and Près-la-Rose. The o
 The height slider is an explicitly labeled **visual exaggeration** from 1× to 2×. Default 1× uses mapped building heights with an 8 m fallback for missing values. It changes neither coordinates nor route distances, and does not make approximate building heights survey-grade. The pilot does not use a terrain elevation model or photorealistic building meshes.
 
 The live scene tests cover all three lighting controls, height scaling, actual camera pitch, 2D/3D transitions, immersive layout, orbit controls, and reduced-motion behavior on desktop and mobile.
+
+## First-person walking mode
+
+Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a pedestrian-height camera (1.8 m above the flat map ground), spawns near a loaded street, and opens an immersive view.
+
+- **WASD / ZQSD**: forward, back and strafe. Up/down arrows also move; left/right arrows turn.
+- **Mouse/touch drag**: look around, including above street level. **Capturer la souris** optionally enables desktop mouse-look without dragging.
+- **Shift**: sprint. On-screen movement/turn buttons and a speed toggle work on phones. Buttons also support held Enter/Space.
+- **Escape / Quitter la marche**: exit, release mouse capture, and restore the previous aerial camera and 2D/3D mode.
+- **Reset**: return to the starting street and direction. Movement stops when the window loses focus or the tab is hidden.
+
+Buildings and water from currently loaded map tiles block movement; mapped bridge lines allow water crossings. Collision geometry follows the source map, including its omissions and simplifications. Exploration stays inside a 2.5 km pilot radius. This is a stylized virtual city with flat ground, not photographic Street View, a terrain simulation, or evidence of real-world accessibility. Walking uses client-side map data and adds no hosted game server or paid service.
+
+`pnpm test:movement` checks movement distances, normalized diagonals, building clearance/courtyards, water/bridges and pilot bounds. Opt-in live browser tests additionally exercise keyboard movement, held on-screen controls, drag-look, desktop pointer lock, Escape and camera restoration on desktop/mobile.

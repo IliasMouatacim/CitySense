@@ -9,7 +9,8 @@
     "test": "pnpm --filter @citysense/api test",
     "db:migrate": "pnpm --filter @citysense/api db:migrate",
     "test:e2e": "playwright test",
-    "test:live": "playwright test --config=playwright.live.config.ts"
+    "test:live": "playwright test --config=playwright.live.config.ts",
+    "test:movement": "node --test tests/unit/walk-geometry.test.mjs"
   },
   "engines": {
     "node": ">=24 <25"

@@ -1,16 +1,21 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import {CITY_VIEWS,styleCity,type SceneMood} from '../lib/city-scene';
+import WalkingMode from './WalkingMode';
+import type {Position} from '../lib/walk-geometry';
 import SavedPlaces from './SavedPlaces';
 import {useSavedPlaces} from './useSavedPlaces';
 import type {Place} from '../lib/saved-places';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import {ArrowUpRight,Search,MapPin,Layers,Navigation,Accessibility,ArrowRight,TrainFront,Trees,Landmark,Compass,X,Sun,Sunset,Moon,Play,Pause,RotateCcw,Maximize2,Minimize2} from 'lucide-react';
+import {ArrowUpRight,Search,MapPin,Layers,Navigation,Accessibility,ArrowRight,TrainFront,Trees,Landmark,Compass,X,Sun,Sunset,Moon,Play,Pause,RotateCcw,Maximize2,Minimize2,Footprints} from 'lucide-react';
 type Route={engine:string;attribution?:string;distanceMeters:number;durationSeconds:number;geometry:{type:'LineString';coordinates:number[][]};instructions:{text:string;distanceMeters:number}[]};
 export default function Explorer(){
  const savedPlaces=useSavedPlaces();
- const [immersive,setImmersive]=useState(false);
+ const [immersive,setImmersive]=useState(false),[walking,setWalking]=useState(false);
+ const walkingRef=useRef(false),walkStart=useRef<Position>([6.7982,47.5102]),beforeWalk=useRef({immersive:false,tilted:true,scale:1});walkingRef.current=walking;
+ function leaveWalk(){setWalking(false);setImmersive(beforeWalk.current.immersive);setTilted(beforeWalk.current.tilted);setHeightScale(beforeWalk.current.scale);}
+ function enterWalk(){const m=map.current;if(!m||!mapReady)return;m.stop();beforeWalk.current={immersive,tilted,scale:heightScale};walkStart.current=selected?.coordinates||[m.getCenter().lng,m.getCenter().lat];setSelected(null);setTour(false);setHeightScale(1);setTilted(true);setImmersive(true);setWalking(true);}
  const [mood,setMood]=useState<SceneMood>('golden'),[heightScale,setHeightScale]=useState(1),[mapReady,setMapReady]=useState(false),[tour,setTour]=useState(false),[reducedMotion,setReducedMotion]=useState(false),[camera,setCamera]=useState({pitch:62,bearing:-26}),[viewId,setViewId]=useState('centre');
  useEffect(()=>{const query=matchMedia('(prefers-reduced-motion: reduce)');const sync=()=>{setReducedMotion(query.matches);if(query.matches)setTour(false);};sync();query.addEventListener('change',sync);return()=>query.removeEventListener('change',sync);},[]);
  const [originId,setOriginId]=useState(''),[mode,setMode]=useState('pedestrian'),[route,setRoute]=useState<Route|null>(null),[routeStatus,setRouteStatus]=useState('');
@@ -25,7 +30,7 @@ export default function Explorer(){
    const m=new maplibregl.Map({container:container.current,style:'https://tiles.openfreemap.org/styles/liberty',center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
    m.addControl(new maplibregl.NavigationControl({visualizePitch:true}),matchMedia('(max-width:700px)').matches?'bottom-left':'bottom-right');
    m.on('load',()=>{styleCity(m,'golden');setMapReady(true);setMapError('');});
-   m.on('moveend',()=>{const pitch=Math.round(m.getPitch()),bearing=Math.round(m.getBearing());setCamera(previous=>previous.pitch===pitch&&previous.bearing===bearing?previous:{pitch,bearing});setTilted(m.getPitch()>10);});
+   m.on('moveend',()=>{if(walkingRef.current)return;const pitch=Math.round(m.getPitch()),bearing=Math.round(m.getBearing());setCamera(previous=>previous.pitch===pitch&&previous.bearing===bearing?previous:{pitch,bearing});setTilted(m.getPitch()>10);});
    m.on('dragstart',()=>{setTour(false);setViewId('');});
    m.on('zoomstart',event=>{if(event.originalEvent)setTour(false);});
    m.on('pitchstart',event=>{if(event.originalEvent)setTour(false);});
@@ -37,7 +42,7 @@ export default function Explorer(){
  useEffect(()=>{if(mapReady&&map.current){const m=map.current;styleCity(m,mood,heightScale,tilted);if(m.getLayer('citysense-route'))m.setPaintProperty('citysense-route','line-color',mood==='night'?'#6ae8cb':'#087c70');}},[mapReady,mood,heightScale,tilted]);
  useEffect(()=>{
   const frame=requestAnimationFrame(()=>map.current?.resize());
-  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape')setImmersive(false);};
+  const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!walkingRef.current)setImmersive(false);};
   window.addEventListener('keydown',escape);return()=>{cancelAnimationFrame(frame);window.removeEventListener('keydown',escape);};
  },[immersive]);
  useEffect(()=>{
@@ -76,7 +81,7 @@ export default function Explorer(){
  function choose(p:Place){setTour(false);setViewId('');setSelected(p);const m=map.current;if(m){m.flyTo({center:p.coordinates,zoom:16.4,essential:false});marker.current?.remove();marker.current=new maplibregl.Marker({color:'#087b70'}).setLngLat(p.coordinates).addTo(m);}}
  function toggle(){setTour(false);const next=!tilted;setTilted(next);map.current?.easeTo({pitch:next?62:0,bearing:next?-26:0,duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:600});}
  const list=(query.trim().length>=2?results:places).filter(p=>category==='Tout'||p.category===category);
- return <main className={immersive?'immersive':undefined}>
+ return <main className={[immersive?'immersive':'',walking?'walk-active':''].filter(Boolean).join(' ')}>
   <aside className="rail" aria-label="CitySense"><a className="brand-icon" href="/" aria-label="Accueil CitySense"><Layers size={25}/></a><div className="rail-line"/><span className="rail-active"><Compass size={23}/></span><span className="rail-bottom">CS</span></aside>
   <section className="panel" aria-label="Explorer Montbéliard">
    <header><a className="wordmark" href="/">city<span>sense</span><i/></a><span className="beta">PILOTE</span></header>
@@ -102,8 +107,9 @@ export default function Explorer(){
     <label className="scene-scale">Hauteur visuelle <span>{heightScale.toFixed(1)}×</span><input aria-label="Échelle visuelle des bâtiments" type="range" min="1" max="2" step="0.1" value={heightScale} disabled={!mapReady||!tilted} onChange={e=>setHeightScale(Number(e.target.value))}/></label>
     <small>{heightScale===1?'Hauteurs cartographiques ou estimées':'Exagération visuelle · mesures inchangées'}</small>
    </section>
-   <div className="city-views" aria-label="Points de vue"><span className="views-label">PRENDRE DE LA HAUTEUR</span><div>{CITY_VIEWS.map(v=><button key={v.id} aria-pressed={viewId===v.id&&tilted} disabled={!mapReady} onClick={()=>visitView(v.id)}><MapPin size={14}/>{v.name}</button>)}</div><button className="tour-toggle" disabled={!mapReady||reducedMotion} aria-pressed={tour} onClick={()=>{if(!tilted){setTilted(true);map.current?.easeTo({pitch:62,duration:600});}setTour(!tour);}}>{tour?<Pause size={15}/>:<Play size={15}/>} {tour?'Arrêter la visite':'Visite orbitale'}</button>{reducedMotion&&<small>Animations réduites activées</small>}</div>
+   <div className="city-views" aria-label="Points de vue"><span className="views-label">PRENDRE DE LA HAUTEUR</span><div>{CITY_VIEWS.map(v=><button key={v.id} aria-pressed={viewId===v.id&&tilted} disabled={!mapReady} onClick={()=>visitView(v.id)}><MapPin size={14}/>{v.name}</button>)}</div><button className="tour-toggle" disabled={!mapReady||reducedMotion} aria-pressed={tour} onClick={()=>{if(!tilted){setTilted(true);map.current?.easeTo({pitch:62,duration:600});}setTour(!tour);}}>{tour?<Pause size={15}/>:<Play size={15}/>} {tour?'Arrêter la visite':'Visite orbitale'}</button><button className="walk-start" disabled={!mapReady} onClick={enterWalk}><Footprints size={16}/> Marcher dans la ville</button>{reducedMotion&&<small>Animations réduites activées</small>}</div>
 
+   {walking&&map.current&&<WalkingMode map={map.current} start={walkStart.current} onExit={leaveWalk}/>}
    {mapError&&<div role="status" className="map-error">{mapError}</div>}
    <div className="map-caption"><span>47°30′ N &nbsp; 6°48′ E</span><strong>{immersive?'Exploration immersive · Échap pour revenir':'Montbéliard, sous un autre angle.'}</strong></div>
    {selected&&<article className="detail"><button className="close" onClick={()=>setSelected(null)} aria-label="Fermer les détails"><X size={18}/></button><span className="eyebrow">{selected.category}</span><h2>{selected.name}</h2><p>{selected.category==='Adresse'?'Adresse IGN · Zone pilote de Montbéliard':'Montbéliard · Position indicative du répertoire pilote'}</p><button className="save-place" disabled={!savedPlaces.ready} aria-pressed={savedPlaces.saved.some(p=>p.id===selected.id)} onClick={()=>savedPlaces.toggle(selected)}>{savedPlaces.saved.some(p=>p.id===selected.id)?'Retirer des favoris':'Enregistrer ce lieu'}</button><div className="uncertainty"><Accessibility size={18}/> Accessibilité non vérifiée</div><section className="nearby" aria-label="Lieux à proximité"><h3>À proximité · 800 m</h3><p role="status">{nearbyStatus}</p>{nearby.slice(0,3).map(p=><button key={p.id} onClick={()=>choose(p)}><span>{p.name}</span><small>{p.distanceMeters} m</small></button>)}{!nearbyStatus&&!nearby.length&&<p>Aucun autre lieu du pilote dans ce rayon.</p>}<small>Distances à vol d’oiseau, sans itinéraire.</small></section><section className="routing" aria-label="Itinéraire"><h3>Itinéraire vers ce lieu</h3><label>Départ<select aria-label="Lieu de départ" value={originId} onChange={e=>setOriginId(e.target.value)}><option value="">Choisir un départ</option>{places.filter(p=>p.id!==selected.id).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Mode<select aria-label="Mode de déplacement" value={mode} onChange={e=>setMode(e.target.value)}><option value="pedestrian">À pied</option><option value="bicycle">À vélo</option></select></label><p role="status">{routeStatus}</p>{route&&<><strong>{route.distanceMeters} m · {Math.ceil(route.durationSeconds/60)} min</strong><ol>{route.instructions.map((step,i)=><li key={i}>{step.text} <small>({step.distanceMeters} m)</small></li>)}</ol><small>{route.attribution || `${route.engine} · © OpenStreetMap contributors`}</small></>}<p className="detail-note">Accessibilité du trajet non vérifiée. Les conditions réelles peuvent différer des données cartographiques.</p></section></article>}
