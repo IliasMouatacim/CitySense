@@ -16,6 +16,8 @@ Photographs have a capture date and can differ from current building footprints 
 
 Ground-image errors automatically select the ordinary map and show a short notice. Roof-image errors retain the generated roof material. Existing routes, labels, walking, building collisions, and device-local saved places continue to use their existing sources. Mobile map height gives the new selector space without covering navigation controls.
 
+In walking mode, changing the image selector returns keyboard focus to the scene. Roof textures are reused across nearby geometry rebuilds, with anisotropic filtering where supported. An overlapping image reuse area avoids repeated requests when crossing a grid boundary in both directions. Photo tile events do not rebuild the walking collision geometry. These changes reduce redundant work; they do not increase the source imagery's resolution or supply street-level facade photographs.
+
 The uploaded research also suggested OSM2World, BD TOPO, LiDAR HD, Panoramax, and municipal photomeshes. An IGN BD TOPO building query was verified for the center of Montbéliard, but this release does not import it or change building/collision geometry. OSM2World asset generation, LiDAR terrain, street-photo coverage, and a licensed Montbéliard photomesh require separate data preparation and validation. No Google billing account, paid service, or additional infrastructure was added.
 
 ## Validation

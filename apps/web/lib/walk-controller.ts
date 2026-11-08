@@ -70,7 +70,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function lockedMove(e:MouseEvent){if(document.pointerLockElement===canvas)look(e.movementX,e.movementY);}
   function lockChange(){locked=document.pointerLockElement===canvas;if(wasLocked&&!locked){onExit();return;}wasLocked=locked;status();}
   let geometryQueued=false;
-  function sourceData(){if(geometryQueued||performance.now()-geometryTime<750)return;geometryQueued=true;queueMicrotask(()=>{if(disposed)return;geometryQueued=false;geometryTime=performance.now();refreshGeometry();});}
+  function sourceData(event:{sourceId?:string}){if(event.sourceId!=='openmaptiles'||geometryQueued||performance.now()-geometryTime<750)return;geometryQueued=true;queueMicrotask(()=>{if(disposed)return;geometryQueued=false;geometryTime=performance.now();refreshGeometry();});}
   const held=(...codes:string[])=>codes.some(code=>keys.has(code));
   function tick(now:number){
     const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;

@@ -15,6 +15,12 @@ test('IGN hybrid has real ground and roof images, supports map mode and walking'
  await expect.poll(async()=>Number(await detail.getAttribute('data-photo-roofs'))).toBeGreaterThan(0);
  await page.getByRole('button',{name:'Marcher dans la ville'}).click();
  await expect(page.locator('.walk-hud')).toHaveAttribute('data-lon',/\d/);
+ const hud=page.locator('.walk-hud');
+ await mode.selectOption('map');await expect(detail).toHaveAttribute('data-photo-roofs','0');
+ await mode.selectOption('photo');
+ await expect(page.locator('.maplibregl-canvas')).toBeFocused();
+ await page.keyboard.down('w');
+ try{await expect.poll(async()=>Number(await hud.getAttribute('data-meters')),{timeout:15000}).toBeGreaterThan(.5);}finally{await page.keyboard.up('w');}
  await expect.poll(async()=>Number(await detail.getAttribute('data-photo-roofs'))).toBeGreaterThan(0);
  await page.screenshot({path:`test-results/hybrid-street-${test.info().project.name}.png`,fullPage:true});
  await page.getByRole('button',{name:'Quitter la marche'}).click();

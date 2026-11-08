@@ -38,7 +38,7 @@ export default function CityDetails({map,mood,scale,dimensional,walking}:{map:Ma
   return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0}>
     {walking&&status.street&&<div className="street-name"><MapPin size={14}/>{status.street}</div>}
     <div className="architecture-actions"><button aria-pressed={enabled} disabled={!dimensional} onClick={()=>setEnabled(!enabled)}><Building2 size={15}/> Façades {enabled?'détaillées':'simples'}</button><button aria-expanded={open} aria-controls="city-businesses" onClick={()=>setOpen(!open)}><Store size={15}/> Noms et commerces <ChevronDown size={13}/></button></div>
-    <label className="photo-choice"><span>Sol et toits</span><select aria-label="Style de la ville" value={photo?'photo':'map'} onChange={e=>{setPhoto(e.target.value==='photo');setPhotoError(false);}}><option value="photo">Photo + 3D</option><option value="map">Carte 3D</option></select></label>
+    <label className="photo-choice"><span>Sol et toits</span><select aria-label="Style de la ville" value={photo?'photo':'map'} onChange={e=>{setPhoto(e.target.value==='photo');setPhotoError(false);if(walking)map.getCanvas().focus({preventScroll:true});}}><option value="photo">Photo + 3D</option><option value="map">Carte 3D</option></select></label>
     <p className="architecture-credit">{photo?'Photos IGN · Façades stylisées':'Noms OSM · Façades stylisées'}</p>
     {photoError&&<p role="status">Photos indisponibles. La carte reste utilisable.</p>}
     {error&&<p role="status">{error}</p>}
