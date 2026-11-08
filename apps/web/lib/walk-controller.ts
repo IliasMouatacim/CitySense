@@ -46,7 +46,12 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     const target=offset(position,Math.sin(heading)*horizontal,Math.cos(heading)*horizontal);
     map.jumpTo(map.calculateCameraOptionsFromTo(new LngLat(...position),1.8,new LngLat(...target),1.8-30*Math.cos(radians)));
   }
-  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,meters,blocked:collision,boundary,locked});}
+  function focusPlace(event:{coordinates?:Position}){
+    const target=event.coordinates;if(!target||!target.every(Number.isFinite))return;
+    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=87;dirty=true;
+  }
+  map.on('citysense-look-at',focusPlace);
+  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,meters,blocked:collision,boundary,locked});map.fire('citysense-walk-position',{coordinates:[...position]});}
   const keyCodes=['KeyW','KeyZ','KeyS','KeyA','KeyQ','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'];
   const typing=(target:EventTarget|null)=>target instanceof HTMLElement&&Boolean(target.closest('input,textarea,select,[contenteditable=true]'));
   function keyDown(event:KeyboardEvent){
@@ -91,7 +96,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
     reset(){clear();sprintMode=false;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;},
     dispose(){
-      if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);map.off('idle',refreshGeometry);map.off('resize',resized);
+      if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);map.off('idle',refreshGeometry);map.off('resize',resized);map.off('citysense-look-at',focusPlace);
       window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();

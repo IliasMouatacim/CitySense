@@ -107,7 +107,7 @@ The live suite checks actual API responses, IGN search, route instructions, map 
 
 ## 3D city exploration
 
-The map starts with a closer, tilted view of Montbéliard's historic center. Buildings use solid, height-colored extrusions with directional lighting and an atmospheric horizon. Jour, Doré and Nuit presets restyle the existing map without downloading a different basemap or removing routes. The 2D view restores flat footprints and the fuller set of street/place labels.
+The map starts with a closer, tilted view of Montbéliard's historic center. Buildings use solid extrusions, mapped colors where available, and a varied illustrative palette with directional lighting and an atmospheric horizon. Jour, Doré and Nuit presets restyle the existing map without downloading a different basemap or removing routes. The 2D view restores flat footprints and the fuller set of street/place labels.
 
 Landmark viewpoints focus the historic center, Château and Près-la-Rose. The optional orbit tour stops on map interaction or when the tab is hidden, and is disabled for reduced-motion preferences. The immersive view hides the sidebar; Escape restores the normal layout.
 
@@ -128,3 +128,13 @@ Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a 
 Buildings and water from currently loaded map tiles block movement; mapped bridge lines allow water crossings. Collision geometry follows the source map, including its omissions and simplifications. Exploration stays inside a 2.5 km pilot radius. This is a stylized virtual city with flat ground, not photographic Street View, a terrain simulation, or evidence of real-world accessibility. Walking uses client-side map data and adds no hosted game server or paid service.
 
 `pnpm test:movement` checks movement distances, normalized diagonals, building clearance/courtyards, water/bridges and pilot bounds. Opt-in live browser tests additionally exercise keyboard movement, held on-screen controls, drag-look, desktop pointer lock, Escape and camera restoration on desktop/mobile.
+
+## Detailed streets and mapped businesses
+
+Nearby buildings now have a shared-depth Three.js detail layer with varied facade colors, windows, frames, shutters, doors, cornices, tiled roof caps, and storefront glazing. Mapped `colour` values take priority where available; other colors and facade arrangements are illustrative. Roof shapes, window/door locations, sign graphics and facade placement are **stylized**, not a survey or photographic reconstruction.
+
+Named shops, cafés, restaurants, pharmacies and other supported places come directly from the currently loaded OpenStreetMap/OpenFreeMap tiles. No business names are fabricated. **Noms et commerces** opens a local filterable list; selecting an entry focuses the aerial map or turns the walking camera toward its mapped position. The nearby mapped street name appears in walking mode. Map data may omit businesses or lag closures; the display does not claim current opening or accessibility status.
+
+**Façades détaillées / simples** switches the additional meshes off for slower devices. Details are bounded to the nearest 100 buildings while walking (240 m) or 160 in aerial mode (420 m), appear from zoom 15.5, respect the visual height slider, and are released on exit from the map. Tile data is reused from MapLibre; this adds no tile prefetching, external textures, paid API, or hosted service. The renderer is loaded as a separate client chunk.
+
+`node --test tests/unit/*.test.mjs` covers movement and detail-data rules. The opt-in live detail test checks real named places, local filtering, facade toggling, walking camera focus and 2D restoration on desktop/mobile; screenshots allow visual inspection of rendered geometry.

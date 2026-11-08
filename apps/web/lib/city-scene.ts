@@ -1,7 +1,7 @@
 import type {Map, StyleSpecification, ExpressionSpecification} from 'maplibre-gl';
 export type SceneMood = 'day' | 'golden' | 'night';
 export const CITY_VIEWS = [
-  {id:'centre', name:'Centre historique', center:[6.7982,47.5102] as [number,number], zoom:16.25, pitch:62, bearing:-26},
+  {id:'centre', name:'Centre historique', center:[6.7982,47.5102] as [number,number], zoom:16.85, pitch:62, bearing:-26},
   {id:'chateau', name:'Le Château', center:[6.8005,47.50925] as [number,number], zoom:17.05, pitch:67, bearing:28},
   {id:'parc', name:'Près-la-Rose', center:[6.8033,47.5061] as [number,number], zoom:16.25, pitch:60, bearing:-40},
 ];
@@ -34,7 +34,12 @@ export function styleCity(map:Map, mood:SceneMood, scale=1, dimensional=true) {
     }
     if (layer.type==='line') map.setPaintProperty(layer.id,'line-color',night?(/casing|outline/.test(layer.id)?'#182e37':'#4b646a'):paint['line-color' as keyof typeof paint]);
     if (layer.type==='symbol') {
-      const focusZoom=layer.id.startsWith('poi_')?17.5:layer.id.includes('shield')?18:layer.id==='highway-name-minor'?17:0;
+      if(layer.id.startsWith('poi_')){
+        map.setLayoutProperty(layer.id,'text-field',['coalesce',['get','name:fr'],['get','name'],['get','name:latin']]);
+        map.setLayoutProperty(layer.id,'text-size',['interpolate',['linear'],['zoom'],15,11,18,14]);
+        map.setPaintProperty(layer.id,'text-halo-width',1.6);
+      }
+      const focusZoom=layer.id.startsWith('poi_')?15.5:layer.id.includes('shield')?18:layer.id==='highway-name-minor'?16:0;
       map.setLayerZoomRange(layer.id,dimensional?Math.max(layer.minzoom||0,focusZoom):(layer.minzoom||0),layer.maxzoom||24);
       map.setPaintProperty(layer.id,'text-color',night?'#d8e8df':paint['text-color' as keyof typeof paint]);
       map.setPaintProperty(layer.id,'text-halo-color',night?'#152b34':paint['text-halo-color' as keyof typeof paint]);
@@ -45,10 +50,10 @@ export function styleCity(map:Map, mood:SceneMood, scale=1, dimensional=true) {
       map.setPaintProperty(layer.id,'fill-extrusion-vertical-gradient',true);
       map.setPaintProperty(layer.id,'fill-extrusion-height',['*',buildingHeight,scale]);
       map.setPaintProperty(layer.id,'fill-extrusion-base',['*',['to-number',['get','render_min_height'],0],scale]);
+      const palette:ExpressionSpecification=['step',['%', ['to-number',['id'],0],17],'#e1c5a4',2,'#e8d9b8',4,'#c9b4a8',6,'#d6b6a1',8,'#d1d2bb',10,'#d7bc83',12,'#bdd0c6',14,'#d5c8bb'];
       map.setPaintProperty(layer.id,'fill-extrusion-color',night
-        ? ['interpolate',['linear'],buildingHeight,0,'#314956',12,'#48616c',35,'#68838b',70,'#8bafb4']
-        : gold?['interpolate',['linear'],buildingHeight,0,'#d5c4a7',12,'#f3e7d0',35,'#e8cba7',70,'#c6a582']
-        : ['interpolate',['linear'],buildingHeight,0,'#b6c9c5',12,'#eeeede',35,'#d8e2dc',70,'#a7bfbd']);
+        ? ['interpolate',['linear'],buildingHeight,0,'#384b55',12,'#52636b',35,'#78888c',70,'#9aafb4']
+        : ['to-color',['get','colour'],palette]);
     }
   }
 }
