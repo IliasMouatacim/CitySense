@@ -6,11 +6,11 @@ The default **Photo + 3D** view combines IGN orthophotography with CitySense's i
 
 - IGN Géoplateforme `ORTHOIMAGERY.ORTHOPHOTOS`, through public WMTS, provides photographic ground surfaces. Roads, gardens, paving, and markings are visible where captured in the imagery.
 - A bounded, on-demand WMS image supplies roof colors and photographic surface detail. Its EPSG:3857 coordinates are projected into the same Mercator space as the building meshes. A new image is requested only when entering a different snapped area; pending obsolete images are cancelled. Imagery is loaded in the browser, without a bulk download or server image cache.
-- OpenFreeMap/OpenStreetMap still supplies footprints, provider heights, road geometry, and named places. Three.js supplies the stylized facades, doors, windows, and signs. Collision geometry and the flat-ground pedestrian camera remain unchanged.
+- OpenFreeMap/OpenStreetMap supplies named places and the wider map. In the detailed center, IGN BD TOPO supplies building footprints/heights and a sampled RGE ALTI surface supplies terrain. Three.js supplies illustrative facades and loads generated OSM2World street/environment assets. See [the walking world](WALKING-WORLD.md) for physics, bounds, and data provenance.
 
 The IGN source attribution is displayed in the map. Data comes from the public Géoplateforme services without an API key or billing-enabled account. See [IGN open-data information](https://geoservices.ign.fr/services-web) and the [service capabilities](https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetCapabilities).
 
-Photographs have a capture date and can differ from current building footprints or businesses. Projecting an overhead image onto roofs is not photogrammetry: walls remain illustrative, ground is flat, and photographed cars/trees do not become physical 3D objects. The night preset dims the daytime imagery.
+Photographs have a capture date and can differ from current building footprints or businesses. Projecting an overhead image onto roofs does not reconstruct photographic facades. Walls remain illustrative, and photographed objects do not automatically become 3D objects. The night preset dims the daytime imagery.
 
 ## Reliability and scope
 
@@ -18,7 +18,7 @@ Ground-image errors automatically select the ordinary map and show a short notic
 
 In walking mode, changing the image selector returns keyboard focus to the scene. Roof textures are reused across nearby geometry rebuilds, with anisotropic filtering where supported. An overlapping image reuse area avoids repeated requests when crossing a grid boundary in both directions. Photo tile events do not rebuild the walking collision geometry. These changes reduce redundant work; they do not increase the source imagery's resolution or supply street-level facade photographs.
 
-The uploaded research also suggested OSM2World, BD TOPO, LiDAR HD, Panoramax, and municipal photomeshes. An IGN BD TOPO building query was verified for the center of Montbéliard, but this release does not import it or change building/collision geometry. OSM2World asset generation, LiDAR terrain, street-photo coverage, and a licensed Montbéliard photomesh require separate data preparation and validation. No Google billing account, paid service, or additional infrastructure was added.
+The walking upgrade now imports BD TOPO geometry, sampled terrain, Rapier physics, OSM2World streets, and a Panoramax photo viewer. The terrain resource is RGE ALTI; a dedicated LiDAR HD point-cloud import and a fully textured municipal photomesh are not included. No Google billing account, paid service, or additional infrastructure was added.
 
 ## Validation
 

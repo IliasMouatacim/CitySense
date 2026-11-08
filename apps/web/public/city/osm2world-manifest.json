@@ -1,1 +1,1 @@
-{"version":1,"status":"pending-network","url":null,"origin":{"lat":47.51,"lon":6.8},"note":"The export pipeline is prepared. The converter build requires the approved OSM2World Maven repositories before a generated model can replace procedural streets."}
+{"version":1,"status":"ready","url":"/city/osm2world.glb","origin":{"lat":47.51,"ele":0,"lon":6.8},"bytes":8802496,"attribution":"© OpenStreetMap contributors / ODbL; OSM2World-generated mesh; default-style materials CC0"}

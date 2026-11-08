@@ -35,7 +35,7 @@ export function loadCityWorld(){
 export async function installCityWorld(map:Map){
  const data=await loadCityWorld();
  if(map.getSource(CITY_BUILDINGS))return;
- map.addSource(CITY_BUILDINGS,{type:'geojson',data:data.buildings,attribution:data.attribution});
+ map.addSource(CITY_BUILDINGS,{type:'geojson',data:data.buildings,attribution:'© IGN BD TOPO / RGE ALTI'});
  const [w,s,e,n]=data.bounds;
  const area:Polygon={type:'Polygon',coordinates:[[[w,s],[e,s],[e,n],[w,n],[w,s]]]};
  const native=map.getLayer('building-3d');

@@ -112,7 +112,7 @@ export default function Explorer(){
    </section>
    <div className="city-views" aria-label="Points de vue"><span className="views-label">PRENDRE DE LA HAUTEUR</span><div>{CITY_VIEWS.map(v=><button key={v.id} aria-pressed={viewId===v.id&&tilted} disabled={!mapReady} onClick={()=>visitView(v.id)}><MapPin size={14}/>{v.name}</button>)}</div><button className="tour-toggle" disabled={!mapReady||reducedMotion} aria-pressed={tour} onClick={()=>{if(!tilted){setTilted(true);map.current?.easeTo({pitch:62,duration:600});}setTour(!tour);}}>{tour?<Pause size={15}/>:<Play size={15}/>} {tour?'Arrêter la visite':'Visite orbitale'}</button><button className="walk-start" disabled={!mapReady} onClick={enterWalk}><Footprints size={16}/> Marcher dans la ville</button>{reducedMotion&&<small>Animations réduites activées</small>}</div>
 
-   {mapReady&&map.current&&<CityDetails map={map.current} mood={mood} scale={heightScale} dimensional={tilted} walking={walking}/>}
+   {mapReady&&map.current&&<CityDetails map={map.current} mood={mood} scale={heightScale} dimensional={tilted} walking={walking} routeCoordinates={route?.geometry.coordinates}/>}
    {walking&&map.current&&<WalkingMode map={map.current} start={walkStart.current} onExit={leaveWalk}/>}
    {mapError&&<div role="status" className="map-error">{mapError}</div>}
    <div className="map-caption"><span>47°30′ N &nbsp; 6°48′ E</span><strong>{immersive?'Exploration immersive · Échap pour revenir':'Montbéliard, sous un autre angle.'}</strong></div>

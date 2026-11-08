@@ -15,7 +15,7 @@ public class CitySceneExport {
   if(args.length!=3)throw new IllegalArgumentException("input.osm.pbf style/standard.properties output.glb");
   var converter=new O2WConverter();
   var excluded=List.of("ExternalModelModule","RailwayModule","AerowayModule","BuildingModule","ParkingModule","WaterModule","PoolModule","GolfModule","SportsModule","CliffModule","PowerModule","MastModule","BridgeModule","TunnelModule","SurfaceAreaModule","InvisibleModule","IndoorModule");
-  converter.setConfig(new O2WConfig(Map.of("excludeWorldModule",excluded,"lod",4,"maxTextureResolution",512,"treesPerSquareMeter",0,"createTerrain",false),new File(args[1])));
+  converter.setConfig(new O2WConfig(Map.of("excludeWorldModule",String.join(";",excluded),"lod",4,"maxTextureResolution",512,"treesPerSquareMeter",0.0003,"createTerrain",false,"clipToBounds",true),new File(args[1])));
   converter.convert(new OSMFileReader(new File(args[0])),new LatLonBounds(47.5055,6.7935,47.5135,6.8065),new MetricMapProjection(new LatLon(47.51,6.8)),new GltfOutput(new File(args[2])));
  }
 }

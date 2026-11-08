@@ -117,9 +117,9 @@ The live scene tests cover all three lighting controls, height scaling, actual c
 
 ## First-person walking mode
 
-The center-city terrain, IGN building geometry, Rapier physics, textured street surfaces, and photo viewer upgrade are documented in [the walking world notes](docs/WALKING-WORLD.md), including the currently blocked OSM2World conversion and unverified live Panoramax coverage.
+The center-city terrain, IGN building geometry, Rapier physics, generated OSM2World streets, and photo viewer are documented in [the walking world notes](docs/WALKING-WORLD.md), including the remaining live photo-image verification.
 
-Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a pedestrian-height camera (1.8 m above the flat map ground), spawns near a loaded street, and opens an immersive view.
+Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a pedestrian-height camera (approximately 1.8 m above sampled IGN ground), validates a clear starting direction on a mapped street, and opens an immersive view.
 
 - **WASD / ZQSD**: forward, back and strafe. Up/down arrows also move; left/right arrows turn.
 - **Mouse/touch drag**: look around, including above street level. **Capturer la souris** optionally enables desktop mouse-look without dragging.
@@ -127,7 +127,7 @@ Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a 
 - **Escape / Quitter la marche**: exit, release mouse capture, and restore the previous aerial camera and 2D/3D mode.
 - **Reset**: return to the starting street and direction. Movement stops when the window loses focus or the tab is hidden.
 
-Buildings and water from currently loaded map tiles block movement; mapped bridge lines allow water crossings. Collision geometry follows the source map, including its omissions and simplifications. Exploration stays inside a 2.5 km pilot radius. This is a stylized virtual city with flat ground, not photographic Street View, a terrain simulation, or evidence of real-world accessibility. Walking uses client-side map data and adds no hosted game server or paid service.
+IGN buildings, sampled terrain, and simplified mapped street objects have Rapier colliders. Water checks and mapped bridge exceptions add source-map constraints. Detailed walking stays within the center-city terrain grid. This is an approximate virtual reconstruction with generated facades; accessibility and real-world passage conditions remain unverified. Walking uses client-side data and adds no hosted game server or paid service.
 
 `pnpm test:movement` checks movement distances, normalized diagonals, building clearance/courtyards, water/bridges and pilot bounds. Opt-in live browser tests additionally exercise keyboard movement, held on-screen controls, drag-look, desktop pointer lock, Escape and camera restoration on desktop/mobile.
 

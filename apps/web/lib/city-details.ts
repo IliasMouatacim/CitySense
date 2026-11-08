@@ -1,4 +1,4 @@
-import {MercatorCoordinate,type Map as CityMap,type CustomLayerInterface,type GeoJSONSource} from 'maplibre-gl';
+import {MercatorCoordinate,type Map as CityMap,type CustomLayerInterface} from 'maplibre-gl';
 import {BufferGeometry,Float32BufferAttribute,Mesh,MeshBasicMaterial,MeshStandardMaterial,AmbientLight,DirectionalLight,TextureLoader,type Texture,Scene,Camera,WebGLRenderer,Matrix4,Color,Vector3,DoubleSide,CanvasTexture,SRGBColorSpace,RepeatWrapping,ShapeUtils,Vector2} from 'three';
 import {readCityPois,mappedHeight,stableVariant,metersBetween,nearbyFootprints,outwardUv,type CityPoi} from './city-details-data';
 import type {SceneMood} from './city-scene';
@@ -6,8 +6,8 @@ import {roofPhotoRequest} from './photo-city';
 import {cityBuildingFeatures,getCityWorld,terrainHeight} from './city-world';
 import {loadCityModel} from './city-model';
 
-export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean};
-export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number};
+export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean;routeCoordinates?:number[][]};
+export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number};
 type Point=[number,number];
 type Wall={a:Point;b:Point;normal:Point;length:number;height:number;base:number;variant:number};
 type Batch={positions:number[];colors:number[];uvs:number[]};
@@ -26,7 +26,6 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   function locate(event:{coordinates?:[number,number]}){if(event.coordinates?.every(Number.isFinite))walkPosition=event.coordinates;}
   let renderer:WebGLRenderer|undefined;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
-  let routeCoordinates:number[][]=[];
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
   const color=new Color();
@@ -127,7 +126,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         else if(object.tags.amenity==='bench'){box(0,0,.4,1.6,.5,.1,'#93704e');box(0,.22,.5,1.6,.08,.55,'#93704e');box(-.55,0,0,.08,.45,.4,'#525b55');box(.55,0,0,.08,.45,.4,'#525b55');}
       }
     }
-    let routeSegments=0;
+    const routeCoordinates=options.routeCoordinates||[];let routeSegments=0;
     for(let i=1;i<routeCoordinates.length;i++){
       const a=routeCoordinates[i-1],b=routeCoordinates[i],parts=Math.max(1,Math.ceil(metersBetween(a,b)/5));
       for(let part=0;part<parts;part++){
@@ -254,12 +253,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(d<closest&&d<65){closest=d;street=String(name);}
       }
     }
-    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments});map.triggerRepaint();
+    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments,modelMeshes:cityModel?.group.children.length||0});map.triggerRepaint();
   }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={
     id:ID,type:'custom',renderingMode:'3d',
-    onAdd(_map,gl){renderer=new WebGLRenderer({canvas:map.getCanvas(),context:gl as WebGL2RenderingContext});renderer.autoClear=false;schedule();source({sourceId:'citysense-route',isSourceLoaded:true});loadCityModel().then(model=>{if(disposed){model?.dispose();return;}cityModel=model;force=true;schedule();}).catch(()=>{/* Keep the procedural street fallback when an asset fails. */});},
+    onAdd(_map,gl){renderer=new WebGLRenderer({canvas:map.getCanvas(),context:gl as WebGL2RenderingContext});renderer.autoClear=false;schedule();loadCityModel().then(model=>{if(disposed){model?.dispose();return;}cityModel=model;force=true;schedule();}).catch(()=>{/* Keep the procedural street fallback when an asset fails. */});},
     render(_gl,args){
       if(!renderer||!options.dimensional||map.getZoom()<15.5)return;
       camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix).multiply(transform);
@@ -269,9 +268,6 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   };
   function source(event:{sourceId?:string;isSourceLoaded?:boolean}){
     if(event.sourceId==='openmaptiles'&&event.isSourceLoaded)schedule();
-    if(event.sourceId==='citysense-route'&&event.isSourceLoaded)(map.getSource('citysense-route') as GeoJSONSource)?.getData().then(data=>{
-      if(disposed)return;routeCoordinates=data.type==='FeatureCollection'&&data.features[0]?.geometry.type==='LineString'?data.features[0].geometry.coordinates:[];force=true;schedule();
-    }).catch(()=>{});
   }
   const layers=map.getStyle().layers;
   const lastBuilding=layers.findLastIndex(l=>l.type==='fill-extrusion');

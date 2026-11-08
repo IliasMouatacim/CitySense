@@ -2,6 +2,8 @@ import {test,expect} from '@playwright/test';
 test('walking keeps its camera above IGN terrain rather than clamping to sea level',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ await expect.poll(async()=>Number(await page.locator('.architecture-panel').getAttribute('data-model-meshes')),{timeout:45000}).toBeGreaterThan(0);
+ expect(Number(await page.locator('.architecture-panel').getAttribute('data-model-meshes'))).toBeLessThan(150);
  await page.getByRole('button',{name:'Marcher dans la ville'}).click();
  const hud=page.locator('.walk-hud');await expect(hud).toHaveAttribute('data-lon',/\d/);
  await expect.poll(async()=>Number(await hud.getAttribute('data-ground-elevation'))).toBeGreaterThan(1);

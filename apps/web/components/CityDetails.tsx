@@ -7,12 +7,12 @@ import type {CityPoi} from '../lib/city-details-data';
 import type {DetailStatus,createCityDetails} from '../lib/city-details';
 import {PHOTO_SOURCE,setPhotoGround} from '../lib/photo-city';
 
-export default function CityDetails({map,mood,scale,dimensional,walking}:{map:Map;mood:SceneMood;scale:number;dimensional:boolean;walking:boolean}){
+export default function CityDetails({map,mood,scale,dimensional,walking,routeCoordinates}:{map:Map;mood:SceneMood;scale:number;dimensional:boolean;walking:boolean;routeCoordinates?:number[][]}){
   const [enabled,setEnabled]=useState(true),[open,setOpen]=useState(false),[query,setQuery]=useState(''),[error,setError]=useState('');
   const [photo,setPhoto]=useState(true),[photoError,setPhotoError]=useState(false);
   const [status,setStatus]=useState<DetailStatus>({buildings:0,windows:0,signs:0,pois:[],street:''});
   const controller=useRef<ReturnType<typeof createCityDetails>|null>(null);
-  const options=useRef({mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo});options.current={mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo};
+  const options=useRef({mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates});options.current={mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates};
   useEffect(()=>{
     setPhotoGround(map,photo,mood==='night');
     const failed=(event:{sourceId?:string})=>{if(event.sourceId===PHOTO_SOURCE){setPhotoError(true);setPhoto(false);}};
@@ -28,14 +28,14 @@ export default function CityDetails({map,mood,scale,dimensional,walking}:{map:Ma
     }).catch(()=>{if(!cancelled)setError('Les détails 3D n’ont pas pu être chargés.');});
     return()=>{cancelled=true;controller.current?.dispose();controller.current=null;};
   },[map]);
-  useEffect(()=>{controller.current?.update(options.current);},[mood,scale,enabled,dimensional,walking,photo]);
+  useEffect(()=>{controller.current?.update(options.current);},[mood,scale,enabled,dimensional,walking,photo,routeCoordinates]);
   function focus(poi:CityPoi){
     if(walking)map.fire('citysense-look-at',{coordinates:poi.coordinates});
     else map.flyTo({center:poi.coordinates,zoom:18.3,pitch:62,duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:1000});
     setOpen(false);
   }
   const list=status.pois.filter(p=>`${p.name} ${p.category}`.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr')));
-  return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0} data-route-segments={status.routeSegments||0}>
+  return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0} data-route-segments={status.routeSegments||0} data-model-meshes={status.modelMeshes||0}>
     {walking&&status.street&&<div className="street-name"><MapPin size={14}/>{status.street}</div>}
     <div className="architecture-actions"><button aria-pressed={enabled} disabled={!dimensional} onClick={()=>setEnabled(!enabled)}><Building2 size={15}/> Façades {enabled?'détaillées':'simples'}</button><button aria-expanded={open} aria-controls="city-businesses" onClick={()=>setOpen(!open)}><Store size={15}/> Noms et commerces <ChevronDown size={13}/></button></div>
     <label className="photo-choice"><span>Sol et toits</span><select aria-label="Style de la ville" value={photo?'photo':'map'} onChange={e=>{setPhoto(e.target.value==='photo');setPhotoError(false);if(walking)map.getCanvas().focus({preventScroll:true});}}><option value="photo">Photo + 3D</option><option value="map">Carte 3D</option></select></label>
