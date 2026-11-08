@@ -103,3 +103,14 @@ LIVE_BASE_URL=http://127.0.0.1:3000 PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin
 ```
 
 The live suite checks actual API responses, IGN search, route instructions, map asset loading and nonzero map/canvas dimensions on desktop and mobile. It is excluded from the default browser suite so ordinary tests do not consume external service quotas.
+
+
+## 3D city exploration
+
+The map starts with a closer, tilted view of Montbéliard's historic center. Buildings use solid, height-colored extrusions with directional lighting and an atmospheric horizon. Jour, Doré and Nuit presets restyle the existing map without downloading a different basemap or removing routes. The 2D view restores flat footprints and the fuller set of street/place labels.
+
+Landmark viewpoints focus the historic center, Château and Près-la-Rose. The optional orbit tour stops on map interaction or when the tab is hidden, and is disabled for reduced-motion preferences. The immersive view hides the sidebar; Escape restores the normal layout.
+
+The height slider is an explicitly labeled **visual exaggeration** from 1× to 2×. Default 1× uses mapped building heights with an 8 m fallback for missing values. It changes neither coordinates nor route distances, and does not make approximate building heights survey-grade. The pilot does not use a terrain elevation model or photorealistic building meshes.
+
+The live scene tests cover all three lighting controls, height scaling, actual camera pitch, 2D/3D transitions, immersive layout, orbit controls, and reduced-motion behavior on desktop and mobile.
