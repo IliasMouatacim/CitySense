@@ -54,6 +54,8 @@ The source converter checkout is pinned during preparation to `1d31c252cbef964b4
 
 After the environment network update, the converter's core and JVM modules built successfully. The exported model includes road junctions and crossings, kerbs, benches, bus stops, trees, and other environment objects. The publisher rejects unexpected origins, oversized models, and accidental duplicate building modules. The converter logged degenerate triangles on six OSM ways, so some affected geometry may be incomplete. The model is bounded to the city extent; sparse forest trees are illustrative placements based on mapped forest areas. No conversion runs on Render, and no paid storage or service was provisioned.
 
+The grey block also models the front roof parapet, two tall pale stacks, the smaller brick chimney, solid lower balcony panels and the salon's sloping awning visible in Lejun's `bbf18b7c-94a6-4969-9cf5-6be5ca50dc98` photograph. These CC-BY-SA-4.0 adaptations use estimated dimensions and setbacks. Hidden roof structures are not reconstructed.
+
 ## Rebuilding and verification
 
 `node scripts/build-city-data.mjs` rebuilds the IGN data using bounded public requests. `scripts/export-city-osm.py` regenerates the street subset. Generated IGN data is under Licence Ouverte 2.0; the OSM derivative database is under ODbL 1.0 with OpenStreetMap/Geofabrik provenance. Material sources are CC0; the Rapier and photo viewer dependencies retain their package licences.

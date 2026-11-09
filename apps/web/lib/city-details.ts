@@ -310,6 +310,18 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           const wall:Wall={a,b,length,normal:[-(b[1]-a[1])/length,(b[0]-a[0])/length],height,base,variant};
           // One continuous observed elevation spans small IGN footprint jogs.
           panel(referenceFacades,wall,length/2,length,base,height,profile.wallColor,.23);
+          if(front.roof){
+            const roof=front.roof;
+            wallBox(details,wall,length/2,length,height-.12,height+roof.parapet,profile.wallColor,.29,.03);
+            wallBox(details,wall,length/2,length+.12,height+roof.parapet,height+roof.parapet+.08,'#797e7b',.35,-.05);
+            // Only the three stacks visible in the credited street reference.
+            // Setbacks and sizes are photo estimates, not surveyed roof geometry.
+            for(const stack of roof.stacks){
+              const at=length*stack.at,back=-stack.setback-stack.depth,frontDepth=-stack.setback;
+              wallBox(details,wall,at,stack.width,height,height+stack.height,stack.color,frontDepth,back);
+              wallBox(details,wall,at,stack.width+.15,height+stack.height,height+stack.height+.12,'#777a75',frontDepth+.08,back-.08);
+            }
+          }
           for(let floor=0;floor<front.floors;floor++){
             const bottom=base+front.firstWindowBottom+floor*front.storeyHeight,top=bottom+1.75;
             panel(details,wall,length/2,length,bottom-.65,bottom-.5,'#ded8c6',.28);
@@ -322,6 +334,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 panel(details,wall,at+.55,.65,bottom+.18,top-.12,'#566569',.32);
                 for(const edge of [-1,1])wallBox(details,wall,at+edge*(w/2+.06),.14,bottom-.12,top+.12,'#bfc1b7',.55,.25);
                 wallBox(details,wall,at,w+.25,bottom-.15,bottom-.02,'#c9c8bc',.7,.25);
+                // Solid lower balcony panel and projecting sill observed in the photo.
+                wallBox(details,wall,at,w,bottom-.02,bottom+.48,profile.wallColor,.66,.48);
                 for(const z of [bottom+.1,bottom+.78])panel(details,wall,at,w,z,z+.04,'#565d59',.67);
                 for(let x=-w/2+.12;x<w/2;x+=.22)panel(details,wall,at+x,.035,bottom+.13,bottom+.8,'#646b65',.68);
               }else if(bay.kind==='shutter'&&!(bay.openTop&&floor===front.floors-1)){
@@ -342,6 +356,18 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             for(let x=at-w/2+.2;x<at+w/2;x+=1.25)panel(details,wall,x,.075,base+.2,base+3,'#c4c7b9',.32);
             wallBox(details,wall,at,w+.2,base+2.95,base+3.6,'#e2ddcd',.48,.25);
             referenceSign(wall,at,w,text);
+            if(shop.awning){
+              const {projection,drop}=shop.awning,dx=(b[0]-a[0])/length,dy=(b[1]-a[1])/length;
+              const point=(x:number,z:number,depth:number)=>[a[0]+dx*x+wall.normal[0]*depth,a[1]+dy*x+wall.normal[1]*depth,z];
+              const left=at-w/2,right=at+w/2,top=base+3.04,lip=top-drop;
+              quad(details,point(left,top,.5),point(right,top,.5),point(right,lip,projection),point(left,lip,projection),'#e2dbca');
+              wallBox(details,wall,at,w,lip-.14,lip,'#bdb4a3',projection+.025,projection-.04);
+              // Angled side cheeks and slim supporting arms, without invented logos.
+              for(const x of [left,right]){
+                triangle(details,point(x,top,.5),point(x,lip,projection),point(x,lip,.5),tint('#b8b1a2',.8));
+                wallBox(details,wall,x,.045,lip-.03,lip+.02,'#535951',projection,.29);
+              }
+            }
           }
         }
     }

@@ -26,7 +26,9 @@ Adaptations: three selected upper wall faces on two matched IGN buildings receiv
 the photographs through manually registered equirectangular UV coordinates.
 The grey eastern front is reconstructed as geometry using four observed upper
 storeys, asymmetric window/shutter bays, balconies, rails, floor bands and the
-visible business names, avoiding foreground objects in the texture. A third,
+visible business names, avoiding foreground objects in the texture. The salon's
+sloped awning, solid lower balcony panels, front parapet and three visible roof
+stacks also follow the `bbf18b7c` reference, with estimated sizes and setbacks. A third,
 pale-blue retail building is reconstructed from visible colors, canopy,
 ribbon windows and ground-floor glazing; its dimensions and window spacing
 are estimates. These photographic facade adaptations and reference profiles

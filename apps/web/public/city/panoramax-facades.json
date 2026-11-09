@@ -332,7 +332,7 @@
           "top": 16.3
         }
       ],
-      "notes": "The east front is manually reconstructed from the four observed upper storeys, asymmetric shutter/window bays, central recessed balconies, floor bands and two visible business names. Dimensions and relief are estimates. The clear north upper face retains the photograph. Hidden walls remain plain; business operation since the capture is unverified.",
+      "notes": "The east front is manually reconstructed from the four observed upper storeys, asymmetric shutter/window bays, central balconies with solid lower panels, floor bands and two visible business names. The salon awning, front roof parapet and three visible rooftop stacks follow the bbf18b7c photo. Dimensions, setbacks and relief are estimates. The clear north upper face retains the photograph. Hidden walls remain plain; business operation since the capture is unverified.",
       "storefrontWalls": [
         {
           "a": [
@@ -399,9 +399,19 @@
           {
             "at": 0.85,
             "width": 4,
-            "label": "BS COIFFURE"
+            "label": "BS COIFFURE",
+            "awning": {"projection": 1.05, "drop": 0.48}
           }
-        ]
+        ],
+        "roof": {
+          "source": "bbf18b7c-94a6-4969-9cf5-6be5ca50dc98",
+          "parapet": 0.45,
+          "stacks": [
+            {"at": 0.08, "width": 1.7, "setback": 0.8, "depth": 1.1, "height": 2.8, "color": "#b7b4aa"},
+            {"at": 0.61, "width": 0.7, "setback": 2.1, "depth": 0.7, "height": 0.95, "color": "#78554a"},
+            {"at": 0.87, "width": 1.2, "setback": 0.8, "depth": 0.9, "height": 2.5, "color": "#b7b4aa"}
+          ]
+        }
       }
     },
     {
