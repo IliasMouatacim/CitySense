@@ -6,6 +6,10 @@ UFR STGI buildings, the university library, restaurant and research facilities.
 Choose a place to centre the aerial map, or look towards it while walking.
 The **Explorer** sector menu provides starts beside UFR STGI, IUT Mesures
 physiques, the library and UTBM's timber facade.
+The IUT start sits on the courtyard footpath and faces the documented ribbon
+windows, with an unobstructed line of sight checked against the IGN footprints.
+Returning to the starting point restores each sector's intended viewing direction
+and pitch as well as its position.
 
 ## Recorded coverage
 
@@ -18,6 +22,10 @@ physiques, the library and UTBM's timber facade.
   places. These counts include the surrounding neighbourhood, not only the
   university estate. Relations and detailed indoor layouts are not imported.
 - IGN orthophotos supply ground and roof imagery in **Photo + 3D** mode.
+  A failed individual tile no longer disables images that have loaded. An initial
+  complete imagery outage falls back to the vector map after a five-second grace
+  period. Campus roofs without photography use a neutral mineral surface instead
+  of the historic centre's illustrative tile colours.
   Furniture sizes and rounded tree crowns are illustrative; mapped locations,
   names and recorded capacities are retained. Entrances are recorded in the
   dataset but door appearances are not reconstructed.
@@ -27,6 +35,7 @@ physiques, the library and UTBM's timber facade.
 - The mapped pedestrian courtyard (OSM way `1334515492`) receives a terrain-following
   concrete-slab surface in both viewing modes. Its boundary is mapped; slab size,
   material appearance and relief are estimates from the courtyard photograph.
+  A muted grey tint follows the weathered outdoor paving seen in that reference.
 
 The campus terrain uses the historic centre's scene datum for rendering and
 Rapier collision. Independent elevation datasets must not reset that datum.
@@ -38,7 +47,10 @@ transoms and a turquoise accent bay. The library has concrete/brick bands,
 glazed ends and stair glazing. UTBM's southern frontage has a projecting timber
 louvre screen, window bands, a concrete base and outline lettering. Three
 IUT Mesures physiques volumes have the courtyard-facing ribbon glazing visible
-in the STGI courtyard photograph. Other walls stay neutral instead of receiving
+in the STGI courtyard photograph: taller ground-floor glazing and shallower upper
+bands. The library's long courtyard wall has uneven window groups and coloured
+reveals from that same photograph, rather than repeating continuous strips.
+Those opening proportions and positions remain approximate. Other walls stay neutral instead of receiving
 invented historic ornaments. The institutional plan supplies sector identities;
 OSM names and departmental boundaries may differ or be outdated.
 
@@ -167,3 +179,12 @@ Four desktop/mobile courtyard and sector cases passed, covering UTBM, library,
 IUT, walking starts and night/day restoration. The sector and courtyard captures
 were inspected. IGN imagery fell back to the vector map in this test run; the
 locally served architectural, material and furniture details remained available.
+
+Walking polish validation: the production build and 20 unit checks passed,
+including an unobstructed sight line from the IUT start to its documented facade.
+Eight desktop/mobile cases covered partial and complete imagery failure, campus
+starts, reset direction and day/night restoration. After correcting the IUT and
+library opening proportions, library frame depth and courtyard paving tint, both
+desktop/mobile sector cases passed again. Their walking captures were inspected.
+Facade registration and opening dimensions remain estimates from the cited photos;
+unobserved elevations remain simplified.

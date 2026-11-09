@@ -49,6 +49,18 @@ test('the UTBM, library and IUT sectors open their documented facades in grounde
   const hud=page.locator('.walk-hud');await expect(hud).toHaveAttribute('data-lat',/47\.49/,{timeout:45000});
   const visit=CAMPUS_VISITS.find(s=>s.id===id)!,lon=Number(await hud.getAttribute('data-lon')),lat=Number(await hud.getAttribute('data-lat'));
   expect(Math.hypot((lon-visit.start[0])*75400,(lat-visit.start[1])*111319)).toBeLessThan(25);
+  const heading=(Math.atan2((visit.lookAt[0]-lon)*Math.cos(lat*Math.PI/180),visit.lookAt[1]-lat)*180/Math.PI+360)%360;
+  await expect.poll(async()=>Math.abs(Number(await hud.getAttribute('data-heading'))-heading)).toBeLessThan(.5);
+  await expect(hud).toHaveAttribute('data-look-pitch',String(visit.pitch));
+  if(id==='iut-mp'){
+   // This viewpoint must not snap across the courtyard to the blank end wall.
+   expect(Math.hypot((lon-visit.start[0])*75400,(lat-visit.start[1])*111319)).toBeLessThan(2);
+   await page.keyboard.down('ArrowRight');
+   try{await expect.poll(async()=>Math.abs(Number(await hud.getAttribute('data-heading'))-heading)).toBeGreaterThan(5);}finally{await page.keyboard.up('ArrowRight');}
+   await page.getByRole('button',{name:'Revenir au point de départ'}).click();
+   await expect.poll(async()=>Math.abs(Number(await hud.getAttribute('data-heading'))-heading)).toBeLessThan(.5);
+   await expect(hud).toHaveAttribute('data-look-pitch',String(visit.pitch));
+  }
   await expect(page.locator('.walk-error')).toHaveCount(0);
   await page.screenshot({path:`test-results/campus-${id}-${test.info().project.name}.png`,fullPage:true});
   await page.getByRole('button',{name:'Quitter la marche',exact:true}).click();

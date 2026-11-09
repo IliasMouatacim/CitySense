@@ -6,7 +6,7 @@ import {drawCampusFacade} from '../../apps/web/lib/campus-architecture';
 import {CAMPUS_VISITS} from '../../apps/web/lib/campus-visits';
 import {matchesFacadeEdge} from '../../apps/web/lib/facade-references';
 import {metersBetween} from '../../apps/web/lib/city-details-data';
-import {insidePolygon} from '../../apps/web/lib/walk-geometry';
+import {insidePolygon,nearestOnLine} from '../../apps/web/lib/walk-geometry';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {drawCampusBench} from '../../apps/web/lib/campus-furniture';
 
@@ -60,6 +60,18 @@ test('campus visit starts sit inside the measured terrain and outside building i
   const p=visit.start;assert.ok(p[0]>w&&p[0]<e&&p[1]>s&&p[1]<n);
   assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),visit.id);
   assert.ok(visit.pitch>=90&&visit.pitch<120);
+ }
+});
+
+test('the IUT walking view reaches a documented windowed facade without another building blocking it',()=>{
+ const visit=CAMPUS_VISITS.find(v=>v.id==='iut-mp')!;
+ const facade=campusReferences.buildings.flatMap(b=>b.faces).find(face=>face.kind==='ribbon'&&metersBetween(visit.lookAt,nearestOnLine(visit.lookAt,[face.a,face.b]))<.2);
+ assert.ok(facade,'Look target must lie on an observed ribbon facade');
+ const span=metersBetween(visit.start,visit.lookAt);
+ assert.ok(span>15&&span<40,'Leave room to see the full elevation at pedestrian height');
+ for(let d=0;d<span-.5;d+=.5){
+  const p:[number,number]=[visit.start[0]+(visit.lookAt[0]-visit.start[0])*d/span,visit.start[1]+(visit.lookAt[1]-visit.start[1])*d/span];
+  assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),'View must not cross a blank wall');
  }
 });
 

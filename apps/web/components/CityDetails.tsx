@@ -17,10 +17,21 @@ export default function CityDetails({map,mood,scale,dimensional,walking,routeCoo
   const controller=useRef<ReturnType<typeof createCityDetails>|null>(null);
   const options=useRef({mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates});options.current={mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates};
   useEffect(()=>{
-    setPhotoGround(map,photo,mood==='night');
-    const failed=(event:{sourceId?:string})=>{if(event.sourceId===PHOTO_SOURCE){setPhotoError(true);setPhoto(false);}};
-    map.on('error',failed);return()=>{map.off('error',failed);};
-  },[map,photo,mood]);
+    // A distant tile can fail at walking pitches while the visible ground is
+    // already loaded. Only abandon imagery after an initial complete outage.
+    let loaded=false,timer:ReturnType<typeof setTimeout>|undefined;
+    const received=(event:{sourceId?:string;tile?:{state?:string}})=>{
+      if(event.sourceId!==PHOTO_SOURCE||event.tile?.state!=='loaded')return;
+      loaded=true;if(timer)clearTimeout(timer);timer=undefined;
+    };
+    const failed=(event:{sourceId?:string})=>{
+      if(event.sourceId!==PHOTO_SOURCE||loaded||timer||!options.current.photo)return;
+      timer=setTimeout(()=>{timer=undefined;if(!loaded&&options.current.photo){setPhotoError(true);setPhoto(false);}},5000);
+    };
+    map.on('sourcedata',received);map.on('error',failed);
+    return()=>{if(timer)clearTimeout(timer);map.off('sourcedata',received);map.off('error',failed);};
+  },[map]);
+  useEffect(()=>{setPhotoGround(map,photo,mood==='night');},[map,photo,mood]);
   useEffect(()=>{
     let cancelled=false;
     // Keep the 3D renderer out of the first page load and free its GPU resources on teardown.

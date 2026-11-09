@@ -186,7 +186,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusRoofs=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
     function solidBox(p:number[],w:number,d:number,h:number,hex:string,target=details){
       const a=[p[0]-w/2,p[1]-d/2,p[2]],b=[p[0]+w/2,p[1]-d/2,p[2]],c=[p[0]+w/2,p[1]+d/2,p[2]],e=[p[0]-w/2,p[1]+d/2,p[2]],top=(q:number[])=>[q[0],q[1],q[2]+h];
       const vertical=[[0,0],[w/2,0],[w/2,h/.25],[0,h/.25]],horizontal=[[0,0],[w/2,0],[w/2,d/.25],[0,d/.25]];
@@ -325,7 +325,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         const [p,q,r]=edges[0];
         if(depth<10&&metersBetween(p,q)>4){const mid=[(p[0]+q[0])/2,(p[1]+q[1])/2];pave(p,mid,r,depth+1);pave(mid,q,r,depth+1);return;}
         const vertices=[a,b,c].map(p=>[...local(p),(terrainHeight(p[0],p[1])??0)+.12]);
-        triangle(campusPaving,vertices[0],vertices[1],vertices[2],tint('#ffffff'),vertices.map(p=>[p[0]/3.2,p[1]/3.2]));
+        // Weathered grey slabs in the institutional courtyard photograph;
+        // the untinted material read as bright indoor stone at pedestrian height.
+        triangle(campusPaving,vertices[0],vertices[1],vertices[2],tint('#b4b6aa'),vertices.map(p=>[p[0]/3.2,p[1]/3.2]));
       }
       for(const indices of ShapeUtils.triangulateShape(points.map(p=>new Vector2(p[0],p[1])),[])){
         if(area.tags.highway==='pedestrian')pave(ring[indices[0]],ring[indices[1]],ring[indices[2]]);
@@ -373,6 +375,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           const points=indices.map(i=>[...vertices[i],height+.045]);
           const uv=photoBounds?points.map(p=>[(origin.x+p[0]*unit-photoBounds!.west)/(photoBounds!.east-photoBounds!.west),1-(origin.y-p[1]*unit-photoBounds!.north)/(photoBounds!.south-photoBounds!.north)]):[];
           if(options.photo&&photoImage&&uv.length&&uv.every(p=>p.every(v=>v>=0&&v<=1)))triangle(photoRoofs,points[0],points[1],points[2],tint('#ffffff'),uv);
+          // Flat campus envelopes should not inherit historic-town terracotta
+          // tiles. Keep a neutral mineral roof when aerial photography is absent.
+          else if(campusBuilding)triangle(campusRoofs,points[0],points[1],points[2],tint('#b9bcb4'),points.map(p=>[p[0]/4,p[1]/4]));
           else triangle(roofs,points[0],points[1],points[2],tint(roofColor),points.map(p=>[p[0]/2,p[1]/2]));
         }
         for(const [ringIndex,ring] of rings.entries()){
@@ -609,6 +614,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const hardware=mesh(metal,undefined,true);if(hardware){const mat=hardware.material as MeshStandardMaterial;mat.metalness=.7;mat.roughness=.34;mat.envMapIntensity=.55;}
     const concrete=campusConcrete.positions.length?mesh(campusConcrete,concreteTexture(),true):undefined;
     physicalSurface(concrete,'campus-concrete',.009);
+    if(campusRoofs.positions.length)physicalSurface(mesh(campusRoofs,concreteTexture(),true),'campus-concrete',.009);
     if(timber.positions.length)physicalSurface(mesh(timber,materialTexture('campus-timber-color'),true),'campus-timber',.004);
     const glazing=mesh(campusGlazing,surfaceTexture('windows'),true);
     if(glazing){

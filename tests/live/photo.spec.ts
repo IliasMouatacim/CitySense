@@ -35,3 +35,22 @@ test('imagery failure falls back to the usable map',async({page})=>{
  await expect(page.getByRole('button',{name:'Marcher dans la ville'})).toBeEnabled();
  await expect(page.locator('.map-error')).toHaveCount(0);
 });
+
+test('one failed IGN tile does not disable the other imagery',async({page})=>{
+ let requests=0,successes=0;
+ page.on('response',response=>{if(response.ok()&&response.url().includes('data.geopf.fr/wmts'))successes++;});
+ await page.route('https://data.geopf.fr/wmts?**',async route=>{
+  if(++requests===1){await route.fulfill({status:503,body:'One missing tile'});return;}
+  // Local image fixture isolates outage handling from IGN's live availability.
+  await route.fulfill({status:200,contentType:'image/jpeg',path:'apps/web/public/materials/campus-concrete-color.jpg'});
+ });
+ await page.goto('/');
+ await expect.poll(()=>successes).toBeGreaterThan(0);
+ // Wait beyond the complete-outage grace period, including slow render frames.
+ await page.waitForTimeout(6500);
+ await expect(page.getByLabel('Style de la ville')).toHaveValue('photo');
+ await expect(page.getByText('Photos indisponibles. La carte reste utilisable.')).toHaveCount(0);
+ await page.getByLabel('Style de la ville').selectOption('map');
+ await page.getByLabel('Style de la ville').selectOption('photo');
+ await expect(page.getByLabel('Style de la ville')).toHaveValue('photo');
+});

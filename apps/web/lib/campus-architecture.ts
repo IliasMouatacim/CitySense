@@ -14,28 +14,33 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  const {panel,box,lettering}=draw;let windows=0;
  const joint='#a5a69c',concrete='#d2d1c8',frame='#344b4c',glass='#49636a';
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
+  // The library's small punched openings have shallow frames. Reusing the
+  // deep STGI concrete-grid relief made these read as projecting window boxes.
+  const relief=face.kind==='libraryStone'?.5:1;
+  const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief,back*relief);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?.04:depth);
   // Dark reveal at the back, with substantial solid jambs and a projecting sill.
   if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09));
   else{panel(at,width,bottom,top,glass,depth+.015);panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);}
-  for(const x of [-1,1])box(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
-  box(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
-  box(at,width+.13,top+.045,top+.10,'#879087',.30,.06);windows++;
-  box(at,width+.11,bottom-.115,bottom-.085,'#8c968e',.53,.43);
+  for(const x of [-1,1])trim(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
+  trim(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
+  trim(at,width+.13,top+.045,top+.10,'#879087',.30,.06);windows++;
+  trim(at,width+.11,bottom-.115,bottom-.085,'#8c968e',.53,.43);
   // Separate opening light, rubber seals and a small aluminium latch.
   // The institutional images show fine divisions inside the larger ribbon bays.
   if(width>.85){
    const split=at+width*.18,z=bottom+(top-bottom)*.72;
-   box(split,.045,bottom+.035,top-.035,'#263b3c',.24,.10);
-   box(at,width-.07,z,z+.035,'#2d4141',.245,.10);
-   box(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
+   trim(split,.045,bottom+.035,top-.035,'#263b3c',.24,.10);
+   trim(at,width-.07,z,z+.035,'#2d4141',.245,.10);
+   trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
  if(face.kind==='ribbon'||face.kind==='frame'){
   const floors=face.floors||3,step=height/floors,bays=Math.max(1,Math.round((length-.5)/(face.kind==='frame'?3.1:2.05))),pitch=(length-.5)/bays;
   panel(length/2,length,.08,.45,'#adafa4',.06);
   for(let floor=0;floor<floors;floor++){
-   const bottom=floor*step+.55,top=Math.min(height-.65,bottom+step*.62);
+   const band=face.glazingBands?.[floor];
+   const bottom=band?height*band[0]:floor*step+.55,top=band?height*band[1]:Math.min(height-.65,bottom+step*.62);
    if(top<=bottom)continue;
    panel(length/2,length-.5,bottom-.12,top+.12,frame,.07);
    for(let bay=0;bay<bays;bay++){
@@ -84,7 +89,20 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    panel(length/2,length,z,z+.24,'#947a70',.065);
    for(let x=.6;x<length;x+=1.3)panel(x,.025,z,z+.24,'#b9a69a',.078);
   }
-  for(const [fraction,span] of [[.1,.7],[.39,.43],[.63,.62],[.82,.52]]){
+  if(face.openings){
+   // Uneven openings observed in the courtyard photograph, measured as
+   // approximate fractions along this particular IGN wall (from a to b).
+   for(const opening of face.openings){
+    const at=length*opening.at,width=length*opening.width,bottom=height*opening.bottom,top=height*opening.top;
+    const bays=Math.max(1,Math.round(width/1.4));
+    for(let b=0;b<bays;b++)pane(at-width/2+(b+.5)*width/bays,width/bays-.065,bottom,top,.12);
+    if(opening.accent){
+     for(const side of [-1,1])box(at+side*(width/2+.06),.1,bottom-.12,top+.12,opening.accent,.20,.06);
+     box(at,width+.2,bottom-.14,bottom-.05,opening.accent,.24,.06);
+     box(at,width+.2,top+.05,top+.14,opening.accent,.17,.06);
+    }
+   }
+  }else for(const [fraction,span] of [[.1,.7],[.39,.43],[.63,.62],[.82,.52]]){
    const bottom=height*fraction,top=bottom+(fraction<.2?1.7:.65),width=length*span;
    if(top>=height-.3)continue;
    const bays=Math.max(2,Math.round(width/1.4));
