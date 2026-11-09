@@ -49,7 +49,7 @@ Some adjoining parts, hidden elevations and the IUT R&T/GACO/MMI facades remain
 simplified. Building interiors and undercrofts cannot be entered. The largest
 letters are a plain typographic interpretation of observed facade lettering.
 
-The campus renderer uses lit cast-concrete surfaces with procedural grain and
+The campus renderer uses lit cast-concrete surfaces with photographed grain and
 formwork marks, deeper window jambs and sills, reflective physical glazing and
 directional shadow maps (2048 pixels on desktop-sized views, 1024 on narrower
 views). A CC0 HDR environment supplies generic outdoor light/reflections; it is
@@ -73,6 +73,17 @@ timber slats, fixings and metal armrests; courtyard lamps have mounting plates
 and base collars. These are original procedural materials and estimated small
 details. Window shading and occasional blinds are illustrative; no university
 interiors or exact hardware were surveyed or copied as photographic textures.
+
+The subsequent realism pass replaces the generated concrete and slab colours
+with CC0 photographed ambientCG surfaces and separate linear height/roughness
+maps. Timber seating and UTBM louvres have photographed grain in a shared batch.
+Materials are bounded to 1024 pixels per edge and served locally. The generic
+Poly Haven daylight HDR also supplies an upper sky hemisphere; it follows the
+eye without writing depth, and is removed in night mode. Hemisphere lighting
+uses the scene's Z-up convention to distinguish cool sky fill from ground bounce.
+These generic material/sky references add visual realism, not new evidence about
+the campus's exact appearance. Source links and derivative steps are recorded
+in `public/materials/README.md`.
 
 On 2026-11-09, Panoramax's federation and OSM France APIs returned zero images
 inside `[6.798, 47.492, 6.809, 47.499]`. A broader search found street imagery
@@ -129,3 +140,12 @@ inspection then identified library wall self-shadow aliasing; calibrating depth
 and normal bias removed that pattern in the inspected desktop and mobile captures.
 Both focused library graphics cases passed after the final correction. Fine window
 hardware, material variation and furniture are estimates rather than survey data.
+
+Photographed-material revision: the production build and 18 unit checks passed,
+including a sky-geometry regression check that keeps the generic HDR landscape
+out of the sky cap. Four desktop/mobile library and courtyard graphics cases
+passed, with all nine local PBR textures loaded successfully. After tuning leaf
+coverage against the captures, both courtyard cases passed again, including
+night/day restoration and GPU error checks. Desktop and mobile captures were
+inspected. CC0 materials and generic skies do not make the approximate building
+envelopes a photogrammetric replica; hardware-device frame rates remain unmeasured.
