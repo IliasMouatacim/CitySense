@@ -11,6 +11,7 @@ const categories:Record<string,[string,string]> = {
   bank:['Banque','#3c6678'], hotel:['Hôtel','#496d79'], museum:['Musée','#8a6040'],
   theatre:['Théâtre','#8a6040'], cinema:['Cinéma','#8a6040'], shop:['Commerce','#496d79'],
   town_hall:['Mairie','#496d79'], library:['Bibliothèque','#496d79'], school:['École','#496d79'],
+  university:['Université','#287b78'],college:['Campus','#287b78'],research:['Recherche','#3c6678'],
   place_of_worship:['Lieu de culte','#8a6040'], hospital:['Santé','#246651'], doctor:['Santé','#246651'],
 };
 export function metersBetween(a:number[],b:number[]) {

@@ -8,12 +8,14 @@ let initialized:Promise<void>|undefined;
 export async function createCityPhysics(){
  initialized??=RAPIER.init();await initialized;
  const data=await loadCityWorld(),world=new RAPIER.World({x:0,y:-9.81,z:0});
- const vertices:number[]=[],indices:number[]=[];const [w,s,e,n]=data.bounds;
- for(let y=0;y<data.size;y++)for(let x=0;x<data.size;x++){
-  const lon=w+x/(data.size-1)*(e-w),lat=s+y/(data.size-1)*(n-s),p=local([lon,lat]);vertices.push(p.x,terrainHeight(lon,lat)!,p.z);
+ for(const tile of [data,...data.terrainPatches||[]]){
+  const vertices:number[]=[],indices:number[]=[],[w,s,e,n]=tile.bounds;
+  for(let y=0;y<tile.size;y++)for(let x=0;x<tile.size;x++){
+   const lon=w+x/(tile.size-1)*(e-w),lat=s+y/(tile.size-1)*(n-s),p=local([lon,lat]);vertices.push(p.x,terrainHeight(lon,lat)!,p.z);
+  }
+  for(let y=0;y<tile.size-1;y++)for(let x=0;x<tile.size-1;x++){const a=y*tile.size+x,b=a+1,c=a+tile.size,d=c+1;indices.push(a,b,c,b,d,c);}
+  world.createCollider(RAPIER.ColliderDesc.trimesh(new Float32Array(vertices),new Uint32Array(indices)));
  }
- for(let y=0;y<data.size-1;y++)for(let x=0;x<data.size-1;x++){const a=y*data.size+x,b=a+1,c=a+data.size,d=c+1;indices.push(a,b,c,b,d,c);}
- world.createCollider(RAPIER.ColliderDesc.trimesh(new Float32Array(vertices),new Uint32Array(indices)));
  for(const feature of data.buildings.features){
   const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
   for(const polygon of polygons){const v:number[]=[],idx:number[]=[];

@@ -1,6 +1,7 @@
 import {execFileSync} from 'node:child_process';
 import {mkdirSync,writeFileSync} from 'node:fs';
-const bounds=[6.7935,47.5055,6.8065,47.5135],size=41,heights=[];
+const campus=process.argv.includes('--campus');
+const bounds=campus?[6.798,47.4915,6.81,47.4985]:[6.7935,47.5055,6.8065,47.5135],size=41,heights=[];
 function get(url){return JSON.parse(execFileSync('curl',['-fsS','--retry','2','--max-time','60',url],{maxBuffer:20*1024*1024}).toString());}
 const coordinates=[];
 for(let y=0;y<size;y++)for(let x=0;x<size;x++)coordinates.push([bounds[0]+x/(size-1)*(bounds[2]-bounds[0]),bounds[1]+y/(size-1)*(bounds[3]-bounds[1])]);
@@ -17,5 +18,5 @@ const datum=Math.floor(Math.min(...heights))-1;
 function trim(value){return Array.isArray(value[0])?value.map(trim):value.slice(0,2).map(v=>Number(v.toFixed(7)));}
 const features=buildings.features.filter(f=>f.properties.etat_de_l_objet==='En service'&&Number(f.properties.hauteur)>0).map((f,i)=>({type:'Feature',id:i,properties:{render_height:Number(f.properties.hauteur),render_min_height:0,ground:Number(f.properties.altitude_minimale_sol),sourceId:f.properties.cleabs,roof:f.properties.materiaux_de_la_toiture},geometry:{type:f.geometry.type,coordinates:trim(f.geometry.coordinates)}}));
 mkdirSync('apps/web/public/city',{recursive:true});
-writeFileSync('apps/web/public/city/montbeliard.json',JSON.stringify({version:1,generated:new Date().toISOString(),bounds,size,datum,heights,buildings:{type:'FeatureCollection',features},attribution:'© IGN BD TOPO / RGE ALTI — Licence Ouverte 2.0',terrainResource:'ign_rge_alti_wld'}));
+writeFileSync(`apps/web/public/city/${campus?'campus-portes-du-jura':'montbeliard'}.json`,JSON.stringify({version:1,generated:new Date().toISOString(),bounds,size,datum,heights,buildings:{type:'FeatureCollection',features},attribution:'© IGN BD TOPO / RGE ALTI — Licence Ouverte 2.0',terrainResource:'ign_rge_alti_wld'}));
 console.log(`Saved ${features.length} buildings; terrain datum ${datum} m`);

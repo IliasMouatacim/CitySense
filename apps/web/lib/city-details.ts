@@ -8,7 +8,7 @@ import {loadCityModel} from './city-model';
 import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
 
 export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean;routeCoordinates?:number[][]};
-export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean};
+export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean;campusBuildings?:number;campus?:boolean};
 type Point=[number,number];
 type Wall={a:Point;b:Point;normal:Point;length:number;height:number;base:number;variant:number};
 type Batch={positions:number[];colors:number[];uvs:number[]};
@@ -115,17 +115,19 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     timer=undefined;if(disposed||!renderer)return;
     const center:[number,number]=options.walking&&walkPosition?walkPosition:[map.getCenter().lng,map.getCenter().lat];
     if(options.dimensional&&map.getZoom()>=15.5)requestPhoto(center);
-    const pois=readCityPois(map.querySourceFeatures('openmaptiles',{sourceLayer:'poi'}),center);
+    const city=getCityWorld(),campus=!!city?.campus&&center[0]>=city.campus.bounds[0]&&center[0]<=city.campus.bounds[2]&&center[1]>=city.campus.bounds[1]&&center[1]<=city.campus.bounds[3];
+    const campusPois=(city?.campus?.pois||[]).map(p=>({id:'campus:'+p.id,geometry:{type:'Point',coordinates:p.coordinates},properties:{...p.tags,class:p.tags.amenity||p.tags.building||p.tags.office}}));
+    const pois=readCityPois([...campusPois,...map.querySourceFeatures('openmaptiles',{sourceLayer:'poi'})],center).filter((p,i,all)=>!all.slice(0,i).some(q=>q.name===p.name&&metersBetween(q.coordinates,p.coordinates)<60));
     if(!options.dimensional||map.getZoom()<15.5){if(scene.children.length)clear();lastCenter=undefined;onStatus({buildings:0,windows:0,signs:0,pois,street:''});return;}
     const features=cityBuildingFeatures(map);
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),facades=batch(),referenceFacades=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0;
-    const city=getCityWorld();
+    const walls:Wall[]=[],details=batch(),facades=batch(),referenceFacades=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0;
     scene.add(new AmbientLight(options.mood==='night'?'#9db5d0':'#fff4dd',1.05));const sun=new DirectionalLight('#fff5df',1.5);sun.position.set(-100,-100,300);scene.add(sun);
-    if(city?.streets&&!cityModel){
+    if(city?.streets){
       for(const road of city.streets.roads){
+        if(cityModel&&!campus)continue;
         const tags=road.tags,kind=tags.highway;if(['motorway','motorway_link','trunk','trunk_link','steps','construction','proposed'].includes(kind)||tags.tunnel==='yes')continue;
         if(!road.coordinates.some(p=>metersBetween(center,p)<300))continue;
         const pedestrian=['footway','pedestrian','path','cycleway','living_street'].includes(kind),lanes=Number(tags.lanes),mappedWidth=Number.parseFloat(tags.width||'');
@@ -149,14 +151,36 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         }
       }
       for(const object of city.streets.objects){
+        if(cityModel&&!campus)continue;
         if(metersBetween(center,object.coordinates)>260)continue;const p=local(object.coordinates),ground=terrainHeight(...object.coordinates)??NaN;if(!Number.isFinite(ground))continue;
         function box(x:number,y:number,z:number,w:number,d:number,h:number,color:string){const a=[p[0]+x-w/2,p[1]+y-d/2,ground+z],b=[a[0]+w,a[1],a[2]],c=[a[0]+w,a[1]+d,a[2]],e=[a[0],a[1]+d,a[2]],top=(v:number[])=>[v[0],v[1],v[2]+h];quad(details,a,b,top(b),top(a),color);quad(details,b,c,top(c),top(b),color);quad(details,c,e,top(e),top(c),color);quad(details,e,a,top(a),top(e),color);quad(details,top(a),top(b),top(c),top(e),color);}
         if(object.tags.natural==='tree'){
           const height=Math.max(3,Math.min(18,Number.parseFloat(object.tags.height||'')||7));box(0,0,0,.25,.25,height*.7,'#77634b');
-          const rgb=tint('#55754b');for(let i=0;i<10;i++){const a=i*Math.PI/5,b=(i+1)*Math.PI/5,r=height*.25;triangle(details,[p[0]+Math.cos(a)*r,p[1]+Math.sin(a)*r,ground+height*.45],[p[0]+Math.cos(b)*r,p[1]+Math.sin(b)*r,ground+height*.45],[p[0],p[1],ground+height],rgb);}
+          const slices=metersBetween(center,object.coordinates)<80?12:8,rings=6;
+          const leaf=['#58784e','#607f51','#4d714a'][object.id%3];
+          // Rounded crowns share one batch. Positions/heights follow mapped
+          // data; foliage shape and unrecorded dimensions remain illustrative.
+          const vertex=(u:number,v:number)=>{const phi=Math.PI*v/rings,theta=2*Math.PI*u/slices,r=height*.27*Math.sin(phi);return [p[0]+Math.cos(theta)*r,p[1]+Math.sin(theta)*r,ground+height*.7+height*.3*Math.cos(phi)];};
+          for(let row=0;row<rings;row++)for(let col=0;col<slices;col++)quad(details,vertex(col,row),vertex(col+1,row),vertex(col+1,row+1),vertex(col,row+1),leaf,.7+.3*Math.max(0,Math.cos(2*Math.PI*(col+.5)/slices)));
         }else if(object.tags.highway==='street_lamp'){box(0,0,0,.12,.12,5,'#5b6465');box(.4,0,4.9,.9,.22,.12,'#444d50');box(.7,0,4.8,.4,.3,.12,options.mood==='night'?'#ffe9a6':'#bec7bf');}
         else if(object.tags.amenity==='bench'){box(0,0,.4,1.6,.5,.1,'#93704e');box(0,.22,.5,1.6,.08,.55,'#93704e');box(-.55,0,0,.08,.45,.4,'#525b55');box(.55,0,0,.08,.45,.4,'#525b55');}
+        else if(object.tags.amenity==='bicycle_parking'){
+          // Locations and capacities are mapped; the steel stands are illustrative.
+          const stands=Math.max(1,Math.min(8,Math.ceil((Number(object.tags.capacity)||4)/2)));
+          for(let i=0;i<stands;i++){const x=(i-(stands-1)/2)*.75;box(x,-.3,0,.045,.045,.75,'#687778');box(x,.3,0,.045,.045,.75,'#687778');box(x,0,.73,.045,.64,.045,'#687778');}
+        }else if(object.tags.amenity==='waste_basket'){box(0,0,0,.4,.4,.72,'#52635e');box(0,0,.72,.44,.44,.05,'#394a45');}
+        else if(object.tags.highway==='bus_stop'&&object.tags.shelter==='yes'){
+          for(const x of [-1.4,1.4])box(x,.5,0,.07,.07,2.3,'#58696a');
+          box(0,0,2.3,3.1,1.4,.12,'#657477');box(0,.52,.45,2.8,.035,1.75,'#a1b8b7');
+          if(object.tags.bench==='yes'){box(0,.2,.45,2.3,.4,.08,'#63706d');for(const x of [-.8,.8])box(x,.2,0,.06,.3,.45,'#586562');}
+        }
       }
+    }
+    if(campus&&city?.campus&&!options.photo)for(const area of city.campus.areas){
+      if(!area.coordinates.some(p=>metersBetween(center,p)<280))continue;
+      const ring=area.coordinates.slice(0,-1),points=ring.map(p=>[...local(p),(terrainHeight(...p)??0)+.035]);
+      const green=area.tags.landuse==='grass'||area.tags.landuse==='flowerbed'||area.tags.leisure==='garden',hex=green?'#849d70':area.tags.amenity==='parking'?'#858b8a':'#bcb9ab';
+      for(const indices of ShapeUtils.triangulateShape(points.map(p=>new Vector2(p[0],p[1])),[]))triangle(details,points[indices[0]],points[indices[1]],points[indices[2]],tint(hex));
     }
     const routeCoordinates=options.routeCoordinates||[];let routeSegments=0;
     for(let i=1;i<routeCoordinates.length;i++){
@@ -168,11 +192,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         routeSegments++;
       }
     }
-    if(city){
-      const [w,s,e,n]=city.bounds,grid:number[][]=[];
-      for(let y=0;y<city.size;y++)for(let x=0;x<city.size;x++){const lon=w+x/(city.size-1)*(e-w),lat=s+y/(city.size-1)*(n-s);grid.push([...local([lon,lat]),terrainHeight(lon,lat)!]);}
-      for(let y=0;y<city.size-1;y++)for(let x=0;x<city.size-1;x++){
-        const a=y*city.size+x,b=a+1,c=a+city.size,d=c+1;
+    for(const tile of city?[city,...city.terrainPatches||[]]:[]){
+      const [w,s,e,n]=tile.bounds,grid:number[][]=[];
+      for(let y=0;y<tile.size;y++)for(let x=0;x<tile.size;x++){const lon=w+x/(tile.size-1)*(e-w),lat=s+y/(tile.size-1)*(n-s);grid.push([...local([lon,lat]),terrainHeight(lon,lat)!]);}
+      for(let y=0;y<tile.size-1;y++)for(let x=0;x<tile.size-1;x++){
+        const a=y*tile.size+x,b=a+1,c=a+tile.size,d=c+1;
         for(const indices of [[a,b,c],[b,d,c]]){const points=indices.map(i=>grid[i]);const uv=photoBounds?points.map(p=>[(origin.x+p[0]*unit-photoBounds!.west)/(photoBounds!.east-photoBounds!.west),1-(origin.y-p[1]*unit-photoBounds!.north)/(photoBounds!.south-photoBounds!.north)]):[];
           if(options.photo&&photoImage&&uv.length&&uv.every(p=>p.every(v=>v>=0&&v<=1)))triangle(photoTerrain,points[0],points[1],points[2],tint('#ffffff'),uv);
           else triangle(terrain,points[0],points[1],points[2],tint('#777970'));
@@ -186,11 +210,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(!options.enabled)break;
         if(count>=(options.walking?100:160))break;
         const p=feature.properties||{};if(p.hide_3d)continue;
+        const campusBuilding=p.region==='campus';if(typeof p.campusName==='string')campusBuildings++;
         const profile=facadeProfile(p.sourceId);if(profile){referenceBuildings++;for(const face of profile.photoFaces){const projection=facadeReferences.projections[face.projection];requestFacadeTexture(projection.image||facadeReferences.source.image);}}
         const {height,base}=mappedHeight(p);if(height<=base)continue;
         const rings=polygon.map(r=>r.slice(0,-1).map(local)).filter(r=>r.length>=3);if(!rings.length||rings[0].length>100)continue;
         const variant=stableVariant(undefined,polygon[0]);count++;
-        const facade=typeof p.colour==='string'&&/^#[0-9a-f]{6}$/i.test(p.colour)?p.colour:['#e1c5a4','#e8d9b8','#c9b4a8','#d6b6a1','#d1d2bb','#d7bc83','#bdd0c6','#d5c8bb'][variant%8];
+        const facade=campusBuilding?'#c2c6c3':typeof p.colour==='string'&&/^#[0-9a-f]{6}$/i.test(p.colour)?p.colour:['#e1c5a4','#e8d9b8','#c9b4a8','#d6b6a1','#d1d2bb','#d7bc83','#bdd0c6','#d5c8bb'][variant%8];
         const outer=rings[0].map(p=>new Vector2(...p)),holes=rings.slice(1).map(r=>r.map(p=>new Vector2(...p)));
         const vertices=rings.flat();const roofColor=roofColors[variant%roofColors.length];
         for(const indices of ShapeUtils.triangulateShape(outer,holes)){
@@ -205,8 +230,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             const a=ring[i],b=ring[(i+1)%ring.length],length=Math.hypot(b[0]-a[0],b[1]-a[1]);if(length<.5)continue;
             const flip=(area>0?1:-1)*(ringIndex===0?1:-1);
             const normal:Point=[(b[1]-a[1])/length*flip,-(b[0]-a[0])/length*flip];
-            const wall:Wall={a,b,normal,length,height,base,variant};if(ringIndex===0&&!profile)walls.push(wall);
-            panel(profile?referenceFacades:facades,wall,length/2,length,base,height,facade,.025,[[0,0],[length/2,0],[length/2,(height-base)/2],[0,(height-base)/2]]);
+            const wall:Wall={a,b,normal,length,height,base,variant};if(ringIndex===0&&!profile&&!campusBuilding)walls.push(wall);
+            panel(profile||campusBuilding?referenceFacades:facades,wall,length/2,length,base,height,facade,.025,[[0,0],[length/2,0],[length/2,(height-base)/2],[0,(height-base)/2]]);
+            if(campusBuilding)continue; // No invented historical windows on undocumented university walls.
             if(profile){
               const ga=polygon[ringIndex][i],gb=polygon[ringIndex][i+1];
               const observed=ringIndex===0&&profile.observedWalls.some(edge=>matchesFacadeEdge(edge,ga,gb));
@@ -427,7 +453,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(d<closest&&d<65){closest=d;street=String(name);}
       }
     }
-    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments,modelMeshes:cityModel?.group.children.length||0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0});map.triggerRepaint();
+    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments,modelMeshes:cityModel?.group.children.length||0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0,campusBuildings,campus});map.triggerRepaint();
   }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={

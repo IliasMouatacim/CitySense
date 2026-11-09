@@ -127,7 +127,7 @@ Select **Marcher dans la ville** from the map's viewpoint tray. The mode uses a 
 - **Escape / Quitter la marche**: exit, release mouse capture, and restore the previous aerial camera and 2D/3D mode.
 - **Reset**: return to the starting street and direction. Movement stops when the window loses focus or the tab is hidden.
 
-IGN buildings, sampled terrain, and simplified mapped street objects have Rapier colliders. Water checks and mapped bridge exceptions add source-map constraints. Detailed walking stays within the center-city terrain grid. This is an approximate virtual reconstruction with limited photo-based facade coverage; accessibility and real-world passage conditions remain unverified. Walking uses client-side data and adds no hosted game server or paid service.
+IGN buildings, sampled terrain, and simplified mapped street objects have Rapier colliders. Water checks and mapped bridge exceptions add source-map constraints. Detailed walking covers separate centre-city and **Portes du Jura university campus** terrain grids; use **Campus universitaire** to visit the latter. See [campus coverage and sources](docs/CAMPUS.md) for IUT/STGI/library locations, mapped facilities and the limits of unverified facades. This is an approximate virtual reconstruction with limited photo-based facade coverage; accessibility and real-world passage conditions remain unverified. Walking uses client-side data and adds no hosted game server or paid service.
 
 `pnpm test:movement` checks movement distances, normalized diagonals, building clearance/courtyards, water/bridges and pilot bounds. Opt-in live browser tests additionally exercise keyboard movement, held on-screen controls, drag-look, desktop pointer lock, Escape and camera restoration on desktop/mobile.
 
