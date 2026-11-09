@@ -1,0 +1,482 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-09",
+  "method": "Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.",
+  "sourceImagesRedistributed": false,
+  "sources": [
+    {
+      "id": "stgi-west",
+      "institution": "UFR STGI · Université Marie et Louis Pasteur",
+      "url": "https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe1.jpg",
+      "published": "2021-02",
+      "captureDate": null
+    },
+    {
+      "id": "stgi-court",
+      "institution": "UFR STGI · Université Marie et Louis Pasteur",
+      "url": "https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe2.jpg",
+      "published": "2021-02",
+      "captureDate": null
+    },
+    {
+      "id": "stgi-colour",
+      "institution": "UFR STGI · Université Marie et Louis Pasteur",
+      "url": "https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe3.jpg",
+      "published": "2021-02",
+      "captureDate": null
+    },
+    {
+      "id": "library",
+      "institution": "UFR STGI · Bibliothèque universitaire",
+      "url": "https://stgi.umlp.fr/wp-content/uploads/2021/06/BU-MONTBELIARD.jpg",
+      "published": "2021-06",
+      "captureDate": null
+    },
+    {
+      "id": "utbm",
+      "institution": "Université de Technologie de Belfort-Montbéliard",
+      "url": "https://www.utbm.fr/wp-content/uploads/2015/04/site-utbm-montbeliard.jpg",
+      "published": "2015-04",
+      "captureDate": null
+    },
+    {
+      "id": "plan",
+      "institution": "UFR STGI · Plan du campus 2025",
+      "url": "https://stgi.umlp.fr/wp-content/uploads/2025/07/2025_Plan-Campus_Montbeliard.jpg",
+      "published": "2025-07",
+      "captureDate": null
+    },
+    {
+      "id": "iut-plan",
+      "institution": "IUT Nord Franche-Comté · Plan Montbéliard 2026",
+      "url": "https://www.iut-nfc.univ-fcomte.fr/wp-content/uploads/2026/04/SITE-MONTBELIARD.png",
+      "published": "2026-04",
+      "captureDate": null
+    }
+  ],
+  "buildings": [
+    {
+      "buildingId": "BATIMENT0000000223563366",
+      "label": "UFR STGI · aile sud",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-west",
+        "stgi-court",
+        "stgi-colour",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8041725,
+            47.4952197
+          ],
+          "b": [
+            6.804268,
+            47.4949922
+          ],
+          "kind": "ribbon",
+          "floors": 3,
+          "label": "LEA  SVE"
+        },
+        {
+          "a": [
+            6.8044189,
+            47.4950197
+          ],
+          "b": [
+            6.8043803,
+            47.495112
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8043558,
+            47.4951605
+          ],
+          "b": [
+            6.8043194,
+            47.4952473
+          ],
+          "kind": "frame",
+          "floors": 3
+        }
+      ],
+      "notes": "Three observed storeys, ribbon glazing, concrete reveals and coloured transoms. Opening positions, dimensions and assignment to IGN walls are estimates. Stair projections remain plain."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563368",
+      "label": "UFR STGI · aile nord",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-west",
+        "stgi-colour",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8041168,
+            47.4953531
+          ],
+          "b": [
+            6.8040611,
+            47.4954856
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.804208,
+            47.4955123
+          ],
+          "b": [
+            6.8042467,
+            47.4954218
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8042624,
+            47.4953808
+          ],
+          "b": [
+            6.8042805,
+            47.495336
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        }
+      ],
+      "notes": "Ribbon windows and red/green/yellow trim follow the institutional views. Small IGN jogs and hidden faces are simplified."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563452",
+      "label": "UFR STGI · pavillon est",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-court",
+        "stgi-colour",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8046458,
+            47.4950682
+          ],
+          "b": [
+            6.8045887,
+            47.4952007
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8045631,
+            47.4951961
+          ],
+          "b": [
+            6.8045368,
+            47.4952565
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8045624,
+            47.495261
+          ],
+          "b": [
+            6.8045477,
+            47.4952976
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8045477,
+            47.4952976
+          ],
+          "b": [
+            6.8047919,
+            47.4953464
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8047919,
+            47.4953464
+          ],
+          "b": [
+            6.804882,
+            47.4951361
+          ],
+          "kind": "ribbon",
+          "floors": 3,
+          "accent": true
+        }
+      ],
+      "notes": "Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. Their registration to this approximate envelope is not a surveyed reconstruction."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563705",
+      "label": "UFR STGI · pavillon nord-est",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-court",
+        "stgi-colour",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8044484,
+            47.4954901
+          ],
+          "b": [
+            6.8044746,
+            47.4954288
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8045016,
+            47.4954343
+          ],
+          "b": [
+            6.8045186,
+            47.4953922
+          ],
+          "kind": "frame",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8045186,
+            47.4953922
+          ],
+          "b": [
+            6.8046629,
+            47.4954209
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8046629,
+            47.4954209
+          ],
+          "b": [
+            6.8047654,
+            47.4954418
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        },
+        {
+          "a": [
+            6.8047654,
+            47.4954418
+          ],
+          "b": [
+            6.8047081,
+            47.4955708
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        }
+      ],
+      "notes": "The courtyard architectural language is reconstructed from institutional photographs. Precise departmental boundaries and obscured openings are unverified."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563364",
+      "label": "Bibliothèque universitaire",
+      "wallColor": "#aaa99e",
+      "sourceIds": [
+        "library",
+        "stgi-court",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8034359,
+            47.4954078
+          ],
+          "b": [
+            6.8034052,
+            47.4954809
+          ],
+          "kind": "libraryGlass"
+        },
+        {
+          "a": [
+            6.8039878,
+            47.4955952
+          ],
+          "b": [
+            6.8039652,
+            47.4956509
+          ],
+          "kind": "libraryGlass"
+        },
+        {
+          "a": [
+            6.8040272,
+            47.4956624
+          ],
+          "b": [
+            6.8040485,
+            47.4956068
+          ],
+          "kind": "libraryGlass"
+        },
+        {
+          "a": [
+            6.8041975,
+            47.4955523
+          ],
+          "b": [
+            6.8040789,
+            47.4955301
+          ],
+          "kind": "libraryStone"
+        },
+        {
+          "a": [
+            6.8040183,
+            47.4955185
+          ],
+          "b": [
+            6.8034359,
+            47.4954078
+          ],
+          "kind": "libraryStone"
+        }
+      ],
+      "notes": "Observed grey concrete/brick courses, narrow ribbon windows, glazed west end and stair bay. Interior space and the undercroft are not accessible. Dimensions are estimated."
+    },
+    {
+      "buildingId": "BATIMENT0000000292211747",
+      "label": "UTBM · façade du Cours Louis Leprince-Ringuet",
+      "wallColor": "#c4c1b4",
+      "sourceIds": [
+        "utbm",
+        "library",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8045412,
+            47.4960476
+          ],
+          "b": [
+            6.8054468,
+            47.4961595
+          ],
+          "kind": "timber",
+          "label": "UTBM"
+        },
+        {
+          "a": [
+            6.8045101,
+            47.4961703
+          ],
+          "b": [
+            6.8045412,
+            47.4960476
+          ],
+          "kind": "concrete"
+        }
+      ],
+      "notes": "The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The reference was published in 2015; present-day alterations are unverified."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563543",
+      "label": "IUT · Mesures physiques · côté cour",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-court",
+        "iut-plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8036407,
+            47.4954083
+          ],
+          "b": [
+            6.8037064,
+            47.4951727
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        }
+      ],
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563537",
+      "label": "IUT · Mesures physiques · côté cour",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-court",
+        "iut-plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8037963,
+            47.494903
+          ],
+          "b": [
+            6.8037393,
+            47.4950374
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        }
+      ],
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563536",
+      "label": "IUT · Mesures physiques · côté cour",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-court",
+        "iut-plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8038165,
+            47.4949069
+          ],
+          "b": [
+            6.8037596,
+            47.4950412
+          ],
+          "kind": "ribbon",
+          "floors": 3
+        }
+      ],
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import type {Map,GeoJSONSource} from 'maplibre-gl';
 import {facadeProfile} from './facade-references';
 import {insidePolygon} from './walk-geometry';
+import {campusProfile} from './campus-references';
 type Polygon={type:'Polygon';coordinates:number[][][]};
 type MultiPolygon={type:'MultiPolygon';coordinates:number[][][][]};
 export type StreetWay={id:number;coordinates:[number,number][];tags:Record<string,string>};
@@ -56,7 +57,8 @@ export function loadCityWorld(){
    const p=rings[0][0];const height=Number(feature.properties?.render_height)||8;
    const ground=terrainHeight(p[0],p[1],data)??0;
    const profile=facadeProfile(feature.properties?.sourceId);
-   feature.properties={...feature.properties,...(feature.properties.region==='campus'?{colour:'#c2c6c3'}:{}),...(profile?{colour:profile.wallColor}:{}),render_min_height:ground,render_height:ground+height};
+   const university=campusProfile(feature.properties?.sourceId);
+   feature.properties={...feature.properties,...(feature.properties.region==='campus'?{colour:university?.wallColor||'#c2c6c3'}:{}),...(profile?{colour:profile.wallColor}:{}),render_min_height:ground,render_height:ground+height};
   }
   world=data;return data;
  })().catch(error=>{pending=undefined;throw error;});

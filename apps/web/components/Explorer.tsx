@@ -4,6 +4,7 @@ import {CITY_VIEWS,styleCity,type SceneMood} from '../lib/city-scene';
 import WalkingMode from './WalkingMode';
 import CityDetails from './CityDetails';
 import {installCityWorld} from '../lib/city-world';
+import {CAMPUS_VISITS} from '../lib/campus-visits';
 import type {Position} from '../lib/walk-geometry';
 import SavedPlaces from './SavedPlaces';
 import {useSavedPlaces} from './useSavedPlaces';
@@ -16,13 +17,15 @@ type Route={engine:string;attribution?:string;distanceMeters:number;durationSeco
 export default function Explorer(){
  const savedPlaces=useSavedPlaces();
  const [immersive,setImmersive]=useState(false),[walking,setWalking]=useState(false);
+ const [campusVisit,setCampusVisit]=useState('stgi');
  const walkingRef=useRef(false),walkStart=useRef<Position>([6.7982,47.5102]),walkLookAt=useRef<Position|undefined>(undefined),beforeWalk=useRef({immersive:false,tilted:true,scale:1});walkingRef.current=walking;
  function leaveWalk(){setWalking(false);setImmersive(beforeWalk.current.immersive);setTilted(beforeWalk.current.tilted);setHeightScale(beforeWalk.current.scale);}
  function enterWalk(){
   const m=map.current;if(!m||!mapReady)return;m.stop();beforeWalk.current={immersive,tilted,scale:heightScale};
   const reference=!selected&&viewId==='panoramax',campus=!selected&&viewId==='campus';
-  walkStart.current=selected?.coordinates||(reference?CITY_VIEWS.find(v=>v.id==='panoramax')!.center:campus?[6.80340,47.49521]:[m.getCenter().lng,m.getCenter().lat]);
-  walkLookAt.current=reference?[6.79812,47.51174]:campus?[6.8032382,47.4956232]:undefined;
+  const sector=CAMPUS_VISITS.find(s=>s.id===campusVisit)!;
+  walkStart.current=selected?.coordinates||(reference?CITY_VIEWS.find(v=>v.id==='panoramax')!.center:campus?sector.start:[m.getCenter().lng,m.getCenter().lat]);
+  walkLookAt.current=reference?[6.79812,47.51174]:campus?sector.lookAt:undefined;
   setSelected(null);setTour(false);setHeightScale(1);setTilted(true);setImmersive(true);setWalking(true);
  }
  const [mood,setMood]=useState<SceneMood>('day'),[heightScale,setHeightScale]=useState(1),[mapReady,setMapReady]=useState(false),[tour,setTour]=useState(false),[reducedMotion,setReducedMotion]=useState(false),[camera,setCamera]=useState({pitch:62,bearing:20,fov:36.87}),[viewId,setViewId]=useState('panoramax');
@@ -63,6 +66,7 @@ export default function Explorer(){
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('visibilitychange',hide);};
  },[tour,mapReady,reducedMotion]);
  function visitView(id:string){const preset=CITY_VIEWS.find(v=>v.id===id);if(!preset)return;setTour(false);setViewId(id);setTilted(true);map.current?.flyTo({center:preset.center,zoom:preset.zoom,pitch:preset.pitch,bearing:preset.bearing,duration:reducedMotion?0:1800,essential:false});}
+ function visitCampus(id:string){const sector=CAMPUS_VISITS.find(s=>s.id===id);if(!sector)return;setCampusVisit(id);setViewId('campus');setTour(false);setTilted(true);map.current?.flyTo({center:sector.center,zoom:18,pitch:62,bearing:15,duration:reducedMotion?0:1000,essential:false});}
  useEffect(()=>{
   if(query.trim().length<2){setResults([]);setLoading(false);return;}
   const controller=new AbortController();setLoading(true);setSearchError('');
@@ -118,8 +122,8 @@ export default function Explorer(){
    </section>
    <div className="city-views" aria-label="Points de vue"><span className="views-label">PRENDRE DE LA HAUTEUR</span><div>{CITY_VIEWS.map(v=><button key={v.id} aria-pressed={viewId===v.id&&tilted} disabled={!mapReady} onClick={()=>visitView(v.id)}><MapPin size={14}/>{v.name}</button>)}</div><button className="tour-toggle" disabled={!mapReady||reducedMotion} aria-pressed={tour} onClick={()=>{if(!tilted){setTilted(true);map.current?.easeTo({pitch:62,duration:600});}setTour(!tour);}}>{tour?<Pause size={15}/>:<Play size={15}/>} {tour?'Arrêter la visite':'Visite orbitale'}</button><button className="walk-start" disabled={!mapReady} onClick={enterWalk}><Footprints size={16}/> Marcher dans la ville</button>{reducedMotion&&<small>Animations réduites activées</small>}</div>
 
-   {mapReady&&map.current&&<CityDetails map={map.current} mood={mood} scale={heightScale} dimensional={tilted} walking={walking} routeCoordinates={route?.geometry.coordinates}/>}
-    {walking&&map.current&&<WalkingMode map={map.current} start={walkStart.current} lookAt={walkLookAt.current} lookPitch={viewId==='campus'?87:108} locationName={viewId==='campus'?'Sur le campus Portes du Jura':undefined} onExit={leaveWalk}/>}
+   {mapReady&&map.current&&<CityDetails map={map.current} mood={mood} scale={heightScale} dimensional={tilted} walking={walking} routeCoordinates={route?.geometry.coordinates} campusVisit={campusVisit} onCampusVisit={visitCampus}/>}
+    {walking&&map.current&&<WalkingMode map={map.current} start={walkStart.current} lookAt={walkLookAt.current} lookPitch={viewId==='campus'?CAMPUS_VISITS.find(s=>s.id===campusVisit)!.pitch:108} locationName={viewId==='campus'?'Sur le campus Portes du Jura':undefined} onExit={leaveWalk}/>}
    {mapError&&<div role="status" className="map-error">{mapError}</div>}
    <div className="map-caption"><span>47°30′ N &nbsp; 6°48′ E</span><strong>{immersive?'Exploration immersive · Échap pour revenir':'Montbéliard, sous un autre angle.'}</strong></div>
    {selected&&<article className="detail"><button className="close" onClick={()=>setSelected(null)} aria-label="Fermer les détails"><X size={18}/></button><span className="eyebrow">{selected.category}</span><h2>{selected.name}</h2><p>{selected.category==='Adresse'?'Adresse IGN · Zone pilote de Montbéliard':'Montbéliard · Position indicative du répertoire pilote'}</p><button className="save-place" disabled={!savedPlaces.ready} aria-pressed={savedPlaces.saved.some(p=>p.id===selected.id)} onClick={()=>savedPlaces.toggle(selected)}>{savedPlaces.saved.some(p=>p.id===selected.id)?'Retirer des favoris':'Enregistrer ce lieu'}</button><div className="uncertainty"><Accessibility size={18}/> Accessibilité non vérifiée</div><section className="nearby" aria-label="Lieux à proximité"><h3>À proximité · 800 m</h3><p role="status">{nearbyStatus}</p>{nearby.slice(0,3).map(p=><button key={p.id} onClick={()=>choose(p)}><span>{p.name}</span><small>{p.distanceMeters} m</small></button>)}{!nearbyStatus&&!nearby.length&&<p>Aucun autre lieu du pilote dans ce rayon.</p>}<small>Distances à vol d’oiseau, sans itinéraire.</small></section><section className="routing" aria-label="Itinéraire"><h3>Itinéraire vers ce lieu</h3><label>Départ<select aria-label="Lieu de départ" value={originId} onChange={e=>setOriginId(e.target.value)}><option value="">Choisir un départ</option>{places.filter(p=>p.id!==selected.id).map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Mode<select aria-label="Mode de déplacement" value={mode} onChange={e=>setMode(e.target.value)}><option value="pedestrian">À pied</option><option value="bicycle">À vélo</option></select></label><p role="status">{routeStatus}</p>{route&&<><strong>{route.distanceMeters} m · {Math.ceil(route.durationSeconds/60)} min</strong><ol>{route.instructions.map((step,i)=><li key={i}>{step.text} <small>({step.distanceMeters} m)</small></li>)}</ol><small>{route.attribution || `${route.engine} · © OpenStreetMap contributors`}</small></>}<p className="detail-note">Accessibilité du trajet non vérifiée. Les conditions réelles peuvent différer des données cartographiques.</p></section></article>}
