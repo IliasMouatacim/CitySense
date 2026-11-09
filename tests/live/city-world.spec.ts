@@ -9,7 +9,7 @@ test('walking keeps its camera above IGN terrain rather than clamping to sea lev
  await expect.poll(async()=>Number(await hud.getAttribute('data-ground-elevation'))).toBeGreaterThan(1);
  await expect.poll(async()=>{
   const g=Number(await hud.getAttribute('data-ground-elevation')),target=Number(await hud.getAttribute('data-camera-target')),pitch=Number(await hud.getAttribute('data-look-pitch'));
-  return Math.abs(target-(g+1.8-30*Math.cos(pitch*Math.PI/180)));
+  return Math.abs(target-(Number(await hud.getAttribute('data-eye-elevation'))-30*Math.cos(pitch*Math.PI/180)));
  }).toBeLessThan(.03);
  await page.keyboard.down('w');try{await expect.poll(async()=>Number(await hud.getAttribute('data-meters')),{timeout:15000}).toBeGreaterThan(.3);}finally{await page.keyboard.up('w');}
  await page.screenshot({path:`test-results/ign-grounded-${test.info().project.name}.png`,fullPage:true});

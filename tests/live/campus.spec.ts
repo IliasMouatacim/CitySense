@@ -26,7 +26,7 @@ test('campus terrain, named departments and grounded walking work outside the hi
  await expect(details).toHaveAttribute('data-campus','true');
  await expect(hud).toContainText('Sur le campus Portes du Jura');
  const ground=Number(await hud.getAttribute('data-ground-elevation')),pitch=Number(await hud.getAttribute('data-look-pitch')),target=Number(await hud.getAttribute('data-camera-target'));
- expect(Math.abs(target-(ground+1.8-30*Math.cos(pitch*Math.PI/180)))).toBeLessThan(.1);
+ expect(Math.abs(target-(ground+Number(await hud.getAttribute('data-eye-height'))-30*Math.cos(pitch*Math.PI/180)))).toBeLessThan(.1);
  await expect(page.locator('.walk-error')).toHaveCount(0);
  if(test.info().project.name==='desktop'){
   await page.keyboard.down('KeyW');
@@ -47,6 +47,8 @@ test('the UTBM, library and IUT sectors open their documented facades in grounde
   const details=page.locator('.architecture-panel');await expect.poll(async()=>Number(await details.getAttribute('data-campus-facades'))).toBeGreaterThan(15);
   await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
   const hud=page.locator('.walk-hud');await expect(hud).toHaveAttribute('data-lat',/47\.49/,{timeout:45000});
+  await expect.poll(async()=>Number(await details.getAttribute('data-campus-ground'))).toBeGreaterThan(0);
+  await expect(details).toHaveAttribute('data-photo-ground','0');
   const visit=CAMPUS_VISITS.find(s=>s.id===id)!,lon=Number(await hud.getAttribute('data-lon')),lat=Number(await hud.getAttribute('data-lat'));
   expect(Math.hypot((lon-visit.start[0])*75400,(lat-visit.start[1])*111319)).toBeLessThan(25);
   const heading=(Math.atan2((visit.lookAt[0]-lon)*Math.cos(lat*Math.PI/180),visit.lookAt[1]-lat)*180/Math.PI+360)%360;

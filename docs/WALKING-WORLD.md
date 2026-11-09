@@ -18,7 +18,7 @@ Nearby facades also have solid window surrounds and projecting sills, door frame
 
 Rapier is loaded when entering walking mode. Its world contains the sampled terrain mesh, IGN building walls, and simplified colliders for mapped benches, trees, and lamps. A capsule character controller resolves movement, with stepping, ground snapping, and slope limits. OSM water/building checks remain an additional movement constraint. Walking is bounded to the detailed terrain grid.
 
-The camera follows sampled ground at an eye height of approximately 1.8 m. MapLibre's center-to-ground clamping is disabled during walking; otherwise its render loop resets the camera target to zero even with a custom elevated terrain mesh. Exiting restores the prior clamping mode and camera. Terrain and physics are approximate and are not evidence of real-world route accessibility.
+The camera follows the visible ground at an eye height of 1.65 m, including the campus's slab and sidewalk offsets. Campus starts look horizontally, with a subtle 2.2 cm distance-driven footfall that settles when stopped and is disabled for reduced-motion users. Walk/run speeds are 2.8 / 5.5 m/s for exploration. MapLibre's center-to-ground clamping is disabled during walking; otherwise its render loop resets the camera target to zero even with a custom elevated terrain mesh. Exiting restores the prior clamping mode, pixel ratio and camera. Terrain and physics are approximate and are not evidence of real-world route accessibility.
 
 ## Real street photos
 
@@ -40,7 +40,7 @@ The original JPEG, SHA-256, photo date, author, source URL, registration corresp
 
 Walking temporarily uses a 72° vertical field of view and allows looking upward to inspect upper storeys. Entering from the Panoramax viewpoint looks toward the documented tower. Exiting restores the previous camera field of view and pitch.
 
-Movement catches up for frame intervals up to 250 ms using collision-checked substeps of at most 50 ms. This preserves walking distance at 5 fps as well as 60 fps without a large step through walls; longer suspended frames remain capped. Native map symbols are hidden during walking to avoid floating city/road-shield labels over the photographed facade scene and are restored on exit. Mapped names remain available through the street HUD, business list and 3D signs.
+Movement catches up for frame intervals up to one second using collision-checked substeps of at most 50 ms. This preserves walking distance down to 1 fps without a large step through walls; longer suspended frames remain capped. Blur, hidden documents and photo-viewer pauses clear held input. Walking caps pixel density at 1.25 and can lower it in sustained slow frames, down to 0.75; leaving restores the original density. Distant campus trees use simpler crowns, and the separate town-centre GLB is not drawn while exploring the campus. Native map symbols are hidden during walking and restored on exit. Mapped names remain available through the street HUD, business list and 3D signs.
 
 ## OSM2World offline pipeline
 

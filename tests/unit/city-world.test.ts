@@ -5,6 +5,7 @@ import {loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
 import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
 import {distance,offset,advance} from '../../apps/web/lib/walk-geometry.ts';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
+import {walkingGroundHeight} from '../../apps/web/lib/walking-ground';
 
 test('IGN terrain samples, bounds and Rapier walking agree on the detailed city area',async()=>{
  const original=globalThis.fetch;
@@ -25,6 +26,15 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
   assert.ok(data.buildings.features.some(f=>String(f.properties.campusName).includes('Réseaux')));
   assert.ok(data.buildings.features.some(f=>String(f.properties.campusName).includes('STGI')));
   assert.ok(data.campus?.pois.some(p=>p.tags.short_name==='UTBM'));
+  const courtyard:[number,number]=[6.804015,47.495204];
+  assert.ok(Math.abs(walkingGroundHeight(courtyard)-terrainHeight(...courtyard)!-.12)<1e-7,'The camera stands on the visible courtyard slabs');
+  const sidewalkRoad=data.campus!.roads.find(r=>r.tags.sidewalk==='yes')!;
+  const [a,b]=sidewalkRoad.coordinates.slice(1).map((b,i)=>[sidewalkRoad.coordinates[i],b]).find(([a,b])=>terrainHeight(...a)!==null&&terrainHeight(...b)!==null)!;
+  const dx=(b[0]-a[0])*Math.cos(a[1]*Math.PI/180),dy=b[1]-a[1],length=Math.hypot(dx,dy);
+  const middle:[number,number]=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  const roadWidth=Number.parseFloat(sidewalkRoad.tags.width)||Number(sidewalkRoad.tags.lanes)*3||6;
+  const sidewalk=offset(middle,-dy/length*(roadWidth/2+.8),dx/length*(roadWidth/2+.8));
+  assert.ok(Math.abs(walkingGroundHeight(sidewalk)-terrainHeight(...sidewalk)!-.19)<1e-6,'Raised sidewalks also set the camera support height');
   assert.equal(new Set(data.buildings.features.map(f=>f.id)).size,data.buildings.features.length);
   const fixture={...data,bounds:[0,0,1,1],size:2,datum:0,heights:[0,10,20,40]};
   assert.equal(terrainHeight(.25,.25,fixture),7.5);assert.equal(terrainHeight(.75,.75,fixture),27.5);

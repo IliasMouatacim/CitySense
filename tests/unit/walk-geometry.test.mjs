@@ -1,17 +1,22 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {advance,distance,offset,insidePolygon,makeObstacle,blocked,nearestOnLine,withinPilot,walkFrame} from '../../apps/web/lib/walk-geometry.ts';
+import {WALK_SPEED,RUN_SPEED,walkBob} from '../../apps/web/lib/walk-settings.ts';
 const start=[6.8,47.51];
-test('walking covers the same distance at 60 and 5 fps while checking short collision steps',()=>{
- for(const fps of [60,5]){
+test('walking covers the same distance down to 1 fps while checking short collision steps',()=>{
+ for(const speed of [WALK_SPEED,RUN_SPEED])for(const fps of [60,5,2,1]){
   let position=start;
   for(let frame=0;frame<fps;frame++){
    const timing=walkFrame(1/fps);assert.ok(timing.step<=.05);
-   for(let step=0;step<timing.steps;step++)position=advance(position,0,1,0,1.55*timing.step);
+   for(let step=0;step<timing.steps;step++)position=advance(position,0,1,0,speed*timing.step);
   }
-  assert.ok(Math.abs(distance(start,position)-1.55)<.001);
+  assert.ok(Math.abs(distance(start,position)-speed)<.001);
  }
- const suspended=walkFrame(10);assert.equal(suspended.elapsed,.25);assert.ok(suspended.step<=.05);
+ const suspended=walkFrame(10);assert.equal(suspended.elapsed,1);assert.ok(suspended.step<=.05);
+});
+test('footfall motion stays subtle and does not accumulate vertical drift',()=>{
+ for(let d=0;d<100;d+=.03)assert.ok(Math.abs(walkBob(d))<=.022);
+ assert.ok(Math.abs(walkBob(1.4))<1e-9);
 });
 test('walking moves in meters in the camera direction without diagonal speed gain',()=>{
  const north=advance(start,0,1,0,10),east=advance(start,90,1,0,10),diagonal=advance(start,0,1,1,10);

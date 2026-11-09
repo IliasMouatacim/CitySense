@@ -14,7 +14,7 @@ Photographs have a capture date and can differ from current building footprints 
 
 ## Reliability and scope
 
-Ground-image errors automatically select the ordinary map and show a short notice. Roof-image errors retain the generated roof material. Existing routes, labels, walking, building collisions, and device-local saved places continue to use their existing sources. Mobile map height gives the new selector space without covering navigation controls.
+An initial complete ground-image outage selects the ordinary map after a five-second grace period; an individual failed tile does not disable images that loaded. Roof-image errors retain the generated roof material. Campus walking uses repeating ground materials in both modes, keeping aerial photographs on roofs and in the aerial view. Existing routes, labels, building collisions, and device-local saved places continue to use their existing sources.
 
 In walking mode, changing the image selector returns keyboard focus to the scene. Roof textures are reused across nearby geometry rebuilds, with anisotropic filtering where supported. An overlapping image reuse area avoids repeated requests when crossing a grid boundary in both directions. Photo tile events do not rebuild the walking collision geometry. These changes reduce redundant work; they do not increase the source imagery's resolution or supply street-level facade photographs.
 

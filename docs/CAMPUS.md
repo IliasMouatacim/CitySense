@@ -22,6 +22,11 @@ and pitch as well as its position.
   places. These counts include the surrounding neighbourhood, not only the
   university estate. Relations and detailed indoor layouts are not imported.
 - IGN orthophotos supply ground and roof imagery in **Photo + 3D** mode.
+  At walking height on the campus, the ground instead uses repeating surface
+  materials, including in photo mode; IGN roof images remain available. This
+  removes stretched aerial photographs and their baked building/tree shadows
+  from beneath the pedestrian camera. Unknown surfaces use a neutral aggregate
+  appearance; OSM paths, lawns, parking and courtyard areas retain mapped extents.
   A failed individual tile no longer disables images that have loaded. An initial
   complete imagery outage falls back to the vector map after a five-second grace
   period. Campus roofs without photography use a neutral mineral surface instead
@@ -36,6 +41,10 @@ and pitch as well as its position.
   concrete-slab surface in both viewing modes. Its boundary is mapped; slab size,
   material appearance and relief are estimates from the courtyard photograph.
   A muted grey tint follows the weathered outdoor paving seen in that reference.
+  Ground overlays are clipped to the terrain grid's cell diagonals, so paths,
+  markings and courtyards follow the same triangles as physics without cutting
+  across slopes. Foundations extend down to sloping ground instead of hovering
+  above it. Material appearance and foundation depth are illustrative.
 
 The campus terrain uses the historic centre's scene datum for rendering and
 Rapier collision. Independent elevation datasets must not reset that datum.
@@ -188,3 +197,14 @@ library opening proportions, library frame depth and courtyard paving tint, both
 desktop/mobile sector cases passed again. Their walking captures were inspected.
 Facade registration and opening dimensions remain estimates from the cited photos;
 unobserved elevations remain simplified.
+
+Ground/movement repair validation: production build and 22 unit checks passed.
+The new terrain test verifies overlay interiors as well as vertices against every
+cell diagonal, with no missing or duplicate area. Camera support checks include
+the courtyard and raised sidewalks; movement substeps preserve distance from
+60 down to 1 fps. Six desktop/mobile browser cases covered campus sectors,
+ground-material mode switching, movement, camera height and town-centre walking.
+After the foundation and sidewalk refinements, both library ground cases passed
+again and their stationary/moving screenshots were inspected. Browser frame
+samples use software WebGL and do not establish a hardware-device frame-rate
+guarantee; desktop/mobile samples still advanced more than 8 m in roughly 4–5 s.
