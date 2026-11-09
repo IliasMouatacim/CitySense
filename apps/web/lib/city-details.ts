@@ -14,6 +14,7 @@ import {campusSurface} from './campus-surfaces';
 import {withShadowDepthRange} from './render-depth';
 import {HemisphereLight,type SphereGeometry} from 'three';
 import {campusSkyGeometry} from './campus-sky';
+import {drawCampusBench,drawCampusCycleStand,type FurnitureDrawing} from './campus-furniture';
 
 export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean;routeCoordinates?:number[][]};
 export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean;campusBuildings?:number;campus?:boolean;campusFacades?:number;campusReferenceBuildings?:number;campusEnvironment?:boolean;campusFixtures?:number;campusShadowResolution?:number};
@@ -28,6 +29,7 @@ const local=(p:number[]):Point=>{const c=MercatorCoordinate.fromLngLat([p[0],p[1
 const batch=():Batch=>({positions:[],colors:[],uvs:[]});
 const roofColors=['#ae6d50','#8f5848','#7c5550','#687880','#b57c5e'];
 const shutterColors=['#52695c','#526b7a','#80574a','#64756f','#6c6575'];
+const campusConcreteTones=new Set(['#d2d1c8','#b3b6aa','#a9ac9f','#a3a497','#a9a79a','#8c938b','#adafa4','#cac8bb','#b8b6a8']);
 
 /** A bounded, shared-depth mesh layer; no per-frame tile decoding or geometry allocation. */
 export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(value:DetailStatus)=>void) {
@@ -94,15 +96,16 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   }
   // Actual solid trim near the camera: side and underside faces make sills,
   // frames and cornices read as architecture rather than decals on a box.
-  function wallBox(target:Batch,wall:Wall,along:number,width:number,bottom:number,top:number,hex:string,front:number,back=.03,textured=false){
+  function wallBox(target:Batch,wall:Wall,along:number,width:number,bottom:number,top:number,hex:string,front:number,back=.03,textured=false,textureSpan:Point=[3,.25]){
     const dx=(wall.b[0]-wall.a[0])/wall.length,dy=(wall.b[1]-wall.a[1])/wall.length;
     const point=(at:number,z:number,depth:number)=>[wall.a[0]+dx*at+wall.normal[0]*depth,wall.a[1]+dy*at+wall.normal[1]*depth,z];
     const l=along-width/2,r=along+width/2;
     const a=point(l,bottom,front),b=point(r,bottom,front),c=point(r,top,front),d=point(l,top,front);
     const e=point(l,bottom,back),f=point(r,bottom,back),g=point(r,top,back),h=point(l,top,back);
-    const uv=textured?[[0,0],[width/3,0],[width/3,(top-bottom)/.25],[0,(top-bottom)/.25]]:undefined;
-    quad(target,a,b,c,d,hex,.92,uv);quad(target,e,a,d,h,hex,.64,uv);quad(target,b,f,g,c,hex,.72,uv);
-    quad(target,d,c,g,h,hex,1,uv);quad(target,e,f,b,a,hex,.5,uv);
+    const faceUv=(w:number,h:number)=>textured?[[0,0],[w/textureSpan[0],0],[w/textureSpan[0],h/textureSpan[1]],[0,h/textureSpan[1]]]:undefined;
+    const uv=faceUv(width,top-bottom),sideUv=faceUv(front-back,top-bottom),topUv=faceUv(width,front-back);
+    quad(target,a,b,c,d,hex,.92,uv);quad(target,e,a,d,h,hex,.64,sideUv);quad(target,b,f,g,c,hex,.72,sideUv);
+    quad(target,d,c,g,h,hex,1,topUv);quad(target,e,f,b,a,hex,.5,topUv);
   }
   function mesh(data:Batch,texture?:Texture,physical=false,cutout=false){
     if(!data.positions.length)return;
@@ -183,17 +186,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
     function solidBox(p:number[],w:number,d:number,h:number,hex:string,target=details){
       const a=[p[0]-w/2,p[1]-d/2,p[2]],b=[p[0]+w/2,p[1]-d/2,p[2]],c=[p[0]+w/2,p[1]+d/2,p[2]],e=[p[0]-w/2,p[1]+d/2,p[2]],top=(q:number[])=>[q[0],q[1],q[2]+h];
       const vertical=[[0,0],[w/2,0],[w/2,h/.25],[0,h/.25]],horizontal=[[0,0],[w/2,0],[w/2,d/.25],[0,d/.25]];
       quad(target,a,b,top(b),top(a),hex,1,vertical);quad(target,b,c,top(c),top(b),hex,.85,vertical);quad(target,c,e,top(e),top(c),hex,.9,vertical);quad(target,e,a,top(a),top(e),hex,.85,vertical);quad(target,top(a),top(b),top(c),top(e),hex,1,horizontal);
     }
-    function branch(a:number[],b:number[],radius:number,hex='#776449'){
+    function branch(a:number[],b:number[],radius:number,hex='#776449',target=details,endScale=.6){
       const direction=new Vector3(b[0]-a[0],b[1]-a[1],b[2]-a[2]).normalize(),u=new Vector3().crossVectors(direction,Math.abs(direction.y)>.9?new Vector3(0,0,1):new Vector3(0,1,0)).normalize(),v=new Vector3().crossVectors(direction,u).normalize();
       for(let i=0;i<8;i++){
         const point=(p:number[],angle:number,r:number)=>[p[0]+(u.x*Math.cos(angle)+v.x*Math.sin(angle))*r,p[1]+(u.y*Math.cos(angle)+v.y*Math.sin(angle))*r,p[2]+(u.z*Math.cos(angle)+v.z*Math.sin(angle))*r];
-        quad(details,point(a,i*Math.PI/4,radius),point(a,(i+1)*Math.PI/4,radius),point(b,(i+1)*Math.PI/4,radius*.6),point(b,i*Math.PI/4,radius*.6),hex,.75+Math.sin(i)*.16);
+        quad(target,point(a,i*Math.PI/4,radius),point(a,(i+1)*Math.PI/4,radius),point(b,(i+1)*Math.PI/4,radius*endScale),point(b,i*Math.PI/4,radius*endScale),hex,.75+Math.sin(i)*.16);
       }
     }
     function leaves(p:number[],radius:number,seed:number){
@@ -201,6 +204,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         const angle=plane*Math.PI/3+seed*.7,dx=Math.cos(angle)*radius,dy=Math.sin(angle)*radius;
         quad(foliage,[p[0]-dx,p[1]-dy,p[2]-radius*.85],[p[0]+dx,p[1]+dy,p[2]-radius*.85],[p[0]+dx,p[1]+dy,p[2]+radius*.85],[p[0]-dx,p[1]-dy,p[2]+radius*.85],'#ffffff',.9+seed%3*.05,[[0,0],[1,0],[1,1],[0,1]]);
       }
+    }
+    function furnitureAt(p:number[],ground:number):FurnitureDrawing{
+      return {
+        box:(x,y,z,w,d,h,color,wood)=>solidBox([p[0]+x,p[1]+y,ground+z],w,d,h,color,wood?timber:metal),
+        tube:(a,b,r,color)=>branch([p[0]+a[0],p[1]+a[1],ground+a[2]],[p[0]+b[0],p[1]+b[1],ground+b[2]],r,color,metal,1),
+      };
     }
     function tree(p:number[],height:number,seed:number){
       for(let root=0;root<5;root++){
@@ -261,11 +270,18 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           const vertex=(u:number,v:number)=>{const phi=Math.PI*v/rings,theta=2*Math.PI*u/slices,r=height*.27*Math.sin(phi);return [p[0]+Math.cos(theta)*r,p[1]+Math.sin(theta)*r,ground+height*.7+height*.3*Math.cos(phi)];};
           for(let row=0;row<rings;row++)for(let col=0;col<slices;col++)quad(details,vertex(col,row),vertex(col+1,row),vertex(col+1,row+1),vertex(col,row+1),leaf,.7+.3*Math.max(0,Math.cos(2*Math.PI*(col+.5)/slices)));
         }else if(object.tags.highway==='street_lamp'){box(0,0,0,.12,.12,5,'#5b6465');box(.4,0,4.9,.9,.22,.12,'#444d50');box(.7,0,4.8,.4,.3,.12,options.mood==='night'?'#ffe9a6':'#bec7bf');}
-        else if(object.tags.amenity==='bench'){box(0,0,.4,1.6,.5,.1,'#93704e');box(0,.22,.5,1.6,.08,.55,'#93704e');box(-.55,0,0,.08,.45,.4,'#525b55');box(.55,0,0,.08,.45,.4,'#525b55');}
+        else if(object.tags.amenity==='bench'){
+          if(campus)drawCampusBench(1.6,furnitureAt(p,ground));
+          else{box(0,0,.4,1.6,.5,.1,'#93704e');box(0,.22,.5,1.6,.08,.55,'#93704e');box(-.55,0,0,.08,.45,.4,'#525b55');box(.55,0,0,.08,.45,.4,'#525b55');}
+        }
         else if(object.tags.amenity==='bicycle_parking'){
           // Locations and capacities are mapped; the steel stands are illustrative.
           const stands=Math.max(1,Math.min(8,Math.ceil((Number(object.tags.capacity)||4)/2)));
-          for(let i=0;i<stands;i++){const x=(i-(stands-1)/2)*.75;box(x,-.3,0,.045,.045,.75,'#687778');box(x,.3,0,.045,.045,.75,'#687778');box(x,0,.73,.045,.64,.045,'#687778');}
+          for(let i=0;i<stands;i++){
+            const x=(i-(stands-1)/2)*.75;
+            if(campus)drawCampusCycleStand(x,furnitureAt(p,ground));
+            else{box(x,-.3,0,.045,.045,.75,'#687778');box(x,.3,0,.045,.045,.75,'#687778');box(x,0,.73,.045,.64,.045,'#687778');}
+          }
         }else if(object.tags.amenity==='waste_basket'){box(0,0,0,.4,.4,.72,'#52635e');box(0,0,.72,.44,.44,.05,'#394a45');}
         else if(object.tags.highway==='bus_stop'&&object.tags.shelter==='yes'){
           for(const x of [-1.4,1.4])box(x,.5,0,.07,.07,2.3,'#58696a');
@@ -290,16 +306,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         }
         for(const x of [-1,1])for(const y of [-1,1])solidBox([p[0]+x*(fixture.width*.5-.07),p[1]+y*(fixture.depth*.5-.07),ground+fixture.height],.14,.14,.045,'#cdcec0');
       }else if(fixture.kind==='bench'){
-        for(let slat=0;slat<5;slat++){
-          const y=p[1]-.23+slat*.11;solidBox([p[0],y,ground+.45],fixture.width,.085,.06,'#ffffff',timber);
-          for(const x of [-.8,.8])solidBox([p[0]+x,y,ground+.511],.018,.018,.004,'#59635c');
-        }
-        for(const x of [-.8,.8]){
-          solidBox([p[0]+x,p[1],ground],.07,.4,.45,'#59635c');solidBox([p[0]+x,p[1],ground+.13],.15,.48,.04,'#4c5851');
-          branch([p[0]+x,p[1]-.17,ground+.49],[p[0]+x,p[1]-.17,ground+.69],.022,'#59635c');
-          branch([p[0]+x,p[1]-.17,ground+.69],[p[0]+x,p[1]+.22,ground+.69],.022,'#59635c');
-        }
-        for(let z=.62;z<.95;z+=.12)solidBox([p[0],p[1]+.22,ground+z],fixture.width,.055,.08,'#ffffff',timber);
+        drawCampusBench(fixture.width,furnitureAt(p,ground));
       }else{
         solidBox([p[0],p[1],ground+.01],.25,.25,.035,'#525e57');
         branch([p[0],p[1],ground],[p[0],p[1],ground+.24],.085,'#63736c');
@@ -385,10 +392,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
               const face=university&&campusFace(university,polygon[ringIndex][i],polygon[ringIndex][i+1]);
               if(face){
                 windows+=drawCampusFacade(face,length,height-base,{
-                  panel:(at,w,bottom,top,hex,depth)=>panel(details,wall,at,w,base+bottom,base+top,hex,depth),
+                  panel:(at,w,bottom,top,hex,depth)=>panel(campusConcreteTones.has(hex)?campusConcrete:details,wall,at,w,base+bottom,base+top,hex,depth,campusConcreteTones.has(hex)?[[0,0],[w/4,0],[w/4,(top-bottom)/2],[0,(top-bottom)/2]]:undefined),
                   box:(at,w,bottom,top,hex,front,back)=>{
                     const wooden=face.kind==='timber'&&['#9a7049','#aa8056','#88603f','#ad8259'].includes(hex);
-                    wallBox(wooden?timber:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden);
+                    const concrete=campusConcreteTones.has(hex);
+                    wallBox(wooden?timber:concrete?campusConcrete:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden||concrete,concrete?[4,2]:[3,.25]);
                   },
                   lettering:(...args)=>campusLettering(wall,...args),
                   glazing:(at,w,bottom,top,depth)=>{
@@ -598,6 +606,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     mesh(terrain);mesh(facades,materialTexture('plaster'),true);
     for(const floor of [mesh(asphalt,materialTexture('asphalt'),true),mesh(paving,materialTexture('paving'),true),mesh(groundAreas,undefined,campus)])if(floor)floor.castShadow=false;
     mesh(details,undefined,campus);mesh(roofs,roofTexture());
+    const hardware=mesh(metal,undefined,true);if(hardware){const mat=hardware.material as MeshStandardMaterial;mat.metalness=.7;mat.roughness=.34;mat.envMapIntensity=.55;}
     const concrete=campusConcrete.positions.length?mesh(campusConcrete,concreteTexture(),true):undefined;
     physicalSurface(concrete,'campus-concrete',.009);
     if(timber.positions.length)physicalSurface(mesh(timber,materialTexture('campus-timber-color'),true),'campus-timber',.004);

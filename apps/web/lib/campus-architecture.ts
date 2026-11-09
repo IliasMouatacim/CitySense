@@ -21,6 +21,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   for(const x of [-1,1])box(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
   box(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
   box(at,width+.13,top+.045,top+.10,'#879087',.30,.06);windows++;
+  box(at,width+.11,bottom-.115,bottom-.085,'#8c968e',.53,.43);
   // Separate opening light, rubber seals and a small aluminium latch.
   // The institutional images show fine divisions inside the larger ribbon bays.
   if(width>.85){
@@ -62,6 +63,8 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    for(const side of [-1,1]){
     const x=at+side*doorWidth*.25;
     pane(x,doorWidth*.5-.045,.18,Math.min(2.35,height*.28),.38);
+    box(x,doorWidth*.5-.09,.2,.43,'#687b76',.425,.40);
+    for(const z of [.52,1.15,1.9])box(at+side*(doorWidth*.5+.025),.045,z,z+.11,'#94a49d',.39,.34);
     box(at+side*.09,.028,.9,1.3,'#b5bcb1',.54,.47);
    }
    box(at,doorWidth+.22,.13,.18,'#8a9188',.7,.03);

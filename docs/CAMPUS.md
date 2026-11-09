@@ -85,6 +85,17 @@ These generic material/sky references add visual realism, not new evidence about
 the campus's exact appearance. Source links and derivative steps are recorded
 in `public/materials/README.md`.
 
+The hardware pass extends the same concrete PBR material over documented facade
+columns, lintels and masonry backing panels, with texture coordinates measured
+separately on front, side and top faces. Door leaves in the existing turquoise
+entry bay have estimated hinges and kickplates; window sills have projecting
+drip edges. Existing mapped benches and the courtyard bench share slatted timber
+seating, fixings, metal legs and armrests. Existing bicycle-parking locations keep
+their mapped capacity (and the eight-stand rendering cap); their estimated stands
+have curved steel hoops, mounting plates and bolts. Metal furniture shares one
+reflective mesh batch. Hardware dimensions and furniture orientation are visual
+estimates; no new entrance or furniture locations were invented.
+
 On 2026-11-09, Panoramax's federation and OSM France APIs returned zero images
 inside `[6.798, 47.492, 6.809, 47.499]`. A broader search found street imagery
 north of the campus, but those images cannot document campus facades. After
@@ -149,3 +160,10 @@ coverage against the captures, both courtyard cases passed again, including
 night/day restoration and GPU error checks. Desktop and mobile captures were
 inspected. CC0 materials and generic skies do not make the approximate building
 envelopes a photogrammetric replica; hardware-device frame rates remain unmeasured.
+
+Hardware revision validation: the production build and 19 unit checks passed,
+including detailed bench bounds against the existing walking collision envelopes.
+Four desktop/mobile courtyard and sector cases passed, covering UTBM, library,
+IUT, walking starts and night/day restoration. The sector and courtyard captures
+were inspected. IGN imagery fell back to the vector map in this test run; the
+locally served architectural, material and furniture details remained available.

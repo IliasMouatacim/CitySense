@@ -8,9 +8,24 @@ import {matchesFacadeEdge} from '../../apps/web/lib/facade-references';
 import {metersBetween} from '../../apps/web/lib/city-details-data';
 import {insidePolygon} from '../../apps/web/lib/walk-geometry';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
+import {drawCampusBench} from '../../apps/web/lib/campus-furniture';
 
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
+
+test('detailed benches remain inside existing walking collision envelopes',()=>{
+ for(const width of [1.6,2.2]){
+  const point=(x:number,y:number,z:number,r=0)=>{
+   assert.ok([x,y,z,r].every(Number.isFinite));
+   assert.ok(Math.abs(x)+r<=width/2+.0001);
+   assert.ok(Math.abs(y)+r<=.25+.0001);assert.ok(z-r>=0&&z+r<=.85);
+  };
+  drawCampusBench(width,{
+   box:(x,y,z,w,d,h)=>{point(x-w/2,y-d/2,z);point(x+w/2,y+d/2,z+h);},
+   tube:(a,b,r)=>{point(...a,r);point(...b,r);},
+  });
+ }
+});
 
 test('institutional campus observations remain attached to actual IGN walls and credited reference URLs',()=>{
  assert.equal(campusReferences.buildings.length,9);assert.equal(campusReferences.sourceImagesRedistributed,false);
