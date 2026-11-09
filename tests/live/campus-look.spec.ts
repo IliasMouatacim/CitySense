@@ -1,5 +1,20 @@
 import {test,expect} from '@playwright/test';
 
+test('library glazing and concrete remain readable in the shaded campus elevation',async({page})=>{
+ test.setTimeout(150000);await page.emulateMedia({reducedMotion:'reduce'});
+ const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
+ page.on('console',message=>{if(message.type()==='error'&&/THREE|WebGL|GL_INVALID|shader error|framebuffer|feedback loop/i.test(message.text()))errors.push(message.text());});
+ await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
+ await page.getByRole('combobox',{name:'Secteur du campus'}).selectOption('library');
+ await expect(page.locator('.architecture-panel')).toHaveAttribute('data-campus-environment','true',{timeout:45000});
+ await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
+ await expect(page.locator('.walk-hud')).toHaveAttribute('data-lat',/47\.49/,{timeout:45000});
+ await expect(page.locator('.walk-error')).toHaveCount(0);
+ await page.screenshot({path:`test-results/campus-library-materials-${test.info().project.name}.png`,fullPage:true});
+ expect(errors).toEqual([]);
+});
+
 test('lit campus courtyard remains detailed at the reported 220 degree walking view',async({page})=>{
  test.setTimeout(210000);await page.emulateMedia({reducedMotion:'reduce'});
  if(test.info().project.name==='desktop')await page.setViewportSize({width:1868,height:938});

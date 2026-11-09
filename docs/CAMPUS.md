@@ -64,6 +64,16 @@ have branches and cutout leaf clusters instead of solid polygon crowns; the
 raised planting bed and posts have Rapier colliders. Roof-edge coping is an
 estimated continuation of the visible contemporary detailing.
 
+The close-range material pass adds concrete rain streaks and formwork tie holes,
+smaller aggregate paving slabs with recessed joints and bump shading, and a
+sixteen-variant window atlas under the HDR reflections. Subdivided opening lights,
+rubber-coloured seals, aluminium latches and the turquoise bay's double entrance
+give the observed facades finer relief. Bed seating and benches have separate
+timber slats, fixings and metal armrests; courtyard lamps have mounting plates
+and base collars. These are original procedural materials and estimated small
+details. Window shading and occasional blinds are illustrative; no university
+interiors or exact hardware were surveyed or copied as photographic textures.
+
 On 2026-11-09, Panoramax's federation and OSM France APIs returned zero images
 inside `[6.798, 47.492, 6.809, 47.499]`. A broader search found street imagery
 north of the campus, but those images cannot document campus facades. After
@@ -112,3 +122,10 @@ captures were visually inspected. Hardware-device frame rates remain unmeasured.
 The final mobile capture exposed ground self-shadow aliasing. Ground meshes now
 receive shadows without casting onto themselves; the mobile comparison case passed
 again and its clean paving capture was inspected before the correction was released.
+
+Close-range detail validation: the production build and 17 unit checks passed.
+All six desktop/mobile courtyard, navigation and sector cases passed. Visual
+inspection then identified library wall self-shadow aliasing; calibrating depth
+and normal bias removed that pattern in the inspected desktop and mobile captures.
+Both focused library graphics cases passed after the final correction. Fine window
+hardware, material variation and furniture are estimates rather than survey data.

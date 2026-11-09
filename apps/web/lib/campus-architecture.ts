@@ -21,6 +21,14 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   for(const x of [-1,1])box(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
   box(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
   box(at,width+.13,top+.045,top+.10,'#879087',.30,.06);windows++;
+  // Separate opening light, rubber seals and a small aluminium latch.
+  // The institutional images show fine divisions inside the larger ribbon bays.
+  if(width>.85){
+   const split=at+width*.18,z=bottom+(top-bottom)*.72;
+   box(split,.045,bottom+.035,top-.035,'#263b3c',.24,.10);
+   box(at,width-.07,z,z+.035,'#2d4141',.245,.10);
+   box(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
+  }
  }
  if(face.kind==='ribbon'||face.kind==='frame'){
   const floors=face.floors||3,step=height/floors,bays=Math.max(1,Math.round((length-.5)/(face.kind==='frame'?3.1:2.05))),pitch=(length-.5)/bays;
@@ -33,7 +41,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
     const at=.25+(bay+.5)*pitch,w=Math.max(.25,pitch-(face.kind==='frame'?.4:.09));
     pane(at,w,bottom,top,face.kind==='frame'?.09:.14);
     panel(at,w,top-.25,top-.205,['#75483c','#436b58','#a89d57'][floor%3],.25);
-    panel(at,w,(bottom+top)/2,(bottom+top)/2+.045,frame,.24);
+    box(at,w,(bottom+top)/2,(bottom+top)/2+.045,frame,.26,.15);
    }
    if(face.kind==='frame'){
     box(length/2,length,bottom-.55,bottom-.3,concrete,.62,.03);
@@ -49,6 +57,14 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    for(let z=height*.15;z<height-.35;z+=.45)panel(at,w,z,z+.018,'#277d74',.35);
    pane(at+w*.32,.35,height*.24,height*.86,.38);
    panel(at+w*.38,.09,height*.23,height*.87,'#b5a74b',.44);
+   // Glazed entry below the photographed turquoise stair projection.
+   const doorWidth=Math.min(1.7,w*.7);
+   for(const side of [-1,1]){
+    const x=at+side*doorWidth*.25;
+    pane(x,doorWidth*.5-.045,.18,Math.min(2.35,height*.28),.38);
+    box(at+side*.09,.028,.9,1.3,'#b5bcb1',.54,.47);
+   }
+   box(at,doorWidth+.22,.13,.18,'#8a9188',.7,.03);
   }
   if(face.label)lettering(face.label,length*.46,Math.min(14,length*.72),height*.42,height*.59,false,.32);
  }else if(face.kind==='libraryGlass'){
