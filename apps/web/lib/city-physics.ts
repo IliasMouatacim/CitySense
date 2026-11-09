@@ -2,6 +2,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {terrainHeight,loadCityWorld} from './city-world';
 import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
+import {CAMPUS_COURTYARD} from './campus-courtyard';
 const anchor:Position=[6.8,47.51],meters=111319.4908,cos=Math.cos(anchor[1]*Math.PI/180);
 const local=(p:Position)=>({x:(p[0]-anchor[0])*meters*cos,z:-(p[1]-anchor[1])*meters});
 let initialized:Promise<void>|undefined;
@@ -30,6 +31,11 @@ export async function createCityPhysics(){
   const ground=terrainHeight(...object.coordinates);if(ground===null)continue;const p=local(object.coordinates);
   if(object.tags.amenity==='bench')world.createCollider(RAPIER.ColliderDesc.cuboid(.8,.45,.25).setTranslation(p.x,ground+.45,p.z));
   else world.createCollider(RAPIER.ColliderDesc.capsule(2.2,object.tags.natural==='tree'?.2:.08).setTranslation(p.x,ground+2.4,p.z));
+ }
+ for(const fixture of CAMPUS_COURTYARD.fixtures){
+  const coordinates:Position=[...fixture.coordinates],ground=terrainHeight(...coordinates);if(ground===null)continue;const p=local(coordinates);
+  if(fixture.kind==='tree'||fixture.kind==='lamp')world.createCollider(RAPIER.ColliderDesc.cylinder(fixture.height/2,fixture.kind==='tree'?.14:.07).setTranslation(p.x,ground+fixture.height/2,p.z));
+  else world.createCollider(RAPIER.ColliderDesc.cuboid(fixture.width/2,fixture.height/2,fixture.depth/2).setTranslation(p.x,ground+fixture.height/2,p.z));
  }
  const body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased()),collider=world.createCollider(RAPIER.ColliderDesc.capsule(.55,.3),body);
  const character=world.createCharacterController(.025);character.enableAutostep(.3,.2,true);character.enableSnapToGround(.5);character.setMaxSlopeClimbAngle(Math.PI/4);character.setMinSlopeSlideAngle(Math.PI/3);

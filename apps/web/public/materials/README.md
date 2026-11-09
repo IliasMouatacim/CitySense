@@ -13,3 +13,11 @@ https://creativecommons.org/publicdomain/zero/1.0/legalcode
 Original cc0textures materials are now distributed by https://ambientcg.com/.
 Derivation: GDAL JPEG conversion, 512×512 pixels, quality 85. These are generic
 surface materials, not photographs of specific Montbéliard facades or roads.
+
+`spruit_sunrise_1k.hdr`: **Spruit Sunrise**, Greg Zaal / HDRI Haven (now
+Poly Haven), CC0. Source: https://polyhaven.com/a/spruit_sunrise
+Downloaded from the Three.js example asset mirror:
+https://github.com/mrdoob/three.js/blob/dev/examples/textures/equirectangular/spruit_sunrise_1k.hdr
+Used only for generic outdoor illumination and glazing reflections; it is not
+campus imagery. Concrete grain, formwork marks and cutout foliage are procedural
+materials generated locally by the renderer.

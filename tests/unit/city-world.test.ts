@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import {loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
 import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
 import {distance,offset,advance} from '../../apps/web/lib/walk-geometry.ts';
+import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 
 test('IGN terrain samples, bounds and Rapier walking agree on the detailed city area',async()=>{
  const original=globalThis.fetch;
@@ -35,6 +36,11 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    const campusPath=data.campus!.roads.filter(r=>['footway','pedestrian','path'].includes(r.tags.highway)).flatMap(r=>r.coordinates).find(p=>p[0]>6.802&&p[0]<6.805&&p[1]>47.494&&p[1]<47.496)!;
    assert.ok(campusPath);assert.equal(physics.height(campusPath),terrainHeight(...campusPath));
    assert.deepEqual(physics.move(campusPath,[6.803,47.502]),campusPath);
+   const bed=CAMPUS_COURTYARD.fixtures.find(f=>f.kind==='planter')!,bedPoint:[number,number]=[...bed.coordinates];
+   let besideBed=offset(bedPoint,4,0);
+   for(let step=0;step<40;step++)besideBed=physics.move(besideBed,offset(besideBed,-.1,0));
+   assert.ok(distance(bedPoint,besideBed)>bed.width/2+.15,'The raised planting bed must block the avatar');
+   assert.ok(distance(bedPoint,besideBed)<3.5,'The avatar should reach the edge rather than freeze on approach');
    let position=from,total=0;
    for(let step=0;step<80;step++){const next=physics.move(position,advance(position,337,1,0,.05));total+=distance(position,next);position=next;}
    assert.ok(total>3.5&&total<4.5,'The capsule must keep walking across terrain cells without becoming embedded');

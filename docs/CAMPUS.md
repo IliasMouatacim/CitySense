@@ -49,6 +49,21 @@ Some adjoining parts, hidden elevations and the IUT R&T/GACO/MMI facades remain
 simplified. Building interiors and undercrofts cannot be entered. The largest
 letters are a plain typographic interpretation of observed facade lettering.
 
+The campus renderer uses lit cast-concrete surfaces with procedural grain and
+formwork marks, deeper window jambs and sills, reflective physical glazing and
+directional shadow maps (2048 pixels on desktop-sized views, 1024 on narrower
+views). A CC0 HDR environment supplies generic outdoor light/reflections; it is
+not a photograph of this campus. Photographic facade textures keep their unlit
+colour treatment. The renderer preserves MapLibre's external framebuffer during
+shadow rendering and factors the true ENU eye position into physical shading.
+
+`lib/campus-courtyard.ts` records a tree, planting bed with timber seating, bench
+and two lamps observed in the institutional courtyard images. Their geographic
+positions and dimensions are estimates, not additional OSM survey data. Trees
+have branches and cutout leaf clusters instead of solid polygon crowns; the
+raised planting bed and posts have Rapier colliders. Roof-edge coping is an
+estimated continuation of the visible contemporary detailing.
+
 On 2026-11-09, Panoramax's federation and OSM France APIs returned zero images
 inside `[6.798, 47.492, 6.809, 47.499]`. A broader search found street imagery
 north of the campus, but those images cannot document campus facades. After
@@ -86,3 +101,11 @@ implementation and documented approximate coverage, not survey accuracy.
 After adding the mapped courtyard's terrain-following slab surface, the production
 build and two focused desktop/mobile campus walking cases passed again; the
 resulting paving and facade screenshot was inspected before release.
+
+Graphics revision validation: the production build and 17 unit checks passed,
+including fixture collision and restoring MapLibre's compressed depth range after
+an isolated shadow pass. Eight desktop/mobile campus and town-centre cases passed.
+After final light/reflection tuning and the shadow-depth correction, both
+matching-angle courtyard cases passed again, including night/day restoration.
+The desktop capture uses the reported 220° view at 1868 × 938; desktop and mobile
+captures were visually inspected. Hardware-device frame rates remain unmeasured.

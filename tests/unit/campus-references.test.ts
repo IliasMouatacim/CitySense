@@ -7,6 +7,7 @@ import {CAMPUS_VISITS} from '../../apps/web/lib/campus-visits';
 import {matchesFacadeEdge} from '../../apps/web/lib/facade-references';
 import {metersBetween} from '../../apps/web/lib/city-details-data';
 import {insidePolygon} from '../../apps/web/lib/walk-geometry';
+import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
@@ -44,5 +45,13 @@ test('campus visit starts sit inside the measured terrain and outside building i
   const p=visit.start;assert.ok(p[0]>w&&p[0]<e&&p[1]>s&&p[1]<n);
   assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),visit.id);
   assert.ok(visit.pitch>=90&&visit.pitch<120);
+ }
+});
+
+test('photo-observed courtyard fixtures are credited and stay outside building interiors',()=>{
+ for(const id of CAMPUS_COURTYARD.sourceIds)assert.ok(campusReferences.sources.some(s=>s.id===id));
+ for(const fixture of CAMPUS_COURTYARD.fixtures){
+  assert.ok(fixture.height>0&&fixture.width>0&&fixture.depth>0);
+  assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon([...fixture.coordinates],poly))));
  }
 });

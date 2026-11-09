@@ -4,6 +4,7 @@ export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
  box:(at:number,width:number,bottom:number,top:number,color:string,front:number,back?:number)=>void;
  lettering:(text:string,at:number,width:number,bottom:number,top:number,outline?:boolean,depth?:number)=>void;
+ glazing?:(at:number,width:number,bottom:number,top:number,depth:number)=>void;
 };
 
 /** Batched solid architecture observed in institutional photographs.
@@ -13,11 +14,13 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  const {panel,box,lettering}=draw;let windows=0;
  const joint='#a5a69c',concrete='#d2d1c8',frame='#344b4c',glass='#49636a';
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
-  panel(at,width+.12,bottom-.08,top+.08,frame,depth);
-  panel(at,width,bottom,top,glass,depth+.015);
-  panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);
-  for(const x of [-1,1])box(at+x*(width/2+.025),.055,bottom-.06,top+.06,frame,depth+.07,depth);
-  box(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',depth+.23,depth);windows++;
+  panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?.04:depth);
+  // Dark reveal at the back, with substantial solid jambs and a projecting sill.
+  if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09));
+  else{panel(at,width,bottom,top,glass,depth+.015);panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);}
+  for(const x of [-1,1])box(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
+  box(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
+  box(at,width+.13,top+.045,top+.10,'#879087',.30,.06);windows++;
  }
  if(face.kind==='ribbon'||face.kind==='frame'){
   const floors=face.floors||3,step=height/floors,bays=Math.max(1,Math.round((length-.5)/(face.kind==='frame'?3.1:2.05))),pitch=(length-.5)/bays;
