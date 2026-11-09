@@ -109,3 +109,6 @@ After final light/reflection tuning and the shadow-depth correction, both
 matching-angle courtyard cases passed again, including night/day restoration.
 The desktop capture uses the reported 220° view at 1868 × 938; desktop and mobile
 captures were visually inspected. Hardware-device frame rates remain unmeasured.
+The final mobile capture exposed ground self-shadow aliasing. Ground meshes now
+receive shadows without casting onto themselves; the mobile comparison case passed
+again and its clean paving capture was inspected before the correction was released.

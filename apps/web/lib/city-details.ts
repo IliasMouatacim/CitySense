@@ -175,7 +175,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),foliage=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
     function solidBox(p:number[],w:number,d:number,h:number,hex:string){
       const a=[p[0]-w/2,p[1]-d/2,p[2]],b=[p[0]+w/2,p[1]-d/2,p[2]],c=[p[0]+w/2,p[1]+d/2,p[2]],e=[p[0]-w/2,p[1]+d/2,p[2]],top=(q:number[])=>[q[0],q[1],q[2]+h];
       quad(details,a,b,top(b),top(a),hex);quad(details,b,c,top(c),top(b),hex);quad(details,c,e,top(e),top(c),hex);quad(details,e,a,top(a),top(e),hex);quad(details,top(a),top(b),top(c),top(e),hex);
@@ -295,7 +295,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       }
       for(const indices of ShapeUtils.triangulateShape(points.map(p=>new Vector2(p[0],p[1])),[])){
         if(area.tags.highway==='pedestrian')pave(ring[indices[0]],ring[indices[1]],ring[indices[2]]);
-        else triangle(details,points[indices[0]],points[indices[1]],points[indices[2]],tint(hex));
+        else triangle(groundAreas,points[indices[0]],points[indices[1]],points[indices[2]],tint(hex));
       }
     }
     const routeCoordinates=options.routeCoordinates||[];let routeSegments=0;
@@ -561,7 +561,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       panel(details,wall,at,width,base+2.38,base+2.52,'#e9dbc0',.31);
       signCount++;
     }
-    mesh(terrain);mesh(facades,materialTexture('plaster'),true);mesh(asphalt,materialTexture('asphalt'),true);mesh(paving,materialTexture('paving'),true);mesh(details,undefined,campus);mesh(roofs,roofTexture());
+    mesh(terrain);mesh(facades,materialTexture('plaster'),true);
+    for(const floor of [mesh(asphalt,materialTexture('asphalt'),true),mesh(paving,materialTexture('paving'),true),mesh(groundAreas,undefined,campus)])if(floor)floor.castShadow=false;
+    mesh(details,undefined,campus);mesh(roofs,roofTexture());
     const concrete=mesh(campusConcrete,concreteTexture(),true);
     if(concrete){const mat=concrete.material as MeshStandardMaterial;mat.bumpMap=mat.map;mat.bumpScale=.018;mat.roughness=.92;}
     const glazing=mesh(campusGlazing,undefined,true);
@@ -571,7 +573,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     }
     const foliageMesh=mesh(foliage,leafTexture(),true);
     if(foliageMesh){const mat=foliageMesh.material as MeshStandardMaterial;mat.alphaTest=.42;mat.alphaToCoverage=true;mat.roughness=.8;mat.needsUpdate=true;}
-    if(campusPaving.positions.length)mesh(campusPaving,campusSlabTexture(),true);
+    if(campusPaving.positions.length){const floor=mesh(campusPaving,campusSlabTexture(),true);if(floor)floor.castShadow=false;}
     mesh(referenceFacades);for(const [path,data]of photoFacades)mesh(data,facadeTextures.get(path));
     if(cityModel){cityModel.group.scale.set(1,1,options.scale);scene.add(cityModel.group);}
     if((photoRoofs.positions.length||photoTerrain.positions.length)&&photoImage){
