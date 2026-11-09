@@ -5,9 +5,10 @@ import type {SceneMood} from './city-scene';
 import {roofPhotoRequest} from './photo-city';
 import {cityBuildingFeatures,getCityWorld,terrainHeight} from './city-world';
 import {loadCityModel} from './city-model';
+import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
 
 export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean;routeCoordinates?:number[][]};
-export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number};
+export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean};
 type Point=[number,number];
 type Wall={a:Point;b:Point;normal:Point;length:number;height:number;base:number;variant:number};
 type Batch={positions:number[];colors:number[];uvs:number[]};
@@ -31,6 +32,21 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const color=new Color();
   const resources:{dispose:()=>void}[]=[];
   const materials=new Map<string,Texture>();
+  const facadeImages=new Map<string,HTMLImageElement>(),facadeTextures=new Map<string,CanvasTexture>(),failedFacadeImages=new Set<string>();
+  function requestFacadeTexture(path:string){
+    if(facadeImages.has(path)||facadeTextures.has(path)||failedFacadeImages.has(path)||!renderer)return;
+    const image=new Image();facadeImages.set(path,image);
+    image.onload=()=>{
+      if(disposed)return;
+      const limit=Math.min(path===facadeReferences.source.image?4096:2048,renderer!.capabilities.maxTextureSize),canvas=document.createElement('canvas');
+      canvas.width=Math.min(limit,image.naturalWidth);canvas.height=Math.round(canvas.width*image.naturalHeight/image.naturalWidth);
+      const ctx=canvas.getContext('2d');if(!ctx){failedFacadeImages.add(path);force=true;schedule();return;}
+      ctx.drawImage(image,0,0,canvas.width,canvas.height);const texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;
+      texture.anisotropy=Math.min(8,renderer!.capabilities.getMaxAnisotropy());facadeTextures.set(path,texture);facadeImages.delete(path);force=true;schedule();
+    };
+    image.onerror=()=>{if(!disposed){failedFacadeImages.add(path);facadeImages.delete(path);force=true;schedule();}};
+    image.src=path;
+  }
   function materialTexture(name:string){
     if(materials.has(name))return materials.get(name)!;
     const texture=new TextureLoader().load(`/materials/${name}.jpg`,()=>{if(disposed){texture.dispose();return;}force=true;schedule();});
@@ -90,6 +106,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     for(let y=0;y<=128;y+=32){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(128,y);ctx.stroke();for(let x=(y%64?16:0);x<=128;x+=32){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+32);ctx.stroke();}}
     const texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;texture.wrapS=texture.wrapT=RepeatWrapping;resources.push(texture);return texture;
   }
+  function referenceSign(wall:Wall,at:number,width:number,text:string){
+    const key='reference-sign:'+text;let texture=materials.get(key);
+    if(!texture){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e7e3d7';ctx.fillRect(0,0,512,96);ctx.fillStyle='#242633';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 33px sans-serif';ctx.fillText(text,256,48,490);texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);}
+    const sign=batch();panel(sign,wall,at,width,wall.base+3.05,wall.base+3.55,'#ffffff',.5,[[0,0],[1,0],[1,1],[0,1]]);mesh(sign,texture);
+  }
   function rebuild(){
     timer=undefined;if(disposed||!renderer)return;
     const center:[number,number]=options.walking&&walkPosition?walkPosition:[map.getCenter().lng,map.getCenter().lat];
@@ -100,7 +121,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),facades=batch(),asphalt=batch(),paving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0;
+    const walls:Wall[]=[],details=batch(),facades=batch(),referenceFacades=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0;
     const city=getCityWorld();
     scene.add(new AmbientLight(options.mood==='night'?'#9db5d0':'#fff4dd',1.05));const sun=new DirectionalLight('#fff5df',1.5);sun.position.set(-100,-100,300);scene.add(sun);
     if(city?.streets&&!cityModel){
@@ -165,6 +186,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(!options.enabled)break;
         if(count>=(options.walking?100:160))break;
         const p=feature.properties||{};if(p.hide_3d)continue;
+        const profile=facadeProfile(p.sourceId);if(profile){referenceBuildings++;for(const face of profile.photoFaces){const projection=facadeReferences.projections[face.projection];requestFacadeTexture(projection.image||facadeReferences.source.image);}}
         const {height,base}=mappedHeight(p);if(height<=base)continue;
         const rings=polygon.map(r=>r.slice(0,-1).map(local)).filter(r=>r.length>=3);if(!rings.length||rings[0].length>100)continue;
         const variant=stableVariant(undefined,polygon[0]);count++;
@@ -183,8 +205,56 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             const a=ring[i],b=ring[(i+1)%ring.length],length=Math.hypot(b[0]-a[0],b[1]-a[1]);if(length<.5)continue;
             const flip=(area>0?1:-1)*(ringIndex===0?1:-1);
             const normal:Point=[(b[1]-a[1])/length*flip,-(b[0]-a[0])/length*flip];
-            const wall:Wall={a,b,normal,length,height,base,variant};if(ringIndex===0)walls.push(wall);
-            panel(facades,wall,length/2,length,base,height,facade,.025,[[0,0],[length/2,0],[length/2,(height-base)/2],[0,(height-base)/2]]);
+            const wall:Wall={a,b,normal,length,height,base,variant};if(ringIndex===0&&!profile)walls.push(wall);
+            panel(profile?referenceFacades:facades,wall,length/2,length,base,height,facade,.025,[[0,0],[length/2,0],[length/2,(height-base)/2],[0,(height-base)/2]]);
+            if(profile){
+              const ga=polygon[ringIndex][i],gb=polygon[ringIndex][i+1];
+              const observed=ringIndex===0&&profile.observedWalls.some(edge=>matchesFacadeEdge(edge,ga,gb));
+              if(!observed)continue; // Hidden faces have no invented windows or ornaments.
+              const photoFace=profile.photoFaces.find(edge=>matchesFacadeEdge(edge,ga,gb));
+              const projection=photoFace&&facadeReferences.projections[photoFace.projection],photoPath=projection?.image||facadeReferences.source.image;
+              const photoReady=facadeTextures.has(photoPath);
+              if(photoFace&&projection&&photoReady){
+                const bottom=Math.max(base,base+photoFace.bottom),top=Math.min(height-.07,base+photoFace.top),columns=Math.ceil(length/.4),rows=Math.ceil((top-bottom)/.4);
+                const vertex=(u:number,v:number)=>[a[0]+(b[0]-a[0])*u+normal[0]*.085,a[1]+(b[1]-a[1])*u+normal[1]*.085,bottom+(top-bottom)*v];
+                for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
+                  const points=[vertex(col/columns,row/rows),vertex((col+1)/columns,row/rows),vertex((col+1)/columns,(row+1)/rows),vertex(col/columns,(row+1)/rows)];
+                  const uv=points.map(point=>facadePhotoUv(point,projection));
+                  let target=photoFacades.get(photoPath);if(!target){target=batch();photoFacades.set(photoPath,target);}
+                  quad(target,points[0],points[1],points[2],points[3],'#ffffff',1,uv);
+                }
+                facadePhotoFaces++;
+              }
+              if(profile.kind==='retail'){
+                // Visible pale-blue upper storey, white ribbon frames and dark glazing.
+                panel(details,wall,length/2,length,base+.18,base+3.25,'#344c51',.07);
+                const bays=Math.max(1,Math.round(length/3.3)),spacing=length/bays;
+                for(let k=0;k<bays;k++){
+                  const at=(k+.5)*spacing;
+                  panel(details,wall,at,Math.max(.3,spacing-.14),base+.35,base+3.15,'#527076',.085);
+                  panel(details,wall,at,Math.max(.3,spacing-.25),base+4.4,base+6.2,'#d7ddd5',.065);
+                  panel(details,wall,at,Math.max(.2,spacing-.42),base+4.52,base+6.06,'#596d70',.08);
+                  panel(details,wall,at,.06,base+4.52,base+6.06,'#e0e5db',.095);windows++;
+                }
+                wallBox(details,wall,length/2,length,base+3.25,base+3.6,'#c8ccbd',.55);
+                wallBox(details,wall,length/2,length,base+6.3,base+6.45,'#aec6ca',.12);
+              }else if(profile.kind==='slab'&&profile.storefrontWalls?.some(edge=>matchesFacadeEdge(edge,ga,gb))){
+                panel(details,wall,length/2,length,base+.2,base+3.1,'#40575d',.07);
+                for(let at=1;at<length;at+=1.6)panel(details,wall,at,.09,base+.2,base+3.1,'#b6bdb4',.1);
+                wallBox(details,wall,length/2,length,base+3.1,base+3.65,'#e4e0d2',.24);
+              }
+              // Loading/outage fallback follows observed modern bands, never the old ornament template.
+              if(photoFace&&!photoReady){
+                const levels=profile.kind==='tower'?10:4,start=profile.kind==='tower'?0:3.8,step=(height-base-start)/levels;
+                for(let floor=0;floor<levels;floor++){
+                  const z=base+start+floor*step;if(z<base+photoFace.bottom)continue;
+                  panel(details,wall,length/2,length*.9,z+.25,z+step*.6,'#687577',.06);
+                  panel(details,wall,length/2,length,z+step*.6,z+step-.07,profile.wallColor,.07);
+                  if(profile.kind==='tower'&&length>18)for(const at of [1.1,length-1.1])panel(details,wall,at,1.3,z+.2,z+step*.6,'#c9ce55',.08);
+                }
+              }
+              continue;
+            }
             panel(details,wall,length/2,length,Math.max(base,height-.22),height+.08,'#d5c9b0',.12);
             if(distance>(options.walking?155:260)||length<2.5)continue;
             // Small masonry plinth and floor bands give depth without changing mapped walls.
@@ -235,6 +305,45 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             }
           }
         }
+        if(profile?.manualFront){
+          const front=profile.manualFront,a=local(front.a),b=local(front.b),length=Math.hypot(b[0]-a[0],b[1]-a[1]);
+          const wall:Wall={a,b,length,normal:[-(b[1]-a[1])/length,(b[0]-a[0])/length],height,base,variant};
+          // One continuous observed elevation spans small IGN footprint jogs.
+          panel(referenceFacades,wall,length/2,length,base,height,profile.wallColor,.23);
+          for(let floor=0;floor<front.floors;floor++){
+            const bottom=base+front.firstWindowBottom+floor*front.storeyHeight,top=bottom+1.75;
+            panel(details,wall,length/2,length,bottom-.65,bottom-.5,'#ded8c6',.28);
+            for(const bay of front.bays){
+              const at=length*bay.at,w=bay.width;
+              panel(details,wall,at,w+.18,bottom-.12,top+.12,'#aaa99f',.26);
+              if(bay.kind==='balcony'){
+                panel(details,wall,at,w,bottom,top,'#444b48',.28);
+                panel(details,wall,at-.35,w*.45,bottom+.1,top-.1,'#bdbdad',.3);
+                panel(details,wall,at+.55,.65,bottom+.18,top-.12,'#566569',.32);
+                for(const edge of [-1,1])wallBox(details,wall,at+edge*(w/2+.06),.14,bottom-.12,top+.12,'#bfc1b7',.55,.25);
+                wallBox(details,wall,at,w+.25,bottom-.15,bottom-.02,'#c9c8bc',.7,.25);
+                for(const z of [bottom+.1,bottom+.78])panel(details,wall,at,w,z,z+.04,'#565d59',.67);
+                for(let x=-w/2+.12;x<w/2;x+=.22)panel(details,wall,at+x,.035,bottom+.13,bottom+.8,'#646b65',.68);
+              }else if(bay.kind==='shutter'&&!(bay.openTop&&floor===front.floors-1)){
+                panel(details,wall,at,w,bottom,top,'#a5a69e',.28);
+                for(let z=bottom+.08;z<top;z+=.12)panel(details,wall,at,w,z,z+.018,'#878d86',.3);
+                wallBox(details,wall,at,w+.2,bottom-.16,bottom-.05,'#c1c1b5',.42,.25);
+              }else{
+                panel(details,wall,at,w,bottom,top,'#43595d',.28);
+                panel(details,wall,at,.055,bottom,top,'#d3d5c9',.32);
+                wallBox(details,wall,at,w+.16,bottom-.15,bottom-.04,'#c1c3b7',.4,.25);
+              }
+              windows++;
+            }
+          }
+          for(const shop of front.shops){
+            const at=length*shop.at,w=shop.width,text=shop.label;
+            panel(details,wall,at,w,base+.2,base+3,'#3b5157',.27);
+            for(let x=at-w/2+.2;x<at+w/2;x+=1.25)panel(details,wall,x,.075,base+.2,base+3,'#c4c7b9',.32);
+            wallBox(details,wall,at,w+.2,base+2.95,base+3.6,'#e2ddcd',.48,.25);
+            referenceSign(wall,at,w,text);
+          }
+        }
     }
     // Signs use genuine mapped names; their facade placement and graphics are illustrative.
     const atlas=document.createElement('canvas');atlas.width=2048;atlas.height=2048;const ctx=atlas.getContext('2d')!;
@@ -269,6 +378,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       signCount++;
     }
     mesh(terrain);mesh(facades,materialTexture('plaster'),true);mesh(asphalt,materialTexture('asphalt'),true);mesh(paving,materialTexture('paving'),true);mesh(details);mesh(roofs,roofTexture());
+    mesh(referenceFacades);for(const [path,data]of photoFacades)mesh(data,facadeTextures.get(path));
     if(cityModel){cityModel.group.scale.set(1,1,options.scale);scene.add(cityModel.group);}
     if((photoRoofs.positions.length||photoTerrain.positions.length)&&photoImage){
       if(roofImageTexture?.userData.image!==photoImage){
@@ -291,7 +401,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(d<closest&&d<65){closest=d;street=String(name);}
       }
     }
-    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments,modelMeshes:cityModel?.group.children.length||0});map.triggerRepaint();
+    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,routeSegments,modelMeshes:cityModel?.group.children.length||0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0});map.triggerRepaint();
   }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={
@@ -302,7 +412,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       camera.projectionMatrix.fromArray(args.defaultProjectionData.mainMatrix).multiply(transform);
       renderer.resetState();renderer.render(scene,camera);renderer.resetState();
     },
-    onRemove(){disposed=true;if(timer)clearTimeout(timer);if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}photoImage=undefined;roofImageTexture?.dispose();materials.forEach(t=>t.dispose());cityModel?.dispose();map.off('moveend',schedule);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();}
+    onRemove(){disposed=true;if(timer)clearTimeout(timer);if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}for(const image of facadeImages.values()){image.onload=null;image.onerror=null;image.src='';}facadeImages.clear();facadeTextures.forEach(t=>t.dispose());facadeTextures.clear();photoImage=undefined;roofImageTexture?.dispose();materials.forEach(t=>t.dispose());cityModel?.dispose();map.off('moveend',schedule);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();}
   };
   function source(event:{sourceId?:string;isSourceLoaded?:boolean}){
     if(event.sourceId==='openmaptiles'&&event.isSourceLoaded)schedule();

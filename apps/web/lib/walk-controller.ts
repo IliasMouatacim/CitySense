@@ -1,9 +1,9 @@
 import {LngLat,type Map} from 'maplibre-gl';
-import {advance,blocked,distance,makeObstacle,nearestOnLine,offset,withinPilot,type Obstacle,type Position} from './walk-geometry';
+import {advance,blocked,distance,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
 import {cityBuildingFeatures,getCityWorld} from './city-world';
 import type {createCityPhysics} from './city-physics';
 export type WalkAction='forward'|'back'|'left'|'right'|'turnLeft'|'turnRight'|'sprint';
-export type WalkStatus={position:Position;bearing:number;pitch:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number};
+export type WalkStatus={position:Position;bearing:number;pitch:number;fov:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number};
 export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>) {
   const canvas=map.getCanvas(),saved={center:map.getCenter(),zoom:map.getZoom(),bearing:map.getBearing(),pitch:map.getPitch(),padding:map.getPadding(),elevation:map.getCameraTargetElevation()},maxPitch=map.getMaxPitch(),maxZoom=map.getMaxZoom();
   const handlers=[map.dragPan,map.dragRotate,map.scrollZoom,map.boxZoom,map.doubleClickZoom,map.keyboard,map.touchZoomRotate,map.touchPitch];
@@ -11,6 +11,8 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   if(physics&&physics.height(origin)===null)throw new Error('La marche détaillée couvre le centre de Montbéliard. Revenez au point de vue Centre historique.');
   const enabled=handlers.map(h=>h.isEnabled());
   const centerClamped=map.getCenterClampedToGround();
+  const verticalFov=map.getVerticalFieldOfView();
+  const symbolLayers=map.getStyle().layers.filter(layer=>layer.type==='symbol').map(layer=>({id:layer.id,visibility:map.getLayoutProperty(layer.id,'visibility')||'visible'}));
   let disposed=false;
   let paused=false;
   let obstacles:Obstacle[]=[],bridges:number[][][]=[],roads:{line:number[][];priority:number}[]=[];
@@ -55,7 +57,8 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   const spawn=chosen.point,streetBearing=chosen.heading;
   let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,geometryTime=0,frame=0;
   const keys=new Set<string>();let sprintMode=false;
-  handlers.forEach(h=>h.disable());map.stop();map.setCenterClampedToGround(false);map.setMaxPitch(110);map.setMaxZoom(24);
+  handlers.forEach(h=>h.disable());map.stop();map.setCenterClampedToGround(false);map.setMaxPitch(135);map.setMaxZoom(24);map.setVerticalFieldOfView(72);
+  for(const layer of symbolLayers)map.setLayoutProperty(layer.id,'visibility','none');
   const resized=()=>{dirty=true;};map.on('resize',resized);
   const originalTouchAction=canvas.style.touchAction,originalLabel=canvas.getAttribute('aria-label');canvas.setAttribute('aria-label','Scène de marche : ZQSD ou WASD pour marcher, flèches pour tourner, Échap pour quitter.');canvas.style.touchAction='none';canvas.focus({preventScroll:true});
   function applyCamera(){
@@ -64,12 +67,12 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     const eye=(physics?.height(position)??0)+1.8;
     map.jumpTo(map.calculateCameraOptionsFromTo(new LngLat(...position),eye,new LngLat(...target),eye-30*Math.cos(radians)));
   }
-  function focusPlace(event:{coordinates?:Position}){
+  function focusPlace(event:{coordinates?:Position;pitch?:number}){
     const target=event.coordinates;if(!target||!target.every(Number.isFinite))return;
-    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=87;dirty=true;
+    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=Number.isFinite(event.pitch)?Math.max(60,Math.min(135,event.pitch!)):87;dirty=true;
   }
   map.on('citysense-look-at',focusPlace);
-  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,meters,blocked:collision,boundary,locked,ground:physics?.height(position)??0,cameraTarget:map.getCameraTargetElevation()});map.fire('citysense-walk-position',{coordinates:[...position]});}
+  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,fov:map.getVerticalFieldOfView(),meters,blocked:collision,boundary,locked,ground:physics?.height(position)??0,cameraTarget:map.getCameraTargetElevation()});map.fire('citysense-walk-position',{coordinates:[...position]});}
   const keyCodes=['KeyW','KeyZ','KeyS','KeyA','KeyQ','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'];
   const typing=(target:EventTarget|null)=>target instanceof HTMLElement&&Boolean(target.closest('input,textarea,select,[contenteditable=true]'));
   function keyDown(event:KeyboardEvent){
@@ -83,7 +86,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function pause(event:{paused?:boolean}){paused=Boolean(event.paused);clear();}
   map.on('citysense-walk-pause',pause);
   function hidden(){if(document.hidden)clear();}
-  function look(dx:number,dy:number){bearing+=dx*.13;pitch=Math.max(60,Math.min(110,pitch-dy*.12));dirty=true;}
+  function look(dx:number,dy:number){bearing+=dx*.13;pitch=Math.max(60,Math.min(135,pitch-dy*.12));dirty=true;}
   let drag:{id:number;x:number;y:number}|null=null;
   function down(e:PointerEvent){if(e.button!==0||document.pointerLockElement===canvas)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});}
   function move(e:PointerEvent){if(document.pointerLockElement===canvas||!drag||drag.id!==e.pointerId)return;e.preventDefault();look(e.clientX-drag.x,e.clientY-drag.y);drag={id:e.pointerId,x:e.clientX,y:e.clientY};}
@@ -94,18 +97,20 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function sourceData(event:{sourceId?:string}){if(event.sourceId!=='openmaptiles'||geometryQueued||performance.now()-geometryTime<750)return;geometryQueued=true;queueMicrotask(()=>{if(disposed)return;geometryQueued=false;geometryTime=performance.now();refreshGeometry();});}
   const held=(...codes:string[])=>codes.some(code=>keys.has(code));
   function tick(now:number){
-    const dt=Math.min(.05,Math.max(0,(now-last)/1000));last=now;
+    const timing=walkFrame((now-last)/1000);last=now;
     const turn=Number(held('ArrowRight','touch:turnRight'))-Number(held('ArrowLeft','touch:turnLeft'));
-    if(turn&&!paused){bearing+=turn*85*dt;dirty=true;}
+    if(turn&&!paused){bearing+=turn*85*timing.elapsed;dirty=true;}
     const forward=Number(held('KeyW','KeyZ','ArrowUp','touch:forward'))-Number(held('KeyS','ArrowDown','touch:back'));
     const strafe=Number(held('KeyD','touch:right'))-Number(held('KeyA','KeyQ','touch:left'));
     collision=false;boundary=false;
     if(!paused&&(forward||strafe)){
       const speed=sprintMode||held('ShiftLeft','ShiftRight')?3.2:1.55;
-      const next=advance(position,bearing,forward,strafe,speed*dt);
-      if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blocked(next,obstacles,bridges)){
-        const resolved=physics?physics.move(position,next):next;meters+=distance(position,resolved);position=resolved;dirty=true;
-      }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);}
+      for(let step=0;step<timing.steps;step++){
+        const next=advance(position,bearing,forward,strafe,speed*timing.step);
+        if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blocked(next,obstacles,bridges)){
+          const resolved=physics?physics.move(position,next):next;meters+=distance(position,resolved);position=resolved;dirty=true;
+        }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);break;}
+      }
     }
     if(dirty){applyCamera();dirty=false;}
     if(now-reported>150){status();reported=now;}
@@ -123,7 +128,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
       window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();
-      try{map.setCenterClampedToGround(centerClamped);map.jumpTo(saved);map.setMaxPitch(maxPitch);map.setMaxZoom(maxZoom);handlers.forEach((h,i)=>{if(enabled[i])h.enable();});}catch{/* Map may already be removed during page teardown. */}
+      try{for(const layer of symbolLayers)if(map.getLayer(layer.id))map.setLayoutProperty(layer.id,'visibility',layer.visibility);map.setCenterClampedToGround(centerClamped);map.setVerticalFieldOfView(verticalFov);map.jumpTo(saved);map.setMaxPitch(maxPitch);map.setMaxZoom(maxZoom);handlers.forEach((h,i)=>{if(enabled[i])h.enable();});}catch{/* Map may already be removed during page teardown. */}
     }
   };
   try{applyCamera();status();frame=requestAnimationFrame(tick);}catch(error){controller.dispose();throw error;}

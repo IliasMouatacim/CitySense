@@ -1,7 +1,18 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {advance,distance,offset,insidePolygon,makeObstacle,blocked,nearestOnLine,withinPilot} from '../../apps/web/lib/walk-geometry.ts';
+import {advance,distance,offset,insidePolygon,makeObstacle,blocked,nearestOnLine,withinPilot,walkFrame} from '../../apps/web/lib/walk-geometry.ts';
 const start=[6.8,47.51];
+test('walking covers the same distance at 60 and 5 fps while checking short collision steps',()=>{
+ for(const fps of [60,5]){
+  let position=start;
+  for(let frame=0;frame<fps;frame++){
+   const timing=walkFrame(1/fps);assert.ok(timing.step<=.05);
+   for(let step=0;step<timing.steps;step++)position=advance(position,0,1,0,1.55*timing.step);
+  }
+  assert.ok(Math.abs(distance(start,position)-1.55)<.001);
+ }
+ const suspended=walkFrame(10);assert.equal(suspended.elapsed,.25);assert.ok(suspended.step<=.05);
+});
 test('walking moves in meters in the camera direction without diagonal speed gain',()=>{
  const north=advance(start,0,1,0,10),east=advance(start,90,1,0,10),diagonal=advance(start,0,1,1,10);
  assert.ok(north[1]>start[1]);assert.ok(east[0]>start[0]);

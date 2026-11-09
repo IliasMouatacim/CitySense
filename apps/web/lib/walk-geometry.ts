@@ -50,3 +50,9 @@ export function blocked(point:Position,obstacles:Obstacle[],bridges:number[][][]
   return false;
 }
 export function withinPilot(point:Position) {return distance(point,[6.8,47.51])<=2500;}
+// Catch up at low frame rates without sending a long movement through walls.
+// A suspended frame is capped to avoid teleporting when rendering resumes.
+export function walkFrame(seconds:number){
+ const elapsed=Number.isFinite(seconds)?Math.min(.25,Math.max(0,seconds)):0;
+ const steps=Math.max(1,Math.ceil(elapsed/.05));return {elapsed,steps,step:elapsed/steps};
+}

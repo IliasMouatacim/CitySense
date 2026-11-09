@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('3D lighting, height scale, viewpoints and orbit controls',async({page})=>{
+ test.setTimeout(210000); // Multi-view WebGL capture/cleanup is slow on software-GPU cloud runners.
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');const map=page.locator('.map');
  await expect(map).toHaveAttribute('data-ready','true');

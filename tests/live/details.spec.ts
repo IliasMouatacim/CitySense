@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('detailed facades and real shop names remain usable in aerial and walking views',async({page})=>{
+ test.setTimeout(150000); // Multiple full-page WebGL captures on software-GPU cloud runners.
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');
  const detail=page.getByRole('region',{name:'Détails de la ville'});
@@ -37,7 +38,8 @@ test('detailed facades and real shop names remain usable in aerial and walking v
  await expect.poll(async()=>Number(await detail.getAttribute('data-signs'))).toBeGreaterThan(0);
  await page.getByRole('button',{name:'Noms et commerces'}).click();
  const heading=await hud.getAttribute('data-heading');
- await businesses.first().getByRole('button').click();
+ // The reference viewpoint may already face the nearest business.
+ await businesses.last().getByRole('button').click();
  await expect(page.getByRole('button',{name:'Noms et commerces'})).toHaveAttribute('aria-expanded','false');
  await expect.poll(()=>hud.getAttribute('data-heading')).not.toBe(heading);
  await page.waitForTimeout(1800); // Let new nearby tile meshes settle before the visual capture.

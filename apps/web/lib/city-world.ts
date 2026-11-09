@@ -1,4 +1,5 @@
 import type {Map,GeoJSONSource} from 'maplibre-gl';
+import {facadeProfile} from './facade-references';
 type Polygon={type:'Polygon';coordinates:number[][][]};
 type MultiPolygon={type:'MultiPolygon';coordinates:number[][][][]};
 export type StreetWay={id:number;coordinates:[number,number][];tags:Record<string,string>};
@@ -27,7 +28,8 @@ export function loadCityWorld(){
    const rings=feature.geometry.type==='Polygon'?feature.geometry.coordinates:feature.geometry.coordinates.flat();
    const p=rings[0][0];const height=Number(feature.properties?.render_height)||8;
    const ground=terrainHeight(p[0],p[1],data)??0;
-   feature.properties={...feature.properties,render_min_height:ground,render_height:ground+height};
+   const profile=facadeProfile(feature.properties?.sourceId);
+   feature.properties={...feature.properties,...(profile?{colour:profile.wallColor}:{}),render_min_height:ground,render_height:ground+height};
   }
   world=data;return data;
  })().catch(error=>{pending=undefined;throw error;});

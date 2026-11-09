@@ -1,0 +1,531 @@
+{
+  "version": 1,
+  "scope": "Three matched buildings near the northern intersection; other city buildings remain illustrative.",
+  "source": {
+    "id": "d238b21c-6068-437f-b9c8-772faa7af830",
+    "image": "/city/facades/d238b21c-6068-437f-b9c8-772faa7af830.jpg",
+    "imageSize": [
+      7680,
+      3840
+    ],
+    "sha256": "39256f2ac0462715d1af0d496658e86767a0194db2c5e6e71d52a61631cdeae0",
+    "coordinates": [
+      6.7978465,
+      47.511485
+    ],
+    "capturedAt": "2026-08-21T13:03:08.500000+01:00",
+    "author": "Lejun",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "url": "https://explore.panoramax.fr/#focus=pic&pic=d238b21c-6068-437f-b9c8-772faa7af830",
+    "original": "https://panoramax.openstreetmap.fr/images/d2/38/b2/1c/6068-437f-b9c8-772faa7af830.jpg"
+  },
+  "projections": {
+    "tower": {
+      "camera": [
+        -157.90971973171722,
+        166.57553682676956,
+        8.053226426033431
+      ],
+      "worldToPhotoRotation": [
+        [
+          0.9708497144330346,
+          -0.2274763917617258,
+          0.07553358972245973
+        ],
+        [
+          0.22314546119709144,
+          0.9728341484494196,
+          0.061642702389088325
+        ],
+        [
+          -0.08750391495488867,
+          -0.042990822296836775,
+          0.995236079563944
+        ]
+      ],
+      "correspondences": [
+        {
+          "world": [
+            -156.5498111478558,
+            193.81044809078054,
+            34.01084384615588
+          ],
+          "pixel": [
+            3715,
+            1052
+          ]
+        },
+        {
+          "world": [
+            -151.8427899289082,
+            181.4424554743152,
+            34.01084384615588
+          ],
+          "pixel": [
+            4147,
+            770
+          ]
+        },
+        {
+          "world": [
+            -129.7438516501504,
+            189.71375636696743,
+            34.01084384615588
+          ],
+          "pixel": [
+            4658,
+            1280
+          ]
+        }
+      ]
+    },
+    "white": {
+      "camera": [
+        -159.638712180002,
+        166.99963108863722,
+        8.707103778503479
+      ],
+      "worldToPhotoRotation": [
+        [
+          0.9760113292012692,
+          -0.2033718946853329,
+          0.07772874450851164
+        ],
+        [
+          0.19741042745805876,
+          0.9772129444004759,
+          0.07799990017287745
+        ],
+        [
+          -0.0918205227691399,
+          -0.060784321566092904,
+          0.9939186374397814
+        ]
+      ],
+      "correspondences": [
+        {
+          "world": [
+            -172.70857887870477,
+            146.74319561976026,
+            21.369758461553623
+          ],
+          "pixel": [
+            420,
+            1206
+          ]
+        },
+        {
+          "world": [
+            -170.7310284305169,
+            162.9962721063757,
+            21.369758461553623
+          ],
+          "pixel": [
+            1290,
+            786
+          ]
+        },
+        {
+          "world": [
+            -182.0098332682299,
+            163.44156251021045,
+            21.369758461553623
+          ],
+          "pixel": [
+            1516,
+            1175
+          ]
+        }
+      ]
+    },
+    "west": {
+      "camera": [
+        -195.75905073447004,
+        173.7052316437588,
+        17.992564381721564
+      ],
+      "worldToPhotoRotation": [
+        [
+          0.9367614873266992,
+          -0.30966163659821766,
+          -0.16305700439043946
+        ],
+        [
+          0.303525299239889,
+          0.9508086288912345,
+          -0.06193015378074315
+        ],
+        [
+          0.17421339955011,
+          0.008521856915252108,
+          0.9846710462748002
+        ]
+      ],
+      "correspondences": [
+        {
+          "world": [
+            -156.5498111478558,
+            193.81044809078054,
+            34.01084384615588
+          ],
+          "pixel": [
+            4755,
+            1300
+          ]
+        },
+        {
+          "world": [
+            -151.8427899289082,
+            181.4424554743152,
+            34.01084384615588
+          ],
+          "pixel": [
+            5150,
+            1286
+          ]
+        },
+        {
+          "world": [
+            -151.8427899289082,
+            181.4424554743152,
+            5.310843846155876
+          ],
+          "pixel": [
+            5168,
+            2046
+          ]
+        }
+      ],
+      "image": "/city/facades/edfe5c1b-3de1-4a51-87d8-712de9d1131d.jpg",
+      "calibrationImageSize": [
+        7680,
+        3840
+      ]
+    }
+  },
+  "buildings": [
+    {
+      "buildingId": "BATIMENT0000000292211847",
+      "label": "Tour crème à bandes horizontales et panneaux jaunes",
+      "kind": "tower",
+      "wallColor": "#cccec1",
+      "referencePhotoIds": [
+        "d238b21c-6068-437f-b9c8-772faa7af830",
+        "edfe5c1b-3de1-4a51-87d8-712de9d1131d"
+      ],
+      "observedWalls": [
+        {
+          "a": [
+            6.7982745,
+            47.5117042
+          ],
+          "b": [
+            6.7979806,
+            47.5116299
+          ]
+        },
+        {
+          "a": [
+            6.7979806,
+            47.5116299
+          ],
+          "b": [
+            6.797918,
+            47.511741
+          ]
+        }
+      ],
+      "photoFaces": [
+        {
+          "a": [
+            6.7982745,
+            47.5117042
+          ],
+          "b": [
+            6.7979806,
+            47.5116299
+          ],
+          "projection": "tower",
+          "bottom": 8.8,
+          "top": 28.4
+        },
+        {
+          "a": [
+            6.7979806,
+            47.5116299
+          ],
+          "b": [
+            6.797918,
+            47.511741
+          ],
+          "projection": "west",
+          "bottom": 8.8,
+          "top": 28.4
+        }
+      ],
+      "notes": "South and west upper faces registered to the photo. Lower faces are occluded by the adjoining retail building; unseen faces remain plain. Balcony relief is not reconstructed. West face uses a farther unoccluded photograph; fitted cameras are virtual texture registrations, not recovered survey camera poses."
+    },
+    {
+      "buildingId": "BATIMENT0000000223567399",
+      "label": "Immeuble gris clair, Auto École Pilote",
+      "kind": "slab",
+      "wallColor": "#b9bab4",
+      "referencePhotoIds": [
+        "d238b21c-6068-437f-b9c8-772faa7af830",
+        "bbf18b7c-94a6-4969-9cf5-6be5ca50dc98"
+      ],
+      "observedWalls": [
+        {
+          "a": [
+            6.7977153,
+            47.5113971
+          ],
+          "b": [
+            6.7977031,
+            47.5113182
+          ]
+        },
+        {
+          "a": [
+            6.7975794,
+            47.5114682
+          ],
+          "b": [
+            6.7977294,
+            47.5114642
+          ]
+        },
+        {
+          "a": [
+            6.7977294,
+            47.5114642
+          ],
+          "b": [
+            6.7977273,
+            47.5114526
+          ]
+        },
+        {
+          "a": [
+            6.7977273,
+            47.5114526
+          ],
+          "b": [
+            6.7977194,
+            47.5113979
+          ]
+        }
+      ],
+      "photoFaces": [
+        {
+          "a": [
+            6.7975794,
+            47.5114682
+          ],
+          "b": [
+            6.7977294,
+            47.5114642
+          ],
+          "projection": "white",
+          "bottom": 4.2,
+          "top": 16.3
+        }
+      ],
+      "notes": "The east front is manually reconstructed from the four observed upper storeys, asymmetric shutter/window bays, central recessed balconies, floor bands and two visible business names. Dimensions and relief are estimates. The clear north upper face retains the photograph. Hidden walls remain plain; business operation since the capture is unverified.",
+      "storefrontWalls": [
+        {
+          "a": [
+            6.7975794,
+            47.5114682
+          ],
+          "b": [
+            6.7977294,
+            47.5114642
+          ]
+        },
+        {
+          "a": [
+            6.7977273,
+            47.5114526
+          ],
+          "b": [
+            6.7977194,
+            47.5113979
+          ]
+        }
+      ],
+      "manualFront": {
+        "a": [
+          6.7977294,
+          47.5114642
+        ],
+        "b": [
+          6.7977031,
+          47.5113182
+        ],
+        "floors": 4,
+        "firstWindowBottom": 4.1,
+        "storeyHeight": 3.2,
+        "bays": [
+          {
+            "at": 0.18,
+            "width": 2.45,
+            "kind": "shutter"
+          },
+          {
+            "at": 0.47,
+            "width": 2.7,
+            "kind": "balcony"
+          },
+          {
+            "at": 0.64,
+            "width": 0.65,
+            "kind": "window"
+          },
+          {
+            "at": 0.82,
+            "width": 2.15,
+            "kind": "shutter",
+            "openTop": true
+          }
+        ],
+        "shops": [
+          {
+            "at": 0.11,
+            "width": 3.4,
+            "label": "AUTO ÉCOLE PILOTE"
+          },
+          {
+            "at": 0.85,
+            "width": 4,
+            "label": "BS COIFFURE"
+          }
+        ]
+      }
+    },
+    {
+      "buildingId": "BATIMENT0000000292211867",
+      "label": "Bâtiment commercial bleu clair, courbe côté rue",
+      "kind": "retail",
+      "wallColor": "#9fbbc3",
+      "referencePhotoIds": [
+        "d238b21c-6068-437f-b9c8-772faa7af830"
+      ],
+      "observedWalls": [
+        {
+          "a": [
+            6.7979806,
+            47.5116299
+          ],
+          "b": [
+            6.7980735,
+            47.51159
+          ]
+        },
+        {
+          "a": [
+            6.7980735,
+            47.51159
+          ],
+          "b": [
+            6.7981261,
+            47.511581
+          ]
+        },
+        {
+          "a": [
+            6.7981261,
+            47.511581
+          ],
+          "b": [
+            6.7982111,
+            47.5115792
+          ]
+        },
+        {
+          "a": [
+            6.7982111,
+            47.5115792
+          ],
+          "b": [
+            6.7983376,
+            47.5115814
+          ]
+        },
+        {
+          "a": [
+            6.7983376,
+            47.5115814
+          ],
+          "b": [
+            6.7985338,
+            47.5116092
+          ]
+        },
+        {
+          "a": [
+            6.7985338,
+            47.5116092
+          ],
+          "b": [
+            6.7986396,
+            47.5116382
+          ]
+        },
+        {
+          "a": [
+            6.7986396,
+            47.5116382
+          ],
+          "b": [
+            6.7988055,
+            47.5116896
+          ]
+        },
+        {
+          "a": [
+            6.7988055,
+            47.5116896
+          ],
+          "b": [
+            6.7989051,
+            47.5117242
+          ]
+        }
+      ],
+      "photoFaces": [],
+      "notes": "Manual reconstruction of visible pale-blue upper wall, ribbon windows, projecting canopy and glazed ground floor. Window spacing and dimensions are estimated from the photos; roof and hidden shop details are not reconstructed."
+    }
+  ],
+  "additionalSources": [
+    {
+      "id": "edfe5c1b-3de1-4a51-87d8-712de9d1131d",
+      "image": "/city/facades/edfe5c1b-3de1-4a51-87d8-712de9d1131d.jpg",
+      "imageSize": [
+        2048,
+        1024
+      ],
+      "sha256": "d45d51f254ee510be2953cefb431037b3e0488e2a1c5272c8d25be5980b4082d",
+      "author": "Lejun",
+      "license": "CC-BY-SA-4.0",
+      "capturedAt": "2026-08-21T13:03:12.240000+01:00",
+      "url": "https://explore.panoramax.fr/#focus=pic&pic=edfe5c1b-3de1-4a51-87d8-712de9d1131d",
+      "original": "https://panoramax.openstreetmap.fr/derivates/ed/fe/5c/1b/3de1-4a51-87d8-712de9d1131d/sd.jpg"
+    },
+    {
+      "id": "bbf18b7c-94a6-4969-9cf5-6be5ca50dc98",
+      "image": "/city/facades/bbf18b7c-94a6-4969-9cf5-6be5ca50dc98.jpg",
+      "imageSize": [
+        2048,
+        1024
+      ],
+      "sha256": "9d934790526bbd81ce065ad4b68535d798c46475fc7bcdbce59e33c9800a0af9",
+      "author": "Lejun",
+      "license": "CC-BY-SA-4.0",
+      "capturedAt": "2026-08-21T13:03:06.200000+01:00",
+      "url": "https://explore.panoramax.fr/#focus=pic&pic=bbf18b7c-94a6-4969-9cf5-6be5ca50dc98",
+      "original": "https://panoramax.openstreetmap.fr/derivates/bb/f1/8b/7c/94a6-4969-9cf5-6be5ca50dc98/sd.jpg"
+    }
+  ]
+}

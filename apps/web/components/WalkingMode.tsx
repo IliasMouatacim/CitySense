@@ -7,8 +7,8 @@ import type {Position} from '../lib/walk-geometry';
 import type {createCityPhysics} from '../lib/city-physics';
 import StreetPhotos from './StreetPhotos';
 
-export default function WalkingMode({map,start,onExit}:{map:Map;start:Position;onExit:()=>void}) {
-  const controller=useRef<ReturnType<typeof createWalkController>|null>(null),exit=useRef(onExit),origin=useRef(start);
+export default function WalkingMode({map,start,lookAt,onExit}:{map:Map;start:Position;lookAt?:Position;onExit:()=>void}) {
+  const controller=useRef<ReturnType<typeof createWalkController>|null>(null),exit=useRef(onExit),origin=useRef(start),initialLook=useRef(lookAt);
   exit.current=onExit;
   const [photoPosition,setPhotoPosition]=useState<Position|null>(null);
   const [status,setStatus]=useState<WalkStatus|null>(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[attempt,setAttempt]=useState(0),[sprint,setSprint]=useState(false);
@@ -16,7 +16,7 @@ export default function WalkingMode({map,start,onExit}:{map:Map;start:Position;o
     let cancelled=false,physics:Awaited<ReturnType<typeof createCityPhysics>>|undefined;
     import('../lib/city-physics').then(module=>module.createCityPhysics()).then(value=>{
       if(cancelled){value.dispose();return;}physics=value;
-      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value);setError('');}
+      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value);if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:108});setError('');}
       catch(e){setError(e instanceof Error?e.message:'Le mode piéton est indisponible.');}
     }).catch(()=>{if(!cancelled)setError('Les données du terrain n’ont pas pu être chargées. Réessayez.');});
     return()=>{cancelled=true;controller.current?.dispose();controller.current=null;physics?.dispose();};
@@ -24,7 +24,7 @@ export default function WalkingMode({map,start,onExit}:{map:Map;start:Position;o
   function direction(action:WalkAction,label:string,Icon:typeof ArrowUp){
     return <button aria-label={label} disabled={!status||!!error} onPointerDown={event=>{event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);controller.current?.press(action,true);}} onPointerUp={()=>controller.current?.press(action,false)} onPointerCancel={()=>controller.current?.press(action,false)} onLostPointerCapture={()=>controller.current?.press(action,false)} onKeyDown={event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();controller.current?.press(action,true);}}} onKeyUp={event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();controller.current?.press(action,false);}}} onBlur={()=>controller.current?.press(action,false)}><Icon size={21} aria-hidden="true"/></button>;
   }
-  return <section className="walk-hud" aria-label="Exploration à pied" data-lon={status?.position[0]} data-lat={status?.position[1]} data-heading={status?.bearing} data-meters={status?.meters} data-eye-height="1.8" data-look-pitch={status?.pitch} data-ground-elevation={status?.ground} data-camera-target={status?.cameraTarget}>
+  return <section className="walk-hud" aria-label="Exploration à pied" data-lon={status?.position[0]} data-lat={status?.position[1]} data-heading={status?.bearing} data-meters={status?.meters} data-eye-height="1.8" data-look-pitch={status?.pitch} data-fov={status?.fov} data-ground-elevation={status?.ground} data-camera-target={status?.cameraTarget}>
     <div className="walk-top"><div className="walk-title"><Footprints size={20}/><div><strong>Dans les rues de Montbéliard</strong><span>Exploration virtuelle · à hauteur de piéton</span></div></div><button onClick={onExit} className="walk-exit"><LogOut size={17}/> Quitter la marche</button></div>
     <div className="walk-crosshair" aria-hidden="true"><i/><i/></div>
     <button className="walk-photo-open" disabled={!status} onClick={()=>{if(status)setPhotoPosition([...status.position]);}}>Photos des rues</button>

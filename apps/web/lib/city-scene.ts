@@ -4,6 +4,7 @@ export const CITY_VIEWS = [
   {id:'centre', name:'Centre historique', center:[6.7982,47.5102] as [number,number], zoom:16.85, pitch:62, bearing:-26},
   {id:'chateau', name:'Le Château', center:[6.8005,47.50925] as [number,number], zoom:17.05, pitch:67, bearing:28},
   {id:'parc', name:'Près-la-Rose', center:[6.8033,47.5061] as [number,number], zoom:16.25, pitch:60, bearing:-40},
+  {id:'panoramax', name:'Façades Panoramax', center:[6.7978465,47.511485] as [number,number], zoom:17.2, pitch:62, bearing:20},
 ];
 const originals = new WeakMap<Map, StyleSpecification>();
 export const buildingHeight:ExpressionSpecification = ['case', ['>', ['to-number',['get','render_height'],0],0], ['to-number',['get','render_height'],8], 8];
