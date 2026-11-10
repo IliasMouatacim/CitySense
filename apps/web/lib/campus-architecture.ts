@@ -17,7 +17,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
   // The library's small punched openings have shallow frames. Reusing the
   // deep STGI concrete-grid relief made these read as projecting window boxes.
-  const relief=face.kind==='libraryStone'?.5:1;
+  const relief=face.kind==='libraryStone'||face.layout==='stgi-west'?.5:1;
   const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief,back*relief);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?.04:depth);
   // Dark reveal at the back, with substantial solid jambs and a projecting sill.
@@ -36,7 +36,50 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
- if(face.kind==='ribbon'||face.kind==='frame'){
+ if(face.layout==='stgi-west'){
+  // The west photograph shows narrow paired upper lights, two taller lower
+  // bands, a glazed stair bay and a solid concrete pier. Do not repeat three
+  // identical window rows through those distinct parts of the elevation.
+  const exclusions=[...(face.solidBays||[]),...(face.stairBay?[face.stairBay]:[])].sort((a,b)=>a[0]-b[0]);
+  const spans:number[][]=[];let start=.02;
+  for(const [a,b] of exclusions){if(a>start)spans.push([start,a]);start=Math.max(start,b);}
+  if(start<.98)spans.push([start,.98]);
+  for(const [row,band] of (face.glazingBands||[]).entries()){
+   const bottom=band[0]*height,top=band[1]*height;
+   for(const [left,right] of spans){
+    const width=(right-left)*length,bays=Math.max(1,Math.round(width/1.7)),pitch=width/bays;
+    for(let bay=0;bay<bays;bay++)pane(left*length+(bay+.5)*pitch,pitch-.12,bottom,top,.10);
+    const at=(left+right)*length/2;
+    if(row<2){
+     // Outside guard rails visible across the broad lower window bands.
+     for(const z of [bottom+.28,bottom+.65,bottom+1.02])if(z<top-.1)box(at,width,z,z+.045,frame,.25,.19);
+     box(at,width,top-.21,top-.17,'#884b42',.24,.18);
+    }else{
+     const split=bottom+(top-bottom)*.48;
+     box(at,width,split-.075,split+.075,concrete,.25,.06);
+     panel(at,width,bottom+.035,bottom+.085,'#367460',.16);
+     panel(at,width,top-.08,top-.03,'#3e647b',.16);
+    }
+    box(at,width,bottom-.18,bottom-.08,concrete,.27,.035);
+   }
+  }
+  if(face.stairBay){
+   const [left,right]=face.stairBay,at=(left+right)*length/2,width=(right-left)*length;
+   pane(at,width-.14,height*.06,height*.89,.10);
+   for(const z of [.32,.62])box(at,width,height*z,height*z+.16,concrete,.30,.035);
+   box(at,width*.9,height*.60,height*.72,'#278773',.28,.035);
+   panel(at+width*.2,width*.27,height*.735,height*.83,'#94483e',.15);
+   box(left*length-.06,.09,.15,height*.95,'#975d50',.24,.03);
+  }
+  for(const [left,right] of face.solidBays||[]){
+   const at=(left+right)*length/2,width=(right-left)*length;
+   box(at,width,.02,height,concrete,.20,.03);
+   for(let z=height/5;z<height-.2;z+=height/5)panel(at,width,z,z+.016,joint,.212);
+   box(at,width,height-.07,height+.06,'#637268',.25,.03);
+  }
+  box(length/2,length,height-.12,height+.06,'#aeb3a8',.15,.03);
+  if(face.label)lettering(face.label,length*.34,length*.59,height*.405,height*.565,true,.30);
+ }else if(face.kind==='ribbon'||face.kind==='frame'){
   const floors=face.floors||3,step=height/floors,bays=Math.max(1,Math.round((length-.5)/(face.kind==='frame'?3.1:2.05))),pitch=(length-.5)/bays;
   panel(length/2,length,.08,.45,'#adafa4',.06);
   for(let floor=0;floor<floors;floor++){
@@ -113,7 +156,27 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  }else if(face.kind==='timber'){
   const plinth=3.05;
   panel(length/2,length,.1,plinth,'#b8b6a8',.06);
-  for(let at=1;at<length-1;at+=1.1)pane(at,.4,.48,plinth-.35,.1);
+  // The reference has a mostly solid west plinth, a small slit and grouped
+  // glazing. The previous repeated windows invented openings across its length.
+  for(const opening of face.openings||[]){
+   const left=(opening.at-opening.width/2)*length,right=(opening.at+opening.width/2)*length;
+   const cuts=[left,...(face.entrances||[]).flatMap(e=>[e.at*length-e.width/2-.12,e.at*length+e.width/2+.12]).filter(x=>x>left&&x<right),right].sort((a,b)=>a-b);
+   for(let i=1;i<cuts.length;i++){
+    const l=cuts[i-1],r=cuts[i],mid=(l+r)/2;
+    if((face.entrances||[]).some(e=>Math.abs(mid-e.at*length)<e.width/2+.12))continue;
+    const bays=Math.max(1,Math.round((r-l)/1.25));
+    for(let b=0;b<bays;b++)pane(l+(b+.5)*(r-l)/bays,(r-l)/bays-.07,opening.bottom*height,opening.top*height,.10);
+   }
+  }
+  // OSM supplies entrance positions; the door hardware is an estimated design.
+  for(const entrance of face.entrances||[]){
+   const at=entrance.at*length,width=entrance.width;
+   for(const side of [-1,1]){
+    pane(at+side*width/4,width/2-.08,.18,2.55,.10);
+    box(at+side*.08,.025,.9,1.25,'#c0c5bb',.28,.22);
+   }
+   box(at,width+.12,.10,.16,'#8c968e',.28,.03);
+  }
   panel(length/2,length,plinth,height-.1,'#805c3d',.1);
   const step=(height-plinth)/3;
   for(let row=0;row<3;row++){
@@ -122,7 +185,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    for(let b=0;b<bays;b++)pane((b+.5)*length/bays,length/bays-.08,bottom,top,.16);
   }
   let rail=0;
-  for(let z=plinth+.12;z<height-.2;z+=.2){box(length/2,length,z,z+.075,['#9a7049','#aa8056','#88603f','#ad8259'][rail++%4],.38,.27);}
+  for(let z=plinth+.12;z<height-.2;z+=.18){box(length/2,length,z,z+.095,['#9a7049','#aa8056','#88603f','#ad8259'][rail++%4],.38,.27);}
   for(let at=.1;at<=length;at+=3.7)box(at,.065,plinth,height-.1,'#bfc1b1',.46,.25);
   box(length/2,length,plinth-.1,plinth+.05,'#9b9f93',.52,.02);
   box(length/2,length,height-.08,height+.06,'#c3c5b7',.46,.02);

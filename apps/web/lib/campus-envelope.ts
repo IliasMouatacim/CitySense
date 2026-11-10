@@ -20,7 +20,7 @@ export const campusCompletionProfile=(id:unknown)=>typeof id==='string'?campusPr
  * No entrances, signage or equipment are invented on undocumented walls.
  * All relief stays inside the walking capsule's 30 cm clearance.
  */
-export function drawCampusEnvelope(length:number,height:number,draw:CampusDrawing,close:boolean,library=false,roofEdge=true){
+export function drawCampusEnvelope(length:number,height:number,draw:CampusDrawing,close:boolean,library=false,roofEdge=true,drainage=true){
  if(length<.5||height<.8)return;
  const {panel,box}=draw;
  if(roofEdge)box(length/2,length,height-.12,height+.06,'#637268',.16,.028);
@@ -53,7 +53,7 @@ export function drawCampusEnvelope(length:number,height:number,draw:CampusDrawin
   panel(at,.018,z+.008,z+.026,'#747d75',.041);
  }
  // One modest rainwater pipe at a wall end, never a repeated mid-wall prop.
- if(length>7&&height>3){
+ if(drainage&&length>7&&height>3){
   const at=length-.32;
   box(at,.085,.28,height-.14,'#7e8a83',.18,.085);
   box(at,.13,.28,.65,'#64716b',.20,.07);

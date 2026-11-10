@@ -14,6 +14,33 @@ import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '..
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
 
+test('STGI keeps its photographed solid pier, narrow upper lights and actual facade lettering',()=>{
+ const profile=campusReferences.buildings.find(b=>b.buildingId==='BATIMENT0000000223563366')!,face=profile.faces.find(f=>f.layout==='stgi-west')!;
+ assert.ok(face);const height=12,length=metersBetween(face.a,face.b),panes:number[][]=[],labels:string[]=[];
+ drawCampusFacade(face,length,height,{panel:()=>{},box:()=>{},lettering:text=>labels.push(text),glazing:(at,w,bottom,top)=>panes.push([at-w/2,at+w/2,bottom,top])});
+ assert.deepEqual(labels,['UFR STGI']);
+ for(const [a,b] of face.solidBays!)assert.ok(panes.every(p=>p[1]<=a*length||p[0]>=b*length),'Do not run windows through the photographed concrete pier');
+ const upper=panes.filter(p=>p[2]>height*.7);assert.ok(upper.length>3);assert.ok(upper.every(p=>p[3]-p[2]<height*.15));
+ assert.ok(panes.some(p=>p[2]<height*.1&&p[3]>height*.8),'Keep the continuous stair glazing');
+});
+
+test('UTBM has a solid western plinth and doors registered to existing OSM entrances',()=>{
+ const face=campusReferences.buildings.find(b=>b.buildingId==='BATIMENT0000000292211747')!.faces.find(f=>f.kind==='timber')!;
+ const length=metersBetween(face.a,face.b),height=16.3,panes:number[][]=[];
+ drawCampusFacade(face,length,height,{panel:()=>{},box:()=>{},lettering:()=>{},glazing:(at,w,bottom,top)=>panes.push([at-w/2,at+w/2,bottom,top])});
+ assert.ok(panes.filter(p=>p[3]<3.05).every(p=>p[0]>length*.18),'No repeated windows across the solid western plinth');
+ const map=JSON.parse(readFileSync('apps/web/public/city/campus-osm.json','utf8'));
+ assert.equal(face.entrances?.length,2);
+ for(const entry of face.entrances!){
+  const node=map.objects.find((n:any)=>n.id===entry.sourceNode);assert.equal(node.tags.entrance,'main');
+  const projected=nearestOnLine(node.coordinates,[face.a,face.b]);
+  assert.ok(metersBetween(node.coordinates,projected)<8,'Allow only the small OSM/IGN registration difference');
+  const actual=[face.a[0]+(face.b[0]-face.a[0])*entry.at,face.a[1]+(face.b[1]-face.a[1])*entry.at];
+  assert.ok(metersBetween(actual,projected)<.05);
+  assert.ok(panes.some(p=>Math.abs((p[0]+p[1])/2-entry.at*length)<entry.width/2&&p[2]<.2&&p[3]>2.5));
+ }
+});
+
 test('campus side-wall completion fits real envelopes and leaves non-academic uses alone',()=>{
  let finished=0,estimated=0,nearGeometry=0,farGeometry=0;
  for(const profile of campusReferences.buildings){

@@ -445,7 +445,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                   },
                 };
                 if(academic&&exposed){
-                  drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind));
+                  drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
                   campusFinishedWalls++;
                 }
                 if(face){

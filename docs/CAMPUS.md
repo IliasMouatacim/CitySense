@@ -33,7 +33,8 @@ and pitch as well as its position.
   of the historic centre's illustrative tile colours.
   Furniture sizes and rounded tree crowns are illustrative; mapped locations,
   names and recorded capacities are retained. Entrances are recorded in the
-  dataset but door appearances are not reconstructed.
+  dataset. UTBM's two mapped main entrances now have estimated door geometry;
+  other recorded entrances do not yet have individual reconstructions.
 - `public/city/campus-facades.json`: nine IGN envelopes and 27 facade sections
   modelled from inspected institutional reference photographs. This is nine
   volumes/parts, not nine independently surveyed whole buildings.
@@ -73,6 +74,21 @@ style. This includes the taller IUT core behind its lower glazed strip; it must
 not disappear from detailing merely because the strip masks its lower floors.
 These associations are in `lib/campus-envelope.ts`, outside the photo manifest.
 
+A further comparison with `stgi-west` corrects the western STGI elevation to
+two broad lower glazing bands and paired narrow upper lights, with an unglazed
+concrete pier, continuous stair glazing, green/red infill, outside guardrails
+and the photographed `UFR STGI` lettering. These are approximate fractions along
+the IGN wall derived from an oblique photograph, not measured opening sizes.
+The IGN heights and footprint remain unchanged.
+
+UTBM's western ground-floor plinth is mostly solid, with a small slit and grouped
+glazing as in its reference; the former repeated windows across the whole base
+have been removed. Door centres project OSM nodes `6050160864` and `6050160865`
+onto the documented frontage. Their widths, hardware and present-day appearance
+remain estimates. The timber screen has denser slats to match the reference's
+coverage. The source photos were published in 2021 (STGI) and 2015 (UTBM), and
+do not establish the buildings' current condition.
+
 These are manual architectural reconstructions on approximate IGN envelopes,
 **not photogrammetry or a surveyed replica**. Window positions, counts, dimensions,
 depths and the registration of photographs to particular walls are estimated.
@@ -83,10 +99,12 @@ letters are a plain typographic interpretation of observed facade lettering.
 
 Academic buildings, the mapped research centre, sports hall and restaurant
 also receive wraparound roof coping, plinths, concrete pour
-joints and, within 100 metres, tie holes and shallow rainwater pipes. These
+joints and, within 100 metres, tie holes and shallow rainwater pipes. Generic
+rainwater pipes are omitted on documented elevations; STGI's west stair bay
+instead uses the pipe visible in its reference. These
 construction details are illustrative. Hidden party walls are skipped, fine
 detail is omitted farther away, and geometry shares the existing material
-batches. No new door, entrance or department sign is invented.
+batches. Entrance locations come from OSM; facade lettering follows the photos.
 
 The campus renderer uses lit cast-concrete surfaces with photographed grain and
 formwork marks, deeper window jambs and sills, reflective physical glazing and
@@ -236,3 +254,11 @@ ground-mode stability, eye height and movement. North-wall and courtyard capture
 were inspected. Additional geometry remains batched; measured software-rendered
 walking progressed more than 8 m in 4–5 seconds. Hardware frame rates and exact
 real-world correspondence of estimated elevations remain unverified.
+
+Photo-fidelity revision validation (2026-11-10): production build and 26 unit
+checks passed. New geometry checks keep windows out of STGI's solid pier, retain
+its narrow upper lights and actual lettering, and verify UTBM door centres
+against the mapped entrances. The generator reproduces the committed manifest.
+Four desktop/mobile browser cases passed for STGI/UTBM facade views and the
+ground/movement regression; both facade screenshots were inspected. No walking
+physics, building height or terrain geometry changed in this revision.

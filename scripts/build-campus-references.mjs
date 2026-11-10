@@ -18,8 +18,8 @@ function building(id,label,wallColor,sourceIds,faces,notes){
  buildings.push({buildingId:id,label,wallColor,sourceIds,faces:faces.map(([edge,kind,extra={}])=>({a:ring[edge],b:ring[edge+1],kind,...extra})),notes});
 }
 building('BATIMENT0000000223563366','UFR STGI · aile sud','#d2d1c8',['stgi-west','stgi-court','stgi-colour','plan'],[
- [0,'ribbon',{floors:3,label:'LEA  SVE'}],[3,'frame',{floors:3}],[16,'frame',{floors:3}],
-],'Three observed storeys, ribbon glazing, concrete reveals and coloured transoms. Opening positions, dimensions and assignment to IGN walls are estimates. Stair projections remain plain.');
+ [0,'ribbon',{floors:3,label:'UFR STGI',layout:'stgi-west',solidBays:[[.69,.83]],stairBay:[.34,.43],glazingBands:[[.055,.29],[.36,.60],[.77,.88]]}],[3,'frame',{floors:3}],[16,'frame',{floors:3}],
+],'West reference: two broad lower glazing bands, paired narrow upper lights, outside guardrails, a glazed stair bay, a solid concrete pier and UFR STGI outline lettering. Positions and registration are estimated from the oblique photo; no new entrance is inferred.');
 building('BATIMENT0000000223563368','UFR STGI · aile nord','#d2d1c8',['stgi-west','stgi-colour','plan'],[
  [9,'ribbon',{floors:3}],[11,'ribbon',{floors:3}],[21,'ribbon',{floors:3}],
 ],'Ribbon windows and red/green/yellow trim follow the institutional views. Small IGN jogs and hidden faces are simplified.');
@@ -38,10 +38,23 @@ building('BATIMENT0000000223563364','Bibliothèque universitaire','#aaa99e',['li
  [1,"libraryStone",{"openings":[{"at":0.46,"width":0.76,"bottom":0.71,"top":0.765},{"at":0.36,"width":0.47,"bottom":0.485,"top":0.55},{"at":0.12,"width":0.025,"bottom":0.385,"top":0.435,"accent":"#52745e"},{"at":0.72,"width":0.022,"bottom":0.4,"top":0.45,"accent":"#a69a58"},{"at":0.88,"width":0.027,"bottom":0.5,"top":0.555},{"at":0.52,"width":0.78,"bottom":0.055,"top":0.23}]}],
 ],"Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope.");
 building('BATIMENT0000000292211747','UTBM · façade du Cours Louis Leprince-Ringuet','#c4c1b4',['utbm','library','plan'],[
- [3,'timber',{label:'UTBM'}],[2,'concrete'],
-],'The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The reference was published in 2015; present-day alterations are unverified.');
+ [3,'timber',{label:'UTBM',openings:[{at:.24,width:.055,bottom:.065,top:.09},{at:.585,width:.37,bottom:.015,top:.16},{at:.895,width:.17,bottom:.015,top:.16}]}],[2,'concrete'],
+],'The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The west plinth remains mostly solid with a small slit and grouped glazing, following the photo. Door positions use OSM entrance nodes 6050160864 and 6050160865; door widths and hardware are estimated. The reference was published in 2015; present-day alterations are unverified.');
 for(const [id,edge] of [['BATIMENT0000000223563543',1],['BATIMENT0000000223563537',25],['BATIMENT0000000223563536',3]]){
  building(id,'IUT · Mesures physiques · côté cour','#d2d1c8',['stgi-court','iut-plan'],[[edge,'ribbon',{floors:3,glazingBands:[[.045,.28],[.465,.585],[.795,.915]]}]],'Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed.');
 }
+// Register existing mapped entrances along the documented southern frontage.
+const campusMap=JSON.parse(readFileSync('apps/web/public/city/campus-osm.json','utf8'));
+const entranceFace=buildings.find(b=>b.buildingId==='BATIMENT0000000292211747').faces.find(f=>f.kind==='timber');
+const [a,b]=[entranceFace.a,entranceFace.b],cos=Math.cos(a[1]*Math.PI/180),dx=(b[0]-a[0])*cos,dy=b[1]-a[1];
+entranceFace.entrances=[6050160864,6050160865].map(id=>{
+ const node=campusMap.objects.find(o=>o.id===id&&o.tags.entrance==='main');
+ if(!node)throw Error('Missing mapped UTBM entrance '+id);
+ const at=((node.coordinates[0]-a[0])*cos*dx+(node.coordinates[1]-a[1])*dy)/(dx*dx+dy*dy);
+ if(at<=0||at>=1)throw Error('Entrance outside UTBM frontage');
+ const gap=Math.hypot((node.coordinates[0]-a[0]-(b[0]-a[0])*at)*cos,node.coordinates[1]-a[1]-(b[1]-a[1])*at)*111319;
+ if(gap>8)throw Error('Mapped entrance too far from the IGN frontage');
+ return {at:Number(at.toFixed(6)),width:1.8,sourceNode:id};
+});
 writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-10',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
 console.log(`Recorded ${buildings.length} building envelopes and ${buildings.reduce((sum,b)=>sum+b.faces.length,0)} observed-style faces.`);

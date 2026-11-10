@@ -77,7 +77,32 @@
           ],
           "kind": "ribbon",
           "floors": 3,
-          "label": "LEA  SVE"
+          "label": "UFR STGI",
+          "layout": "stgi-west",
+          "solidBays": [
+            [
+              0.69,
+              0.83
+            ]
+          ],
+          "stairBay": [
+            0.34,
+            0.43
+          ],
+          "glazingBands": [
+            [
+              0.055,
+              0.29
+            ],
+            [
+              0.36,
+              0.6
+            ],
+            [
+              0.77,
+              0.88
+            ]
+          ]
         },
         {
           "a": [
@@ -104,7 +129,7 @@
           "floors": 3
         }
       ],
-      "notes": "Three observed storeys, ribbon glazing, concrete reveals and coloured transoms. Opening positions, dimensions and assignment to IGN walls are estimates. Stair projections remain plain."
+      "notes": "West reference: two broad lower glazing bands, paired narrow upper lights, outside guardrails, a glazed stair bay, a solid concrete pier and UFR STGI outline lettering. Positions and registration are estimated from the oblique photo; no new entrance is inferred."
     },
     {
       "buildingId": "BATIMENT0000000223563368",
@@ -456,7 +481,39 @@
             47.4961595
           ],
           "kind": "timber",
-          "label": "UTBM"
+          "label": "UTBM",
+          "openings": [
+            {
+              "at": 0.24,
+              "width": 0.055,
+              "bottom": 0.065,
+              "top": 0.09
+            },
+            {
+              "at": 0.585,
+              "width": 0.37,
+              "bottom": 0.015,
+              "top": 0.16
+            },
+            {
+              "at": 0.895,
+              "width": 0.17,
+              "bottom": 0.015,
+              "top": 0.16
+            }
+          ],
+          "entrances": [
+            {
+              "at": 0.693542,
+              "width": 1.8,
+              "sourceNode": 6050160864
+            },
+            {
+              "at": 0.496948,
+              "width": 1.8,
+              "sourceNode": 6050160865
+            }
+          ]
         },
         {
           "a": [
@@ -470,7 +527,7 @@
           "kind": "concrete"
         }
       ],
-      "notes": "The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The reference was published in 2015; present-day alterations are unverified."
+      "notes": "The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The west plinth remains mostly solid with a small slit and grouped glazing, following the photo. Door positions use OSM entrance nodes 6050160864 and 6050160865; door widths and hardware are estimated. The reference was published in 2015; present-day alterations are unverified."
     },
     {
       "buildingId": "BATIMENT0000000223563543",
