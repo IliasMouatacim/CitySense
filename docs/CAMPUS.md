@@ -5,7 +5,9 @@ Lucien Tharradin. The nearby-place directory includes mapped IUT departments,
 UFR STGI buildings, the university library, restaurant and research facilities.
 Choose a place to centre the aerial map, or look towards it while walking.
 The **Explorer** sector menu provides starts beside UFR STGI, IUT Mesures
-physiques, the library and UTBM's timber facade.
+physiques, the library and UTBM's timber facade. STGI has separate starts for
+the western frontage, the courtyard gallery and the turquoise elevation, placed
+on mapped pedestrian paths. All three open at a horizontal pedestrian eye level.
 The IUT start sits on the courtyard footpath and faces the documented ribbon
 windows, with an unobstructed line of sight checked against the IGN footprints.
 Returning to the starting point restores each sector's intended viewing direction
@@ -80,6 +82,20 @@ concrete pier, continuous stair glazing, green/red infill, outside guardrails
 and the photographed `UFR STGI` lettering. These are approximate fractions along
 the IGN wall derived from an oblique photograph, not measured opening sizes.
 The IGN heights and footprint remain unchanged.
+
+STGI's other documented walls now use separate courtyard and ribbon layouts.
+The courtyard gallery has continuous concrete piers, cross beams, recessed
+window bands and a projecting roof soffit. The turquoise facade follows the
+colour reference's upper projection, horizontal opening and yellow stair slit;
+ground-floor glazing continues beneath it. The previously inferred doorway in
+that location has been removed. Window frames on the projecting panel are offset
+with the panel, rather than disappearing behind its surface.
+
+`lib/campus-facade-solids.ts` derives substantial low-level projections from the
+same geometry callbacks as the renderer. Rapier uses those shapes for collision,
+so the walking capsule stops outside the gallery piers. Tiny fittings and upper
+canopies are excluded from this additional collision set. Existing terrain,
+camera eye height and walking speeds are retained.
 
 UTBM's western ground-floor plinth is mostly solid, with a small slit and grouped
 glazing as in its reference; the former repeated windows across the whole base

@@ -1,4 +1,5 @@
 import type {CampusFace} from './campus-references';
+import {drawStgiFacade} from './stgi-architecture';
 
 export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
@@ -17,9 +18,10 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
   // The library's small punched openings have shallow frames. Reusing the
   // deep STGI concrete-grid relief made these read as projecting window boxes.
-  const relief=face.kind==='libraryStone'||face.layout==='stgi-west'?.5:1;
-  const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief,back*relief);
-  panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?.04:depth);
+  const relief=face.kind==='libraryStone'||face.layout?.startsWith('stgi-')?.5:1;
+  const offset=face.layout?.startsWith('stgi-')&&depth>.3?depth-.09:0;
+  const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief+offset,back*relief+offset);
+  panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?Math.max(.04,offset+.04):depth);
   // Dark reveal at the back, with substantial solid jambs and a projecting sill.
   if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09));
   else{panel(at,width,bottom,top,glass,depth+.015);panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);}
@@ -36,7 +38,9 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
- if(face.layout==='stgi-west'){
+ if(drawStgiFacade(face,length,height,draw,pane)){
+  // The specialised STGI layouts share the pane/material implementation.
+ }else if(face.layout==='stgi-west'){
   // The west photograph shows narrow paired upper lights, two taller lower
   // bands, a glazed stair bay and a solid concrete pier. Do not repeat three
   // identical window rows through those distinct parts of the elevation.

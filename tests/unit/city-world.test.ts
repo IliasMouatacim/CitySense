@@ -6,6 +6,7 @@ import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
 import {distance,offset,advance} from '../../apps/web/lib/walk-geometry.ts';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {walkingGroundHeight} from '../../apps/web/lib/walking-ground';
+import {campusFacadeSolids} from '../../apps/web/lib/campus-facade-solids';
 
 test('IGN terrain samples, bounds and Rapier walking agree on the detailed city area',async()=>{
  const original=globalThis.fetch;
@@ -42,6 +43,13 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
   assert.equal(terrainHeight(.25,.25,fixture),7.5);assert.equal(terrainHeight(.75,.75,fixture),27.5);
   const physics=await createCityPhysics();
   try{
+   const piers=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563452'&&s.front===.85&&s.width<.5);
+   assert.ok(piers.length>0);
+   const pier=piers.sort((a,b)=>distance(a.wallCenter,[6.804617,47.495134])-distance(b.wallCenter,[6.804617,47.495134]))[0];
+   let besidePier=offset(pier.wallCenter,pier.normal[0]*(pier.front+2),pier.normal[1]*(pier.front+2));
+   for(let step=0;step<70;step++)besidePier=physics.move(besidePier,offset(besidePier,-pier.normal[0]*.05,-pier.normal[1]*.05));
+   assert.ok(distance(besidePier,pier.wallCenter)>pier.front+.25,'Camera capsule must stop outside the rendered concrete pier');
+   assert.ok(distance(besidePier,pier.wallCenter)<pier.front+.5,'The collision must follow the visible pier rather than an oversized barrier');
    const from:[number,number]=[6.798113188684639,47.51017527332869],to=offset(from,-.25,.6),resolved=physics.move(from,to);
    assert.ok(distance(from,resolved)>.1);assert.ok(distance(from,resolved)<1);assert.ok(physics.height(resolved)!>1);
    assert.deepEqual(physics.move(from,[0,0]),from);

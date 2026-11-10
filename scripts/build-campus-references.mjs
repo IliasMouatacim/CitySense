@@ -18,16 +18,16 @@ function building(id,label,wallColor,sourceIds,faces,notes){
  buildings.push({buildingId:id,label,wallColor,sourceIds,faces:faces.map(([edge,kind,extra={}])=>({a:ring[edge],b:ring[edge+1],kind,...extra})),notes});
 }
 building('BATIMENT0000000223563366','UFR STGI · aile sud','#d2d1c8',['stgi-west','stgi-court','stgi-colour','plan'],[
- [0,'ribbon',{floors:3,label:'UFR STGI',layout:'stgi-west',solidBays:[[.69,.83]],stairBay:[.34,.43],glazingBands:[[.055,.29],[.36,.60],[.77,.88]]}],[3,'frame',{floors:3}],[16,'frame',{floors:3}],
+ [0,'ribbon',{floors:3,label:'UFR STGI',layout:'stgi-west',solidBays:[[.69,.83]],stairBay:[.34,.43],glazingBands:[[.055,.29],[.36,.60],[.77,.88]]}],[3,'frame',{floors:3,layout:'stgi-court'}],[16,'frame',{floors:3,layout:'stgi-court'}],
 ],'West reference: two broad lower glazing bands, paired narrow upper lights, outside guardrails, a glazed stair bay, a solid concrete pier and UFR STGI outline lettering. Positions and registration are estimated from the oblique photo; no new entrance is inferred.');
 building('BATIMENT0000000223563368','UFR STGI · aile nord','#d2d1c8',['stgi-west','stgi-colour','plan'],[
- [9,'ribbon',{floors:3}],[11,'ribbon',{floors:3}],[21,'ribbon',{floors:3}],
+ [9,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[11,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[21,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
 ],'Ribbon windows and red/green/yellow trim follow the institutional views. Small IGN jogs and hidden faces are simplified.');
 building('BATIMENT0000000223563452','UFR STGI · pavillon est','#d2d1c8',['stgi-court','stgi-colour','plan'],[
- [3,'frame',{floors:3}],[5,'frame',{floors:3}],[7,'frame',{floors:3}],[8,'ribbon',{floors:3}],[9,'ribbon',{floors:3,accent:true}],
-],'Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. Their registration to this approximate envelope is not a surveyed reconstruction.');
+ [3,'frame',{floors:3,layout:'stgi-court'}],[5,'frame',{floors:3,layout:'stgi-court'}],[7,'frame',{floors:3,layout:'stgi-court'}],[8,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[9,'ribbon',{floors:3,layout:'stgi-colour',accentBay:[.44,.70],glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
+],'Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. The courtyard grid uses projecting continuous piers and cross beams. The colour reference supplies an upper turquoise projection, a small horizontal window and a yellow vertical slit above uninterrupted ground-floor glazing; the former inferred doorway is removed. Their registration to this approximate envelope is not a surveyed reconstruction.');
 building('BATIMENT0000000223563705','UFR STGI · pavillon nord-est','#d2d1c8',['stgi-court','stgi-colour','plan'],[
- [3,'frame',{floors:3}],[5,'frame',{floors:3}],[6,'ribbon',{floors:3}],[7,'ribbon',{floors:3}],[8,'ribbon',{floors:3}],
+ [3,'frame',{floors:3,layout:'stgi-court'}],[5,'frame',{floors:3,layout:'stgi-court'}],[6,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[7,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[8,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
 ],'The courtyard architectural language is reconstructed from institutional photographs. Precise departmental boundaries and obscured openings are unverified.');
 building('BATIMENT0000000223563364','Bibliothèque universitaire','#aaa99e',['library','stgi-court','plan'],[
  [0,"libraryGlass",{}],

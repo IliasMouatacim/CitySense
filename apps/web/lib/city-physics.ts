@@ -3,6 +3,7 @@ import {terrainHeight,loadCityWorld} from './city-world';
 import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
+import {campusFacadeSolids} from './campus-facade-solids';
 const anchor:Position=[6.8,47.51],meters=111319.4908,cos=Math.cos(anchor[1]*Math.PI/180);
 const local=(p:Position)=>({x:(p[0]-anchor[0])*meters*cos,z:-(p[1]-anchor[1])*meters});
 let initialized:Promise<void>|undefined;
@@ -26,6 +27,11 @@ export async function createCityPhysics(){
    }
    if(v.length)world.createCollider(RAPIER.ColliderDesc.trimesh(new Float32Array(v),new Uint32Array(idx)));
   }
+ }
+ for(const solid of campusFacadeSolids(data)){
+  const vertices=solid.polygon.flatMap(p=>{const v=local(p);return [v.x,solid.bottom,v.z,v.x,solid.top,v.z];});
+  const collider=RAPIER.ColliderDesc.convexHull(new Float32Array(vertices));
+  if(collider)world.createCollider(collider);
  }
  for(const object of data.streets?.objects||[]){
   const ground=terrainHeight(...object.coordinates);if(ground===null)continue;const p=local(object.coordinates);

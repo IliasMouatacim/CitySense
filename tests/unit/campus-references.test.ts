@@ -41,6 +41,22 @@ test('UTBM has a solid western plinth and doors registered to existing OSM entra
  }
 });
 
+test('STGI courtyard piers are continuous and the turquoise panel preserves the ground ribbon',()=>{
+ const faces=campusReferences.buildings.flatMap(b=>b.faces),court=faces.find(f=>f.layout==='stgi-court')!,colour=faces.find(f=>f.layout==='stgi-colour')!;
+ assert.ok(court&&colour);
+ const boxes:number[][]=[];
+ drawCampusFacade(court,12,10,{panel:()=>{},lettering:()=>{},box:(at,w,z0,z1,_c,front)=>boxes.push([at,w,z0,z1,front])});
+ const piers=boxes.filter(b=>b[1]<.5&&b[2]<.1&&b[3]===10&&b[4]>.8);
+ assert.ok(piers.length>=4,'Continuous piers must replace window-sized trim');
+ assert.ok(boxes.some(b=>b[1]===12&&b[2]>9&&b[4]>=.9),'Keep the projecting roof soffit');
+ const panes:number[][]=[];let fakeDoor=false;
+ drawCampusFacade(colour,22,10,{panel:()=>{},lettering:()=>{},box:(_at,_w,z0,z1)=>{if(z0===.13&&z1===.18)fakeDoor=true;},glazing:(at,w,z0,z1)=>panes.push([at-w/2,at+w/2,z0,z1])});
+ assert.equal(fakeDoor,false);
+ const [left,right]=colour.accentBay!;
+ assert.ok(panes.filter(p=>p[2]<1).some(p=>p[0]<right*22&&p[1]>left*22),'Ground-floor glazing continues below the upper panel');
+ assert.ok(panes.some(p=>p[1]-p[0]<.3&&p[2]>2.5&&p[3]>8),'Keep the narrow yellow stair slit');
+});
+
 test('campus side-wall completion fits real envelopes and leaves non-academic uses alone',()=>{
  let finished=0,estimated=0,nearGeometry=0,farGeometry=0;
  for(const profile of campusReferences.buildings){
