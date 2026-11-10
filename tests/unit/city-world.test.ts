@@ -25,6 +25,8 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
   assert.equal(terrainHeight(6.803,47.502),null,'The unmeasured gap between regions must not become walkable');
   assert.ok(data.buildings.features.some(f=>String(f.properties.campusName).includes('Réseaux')));
   assert.ok(data.buildings.features.some(f=>String(f.properties.campusName).includes('STGI')));
+  assert.ok(data.buildings.features.some(f=>f.properties.campusUse==='university'));
+  assert.ok(data.buildings.features.some(f=>f.properties.campusUse==='sports_hall'));
   assert.ok(data.campus?.pois.some(p=>p.tags.short_name==='UTBM'));
   const courtyard:[number,number]=[6.804015,47.495204];
   assert.ok(Math.abs(walkingGroundHeight(courtyard)-terrainHeight(...courtyard)!-.12)<1e-7,'The camera stands on the visible courtyard slabs');

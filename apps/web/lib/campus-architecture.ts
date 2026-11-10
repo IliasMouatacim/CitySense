@@ -8,7 +8,8 @@ export type CampusDrawing={
 };
 
 /** Batched solid architecture observed in institutional photographs.
- * Positions/relief are estimates on IGN envelopes; unseen walls get no windows.
+ * Positions/relief are estimates on IGN envelopes. Inferred continuations are
+ * selected separately by campus-envelope and counted separately in the UI.
  */
 export function drawCampusFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing){
  const {panel,box,lettering}=draw;let windows=0;

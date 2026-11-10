@@ -34,7 +34,7 @@ and pitch as well as its position.
   Furniture sizes and rounded tree crowns are illustrative; mapped locations,
   names and recorded capacities are retained. Entrances are recorded in the
   dataset but door appearances are not reconstructed.
-- `public/city/campus-facades.json`: nine IGN envelopes and 26 facade sections
+- `public/city/campus-facades.json`: nine IGN envelopes and 27 facade sections
   modelled from inspected institutional reference photographs. This is nine
   volumes/parts, not nine independently surveyed whole buildings.
 - The mapped pedestrian courtyard (OSM way `1334515492`) receives a terrain-following
@@ -59,16 +59,34 @@ IUT Mesures physiques volumes have the courtyard-facing ribbon glazing visible
 in the STGI courtyard photograph: taller ground-floor glazing and shallower upper
 bands. The library's long courtyard wall has uneven window groups and coloured
 reveals from that same photograph, rather than repeating continuous strips.
-Those opening proportions and positions remain approximate. Other walls stay neutral instead of receiving
-invented historic ornaments. The institutional plan supplies sector identities;
+The library’s long north elevation now includes the narrow window bands and
+smaller openings visible in the library reference. Opening positions remain
+approximate. Classroom side walls longer than eight metres continue their
+building’s window pattern as explicitly estimated elevations. Mapped university
+and college buildings without a photo profile use estimated modern ribbons;
+residential and utility buildings do not receive this treatment. Library and
+UTBM hidden walls remain solid. The institutional plan supplies sector identities;
 OSM names and departmental boundaries may differ or be outdated.
+
+Seven adjoining IUT/STGI cores and connectors inherit their wing's estimated
+style. This includes the taller IUT core behind its lower glazed strip; it must
+not disappear from detailing merely because the strip masks its lower floors.
+These associations are in `lib/campus-envelope.ts`, outside the photo manifest.
 
 These are manual architectural reconstructions on approximate IGN envelopes,
 **not photogrammetry or a surveyed replica**. Window positions, counts, dimensions,
 depths and the registration of photographs to particular walls are estimated.
-Some adjoining parts, hidden elevations and the IUT R&T/GACO/MMI facades remain
-simplified. Building interiors and undercrofts cannot be entered. The largest
+The IUT R&T/GACO/MMI elevations and undocumented classroom sides use inferred
+window layouts, not photo observations. The panel reports observed faces and
+estimated faces separately. Building interiors and undercrofts cannot be entered. The largest
 letters are a plain typographic interpretation of observed facade lettering.
+
+Academic buildings, the mapped research centre, sports hall and restaurant
+also receive wraparound roof coping, plinths, concrete pour
+joints and, within 100 metres, tie holes and shallow rainwater pipes. These
+construction details are illustrative. Hidden party walls are skipped, fine
+detail is omitted farther away, and geometry shares the existing material
+batches. No new door, entrance or department sign is invented.
 
 The campus renderer uses lit cast-concrete surfaces with photographed grain and
 formwork marks, deeper window jambs and sills, reflective physical glazing and
@@ -208,3 +226,13 @@ After the foundation and sidewalk refinements, both library ground cases passed
 again and their stationary/moving screenshots were inspected. Browser frame
 samples use software WebGL and do not establish a hardware-device frame-rate
 guarantee; desktop/mobile samples still advanced more than 8 m in roughly 4–5 s.
+
+Building completion validation (2026-11-10): production build and 24 unit checks
+passed, including real-wall geometry bounds, inferred-core associations and
+preservation of mapped department names. The reference generator reproduces the
+committed manifest. All six final desktop/mobile cases passed: library material
+loading, a walk around its newly detailed north elevation, courtyard lighting,
+ground-mode stability, eye height and movement. North-wall and courtyard captures
+were inspected. Additional geometry remains batched; measured software-rendered
+walking progressed more than 8 m in 4–5 seconds. Hardware frame rates and exact
+real-world correspondence of estimated elevations remain unverified.

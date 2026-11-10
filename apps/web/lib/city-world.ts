@@ -38,16 +38,17 @@ export function loadCityWorld(){
     const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
     // Match footprint interiors rather than a shared boundary corner, which can
     // otherwise attach the neighbouring department's name to an IGN volume.
-    const candidates=campus.buildings.filter(b=>b.tags.name&&b.tags['building:part']!=='roof').map(b=>{
+    const candidates=campus.buildings.filter(b=>(b.tags.name||['university','college'].includes(b.tags.building||b.tags['building:part']))&&b.tags['building:part']!=='roof').map(b=>{
      const points=b.coordinates.slice(0,-1),mid=points.reduce((v,p)=>[v[0]+p[0]/points.length,v[1]+p[1]/points.length],[0,0]) as [number,number];
      const score=polygons.reduce((best,p)=>{
       const ring=p[0].slice(0,-1),center=ring.reduce((v,p)=>[v[0]+p[0]/ring.length,v[1]+p[1]/ring.length],[0,0]) as [number,number];
       return Math.max(best,Number(insidePolygon(center,[b.coordinates]))+Number(insidePolygon(mid,p)));
      },0);
      return {b,score};
-    }).filter(c=>c.score>0).sort((a,b)=>b.score-a.score);
+    }).filter(c=>c.score>0).sort((a,b)=>b.score-a.score||Number(!!b.b.tags.name)-Number(!!a.b.tags.name));
     const mapped=candidates[0]?.b;
-    feature.id+=100000;feature.properties={...feature.properties,region:'campus',...(mapped?{campusName:mapped.tags.name,campusOsmId:mapped.id}:{} )};
+    const use=mapped&&(mapped.tags.building==='yes'?mapped.tags.leisure||mapped.tags.office||mapped.tags.amenity||'yes':mapped.tags.building||mapped.tags['building:part']);
+    feature.id+=100000;feature.properties={...feature.properties,region:'campus',...(mapped?{campusName:mapped.tags.name,campusOsmId:mapped.id,campusUse:use}:{} )};
    }
    data.buildings.features.push(...patch.buildings.features);
   }

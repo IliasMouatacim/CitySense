@@ -8,7 +8,9 @@ import {cityBuildingFeatures,getCityWorld,terrainHeight} from './city-world';
 import {loadCityModel} from './city-model';
 import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
 import {campusProfile,campusFace} from './campus-references';
-import {drawCampusFacade} from './campus-architecture';
+import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
+import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
+import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
 import {campusSurface} from './campus-surfaces';
 import {withShadowDepthRange} from './render-depth';
@@ -19,7 +21,7 @@ import {drapeSurface} from './terrain-surface';
 import {WALK_EYE_HEIGHT} from './walk-settings';
 
 export type DetailOptions={mood:SceneMood;scale:number;enabled:boolean;dimensional:boolean;walking:boolean;photo:boolean;routeCoordinates?:number[][]};
-export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;photoGroundTriangles?:number;campusGroundTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean;campusBuildings?:number;campus?:boolean;campusFacades?:number;campusReferenceBuildings?:number;campusEnvironment?:boolean;campusFixtures?:number;campusShadowResolution?:number};
+export type DetailStatus={buildings:number;windows:number;signs:number;pois:CityPoi[];street:string;photoRoofTriangles?:number;photoGroundTriangles?:number;campusGroundTriangles?:number;routeSegments?:number;modelMeshes?:number;referenceBuildings?:number;facadePhotoFaces?:number;facadePhotoFailed?:boolean;campusBuildings?:number;campus?:boolean;campusFacades?:number;campusFinishedWalls?:number;campusEstimatedFacades?:number;campusReferenceBuildings?:number;campusEnvironment?:boolean;campusFixtures?:number;campusShadowResolution?:number};
 type Point=[number,number];
 type Wall={a:Point;b:Point;normal:Point;length:number;height:number;base:number;variant:number};
 type Batch={positions:number[];colors:number[];uvs:number[]};
@@ -189,7 +191,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
         const points=face.map(p=>[...local(p),p[2]]);
@@ -375,17 +377,19 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     // OpenMapTiles can merge hundreds of equal-height buildings into one MultiPolygon.
     // Cull and deduplicate individual footprints, never the feature's first polygon.
     const footprints=nearbyFootprints(features,center,options.walking?240:420);
+    const campusOccluders=footprints.filter(f=>f.feature.properties?.region==='campus').map(f=>({feature:f.feature,rings:f.polygon.map(r=>r.map(local))}));
     for(const {feature,polygon,distance} of footprints){
         if(!options.enabled)break;
         if(count>=(options.walking?100:160))break;
         const p=feature.properties||{};if(p.hide_3d)continue;
         const campusBuilding=p.region==='campus';if(typeof p.campusName==='string')campusBuildings++;
         const university=campusProfile(p.sourceId);if(university)campusReferenceBuildings++;
+        const completion=university||campusCompletionProfile(p.sourceId);
         const profile=facadeProfile(p.sourceId);if(profile){referenceBuildings++;for(const face of profile.photoFaces){const projection=facadeReferences.projections[face.projection];requestFacadeTexture(projection.image||facadeReferences.source.image);}}
         const {height,base}=mappedHeight(p);if(height<=base)continue;
         const rings=polygon.map(r=>r.slice(0,-1).map(local)).filter(r=>r.length>=3);if(!rings.length||rings[0].length>100)continue;
         const variant=stableVariant(undefined,polygon[0]);count++;
-        const facade=university?.wallColor||(campusBuilding?'#c2c6c3':typeof p.colour==='string'&&/^#[0-9a-f]{6}$/i.test(p.colour)?p.colour:['#e1c5a4','#e8d9b8','#c9b4a8','#d6b6a1','#d1d2bb','#d7bc83','#bdd0c6','#d5c8bb'][variant%8]);
+        const facade=completion?.wallColor||(campusBuilding?'#c2c6c3':typeof p.colour==='string'&&/^#[0-9a-f]{6}$/i.test(p.colour)?p.colour:['#e1c5a4','#e8d9b8','#c9b4a8','#d6b6a1','#d1d2bb','#d7bc83','#bdd0c6','#d5c8bb'][variant%8]);
         const outer=rings[0].map(p=>new Vector2(...p)),holes=rings.slice(1).map(r=>r.map(p=>new Vector2(...p)));
         const vertices=rings.flat();const roofColor=roofColors[variant%roofColors.length];
         for(const indices of ShapeUtils.triangulateShape(outer,holes)){
@@ -417,16 +421,20 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 const p0=[a[0]+(b[0]-a[0])*t0+normal[0]*.025,a[1]+(b[1]-a[1])*t0+normal[1]*.025],p1=[a[0]+(b[0]-a[0])*t1+normal[0]*.025,a[1]+(b[1]-a[1])*t1+normal[1]*.025];
                 quad(campusConcrete,[...p0,z0],[...p1,z1],[...p1,base],[...p0,base],facade,1,[[length*t0/4,z0/2],[length*t1/4,z1/2],[length*t1/4,base/2],[length*t0/4,base/2]]);
               }
-              if(university){
-                wallBox(details,wall,length/2,length+.10,height-.08,height+.06,'#637268',.16,.015);
-                panel(details,wall,length/2,length,base+.03,base+.26,'#929a90',.045);
-              }
-              const face=university&&campusFace(university,polygon[ringIndex][i],polygon[ringIndex][i+1]);
-              if(face){
-                windows+=drawCampusFacade(face,length,height-base,{
+              const observed=university&&campusFace(university,polygon[ringIndex][i],polygon[ringIndex][i+1]);
+              const academic=!!completion||['university','college','research','sports_hall','restaurant'].includes(String(p.campusUse));
+              // Suppress detail on shared walls hidden inside another volume.
+              const exposed=!academic||[.2,.5,.8].some(t=>{
+                const point:Point=[a[0]+(b[0]-a[0])*t+normal[0]*.6,a[1]+(b[1]-a[1])*t+normal[1]*.6];
+                return !campusOccluders.some(other=>other.feature!==feature&&Number(other.feature.properties?.render_height)>=height-.3&&insidePolygon(point,other.rings));
+              });
+              const estimated=!observed&&academic&&exposed?estimatedCampusFace(completion,p.campusUse,length,height-base):undefined;
+              const face=observed||estimated;
+              if(face||academic&&exposed){
+                const drawing:CampusDrawing={
                   panel:(at,w,bottom,top,hex,depth)=>panel(campusConcreteTones.has(hex)?campusConcrete:details,wall,at,w,base+bottom,base+top,hex,depth,campusConcreteTones.has(hex)?[[0,0],[w/4,0],[w/4,(top-bottom)/2],[0,(top-bottom)/2]]:undefined),
                   box:(at,w,bottom,top,hex,front,back)=>{
-                    const wooden=face.kind==='timber'&&['#9a7049','#aa8056','#88603f','#ad8259'].includes(hex);
+                    const wooden=face?.kind==='timber'&&['#9a7049','#aa8056','#88603f','#ad8259'].includes(hex);
                     const concrete=campusConcreteTones.has(hex);
                     wallBox(wooden?timber:concrete?campusConcrete:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden||concrete,concrete?[4,2]:[3,.25]);
                   },
@@ -435,9 +443,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                     const tile=(Math.round(at*7+bottom*3)+wall.variant)%16,u=(tile%4)/4,v=Math.floor(tile/4)/4;
                     panel(campusGlazing,wall,at,w,base+bottom,base+top,'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
                   },
-                });campusFacades++;
+                };
+                if(academic&&exposed){
+                  drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind));
+                  campusFinishedWalls++;
+                }
+                if(face){
+                  windows+=drawCampusFacade(face,length,height-base,drawing);
+                  if(observed)campusFacades++;else campusEstimatedFacades++;
+                }
               }
-              continue; // Unobserved walls stay neutral, without invented historic ornaments.
+              continue;
             }
             if(profile){
               const ga=polygon[ringIndex][i],gb=polygon[ringIndex][i+1];
@@ -677,7 +693,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(d<closest&&d<65){closest=d;street=String(name);}
       }
     }
-    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,photoGroundTriangles:photoTerrain.positions.length/9,campusGroundTriangles:campusGround.positions.length/9,routeSegments,modelMeshes:!campus&&cityModel?cityModel.group.children.length:0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0,campusBuildings,campus,campusFacades,campusReferenceBuildings,campusEnvironment:campus&&!!environment,campusFixtures:campus?CAMPUS_COURTYARD.fixtures.length:0,campusShadowResolution:campus&&sun.castShadow?sun.shadow.mapSize.width:0});map.triggerRepaint();
+    onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,photoGroundTriangles:photoTerrain.positions.length/9,campusGroundTriangles:campusGround.positions.length/9,routeSegments,modelMeshes:!campus&&cityModel?cityModel.group.children.length:0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0,campusBuildings,campus,campusFacades,campusFinishedWalls,campusEstimatedFacades,campusReferenceBuildings,campusEnvironment:campus&&!!environment,campusFixtures:campus?CAMPUS_COURTYARD.fixtures.length:0,campusShadowResolution:campus&&sun.castShadow?sun.shadow.mapSize.width:0});map.triggerRepaint();
   }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={

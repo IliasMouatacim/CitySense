@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('library glazing and concrete remain readable in the shaded campus elevation',async({page})=>{
- test.setTimeout(150000);await page.emulateMedia({reducedMotion:'reduce'});
+ test.setTimeout(210000);await page.emulateMedia({reducedMotion:'reduce'});
  const loadedMaterials=new Set<string>();
  page.on('response',response=>{if(/\/materials\/campus-.*\.jpg$/.test(response.url())&&response.ok())loadedMaterials.add(response.url());});
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
@@ -15,6 +15,29 @@ test('library glazing and concrete remain readable in the shaded campus elevatio
  await expect(page.locator('.walk-hud')).toHaveAttribute('data-lat',/47\.49/,{timeout:45000});
  await expect(page.locator('.walk-error')).toHaveCount(0);
  await page.screenshot({path:`test-results/campus-library-materials-${test.info().project.name}.png`,fullPage:true});
+ // Walk round the end of the library and inspect the formerly blank north wall.
+ const hud=page.locator('.walk-hud'),canvas=page.locator('.maplibregl-canvas');
+ async function turnTo(target:number){
+  const rect=(await canvas.boundingBox())!,heading=Number(await hud.getAttribute('data-heading'));
+  let dx=((target-heading+540)%360-180)/.13;
+  while(Math.abs(dx)>.1){
+   const step=Math.sign(dx)*Math.min(Math.abs(dx),rect.width*.55,270),x=rect.x+rect.width/2,y=rect.y+rect.height*.52;
+   await page.mouse.move(x-step/2,y);await page.mouse.down();await page.mouse.move(x+step/2,y,{steps:2});await page.mouse.up();dx-=step;
+  }
+ }
+ await turnTo(0);
+ await page.evaluate(()=>new Promise<void>(resolve=>{
+  const start=performance.now(),hud=document.querySelector<HTMLElement>('.walk-hud')!;
+  for(const code of ['KeyW','ShiftLeft'])window.dispatchEvent(new KeyboardEvent('keydown',{code,key:code==='KeyW'?'w':'Shift',bubbles:true}));
+  const step=()=>{
+   if(Number(hud.dataset.lat)<47.49555&&performance.now()-start<15000){requestAnimationFrame(step);return;}
+   for(const code of ['KeyW','ShiftLeft'])window.dispatchEvent(new KeyboardEvent('keyup',{code,key:code==='KeyW'?'w':'Shift',bubbles:true}));
+   resolve();
+  };requestAnimationFrame(step);
+ }));
+ await expect.poll(async()=>Number(await hud.getAttribute('data-lat'))).toBeGreaterThanOrEqual(47.49555);
+ await turnTo(110);
+ await page.screenshot({path:`test-results/campus-library-north-${test.info().project.name}.png`,fullPage:true});
  expect(errors).toEqual([]);
 });
 

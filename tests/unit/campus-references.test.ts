@@ -9,9 +9,56 @@ import {metersBetween} from '../../apps/web/lib/city-details-data';
 import {insidePolygon,nearestOnLine} from '../../apps/web/lib/walk-geometry';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {drawCampusBench} from '../../apps/web/lib/campus-furniture';
+import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '../../apps/web/lib/campus-envelope';
 
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
+
+test('campus side-wall completion fits real envelopes and leaves non-academic uses alone',()=>{
+ let finished=0,estimated=0,nearGeometry=0,farGeometry=0;
+ for(const profile of campusReferences.buildings){
+  const building=data.buildings.features.find((f:any)=>f.properties.sourceId===profile.buildingId),height=building.properties.render_height;
+  for(const poly of polygons(building))for(let i=1;i<poly[0].length;i++){
+   const a=poly[0][i-1],b=poly[0][i],length=metersBetween(a,b);if(length<.5)continue;
+   const check=(at:number,w:number,z0:number,z1:number,color:string,front=.1,back=.028)=>{
+    assert.ok([at,w,z0,z1,front,back].every(Number.isFinite));
+    assert.ok(w>0&&at-w/2>=-.001&&at+w/2<=length+.001);
+    assert.ok(z0>=0&&z1>z0&&z1<=height+.061);
+    assert.ok(front<=.3&&back<front,'Envelope relief must remain inside capsule clearance');
+   };
+   for(const close of [true,false])drawCampusEnvelope(length,height,{panel:(...args)=>{check(...args);if(close)nearGeometry++;else farGeometry++;},box:check,lettering:()=>assert.fail('No invented signs')},close,profile.faces.some(f=>f.kind==='libraryStone'));
+   finished++;
+   if(profile.faces.some(f=>matchesFacadeEdge(f,a,b)))continue;
+   const face=estimatedCampusFace(profile,undefined,length,height);
+   if(face){
+    assert.equal(face.label,undefined);assert.equal(face.accent,undefined);estimated++;
+    const opening=(at:number,w:number,z0:number,z1:number,color:string,front=.1)=>{
+     assert.ok([at,w,z0,z1,front].every(Number.isFinite));
+     assert.ok(w>0&&at-w/2>=-.3&&at+w/2<=length+.3);
+     assert.ok(z0>=0&&z1>z0&&z1<=height+.15);assert.ok(front<1);
+    };
+    assert.ok(drawCampusFacade(face,length,height,{panel:opening,box:opening,lettering:()=>assert.fail('No inferred department signs')})>0);
+   }
+   if(profile.label.includes('Bibliothèque')||profile.label.includes('UTBM'))assert.equal(face,undefined);
+  }
+ }
+ assert.ok(finished>100);assert.ok(estimated>10);assert.ok(nearGeometry>farGeometry*2);
+ for(const use of ['apartments','dormitory','garage',undefined])assert.equal(estimatedCampusFace(undefined,use,20,10),undefined);
+ assert.ok(estimatedCampusFace(undefined,'university',20,10));
+ assert.equal(estimatedCampusFace(undefined,'university',3,10),undefined);
+});
+
+test('taller IUT cores and STGI connectors receive inferred detail without becoming photo observations',()=>{
+ const cores=data.buildings.features.filter((f:any)=>campusCompletionProfile(f.properties.sourceId));
+ assert.equal(cores.length,7);
+ for(const core of cores){
+  assert.ok(!campusReferences.buildings.some(b=>b.buildingId===core.properties.sourceId));
+  const profile=campusCompletionProfile(core.properties.sourceId)!;
+  if(['BATIMENT0000000223563541','BATIMENT0000000223563542'].includes(core.properties.sourceId)){
+   assert.ok(polygons(core).some(p=>p[0].slice(1).some((b,i)=>estimatedCampusFace(profile,undefined,metersBetween(p[0][i],b),core.properties.render_height))),core.properties.sourceId);
+  }
+ }
+});
 
 test('detailed benches remain inside existing walking collision envelopes',()=>{
  for(const width of [1.6,2.2]){

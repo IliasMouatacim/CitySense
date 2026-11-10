@@ -30,13 +30,18 @@ building('BATIMENT0000000223563705','UFR STGI · pavillon nord-est','#d2d1c8',['
  [3,'frame',{floors:3}],[5,'frame',{floors:3}],[6,'ribbon',{floors:3}],[7,'ribbon',{floors:3}],[8,'ribbon',{floors:3}],
 ],'The courtyard architectural language is reconstructed from institutional photographs. Precise departmental boundaries and obscured openings are unverified.');
 building('BATIMENT0000000223563364','Bibliothèque universitaire','#aaa99e',['library','stgi-court','plan'],[
- [0,'libraryGlass'],[2,'libraryGlass'],[4,'libraryGlass'],[7,'libraryStone'],[11,'libraryStone'],
-],'Observed grey concrete/brick courses, narrow ribbon windows, glazed west end and stair bay. Interior space and the undercroft are not accessible. Dimensions are estimated.');
+ [0,"libraryGlass",{}],
+ [2,"libraryGlass",{}],
+ [4,"libraryGlass",{}],
+ [7,"libraryStone",{}],
+ [11,"libraryStone",{"openings":[{"at":0.16,"width":0.2,"bottom":0.045,"top":0.205},{"at":0.49,"width":0.18,"bottom":0.045,"top":0.205},{"at":0.78,"width":0.14,"bottom":0.045,"top":0.205},{"at":0.1,"width":0.07,"bottom":0.3,"top":0.365,"accent":"#559380"},{"at":0.31,"width":0.16,"bottom":0.3,"top":0.365},{"at":0.56,"width":0.24,"bottom":0.3,"top":0.365},{"at":0.83,"width":0.07,"bottom":0.3,"top":0.365,"accent":"#b4a75a"},{"at":0.15,"width":0.07,"bottom":0.535,"top":0.6,"accent":"#559380"},{"at":0.51,"width":0.05,"bottom":0.535,"top":0.6},{"at":0.82,"width":0.06,"bottom":0.535,"top":0.6,"accent":"#995e50"},{"at":0.2,"width":0.06,"bottom":0.79,"top":0.825},{"at":0.53,"width":0.06,"bottom":0.79,"top":0.825},{"at":0.78,"width":0.07,"bottom":0.79,"top":0.825,"accent":"#559380"}]}],
+ [1,"libraryStone",{"openings":[{"at":0.46,"width":0.76,"bottom":0.71,"top":0.765},{"at":0.36,"width":0.47,"bottom":0.485,"top":0.55},{"at":0.12,"width":0.025,"bottom":0.385,"top":0.435,"accent":"#52745e"},{"at":0.72,"width":0.022,"bottom":0.4,"top":0.45,"accent":"#a69a58"},{"at":0.88,"width":0.027,"bottom":0.5,"top":0.555},{"at":0.52,"width":0.78,"bottom":0.055,"top":0.23}]}],
+],"Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope.");
 building('BATIMENT0000000292211747','UTBM · façade du Cours Louis Leprince-Ringuet','#c4c1b4',['utbm','library','plan'],[
  [3,'timber',{label:'UTBM'}],[2,'concrete'],
 ],'The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The reference was published in 2015; present-day alterations are unverified.');
 for(const [id,edge] of [['BATIMENT0000000223563543',1],['BATIMENT0000000223563537',25],['BATIMENT0000000223563536',3]]){
- building(id,'IUT · Mesures physiques · côté cour','#d2d1c8',['stgi-court','iut-plan'],[[edge,'ribbon',{floors:3}]],'Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed.');
+ building(id,'IUT · Mesures physiques · côté cour','#d2d1c8',['stgi-court','iut-plan'],[[edge,'ribbon',{floors:3,glazingBands:[[.045,.28],[.465,.585],[.795,.915]]}]],'Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed.');
 }
-writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-09',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
+writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-10',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
 console.log(`Recorded ${buildings.length} building envelopes and ${buildings.reduce((sum,b)=>sum+b.faces.length,0)} observed-style faces.`);

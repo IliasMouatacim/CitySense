@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedAt": "2026-11-09",
+  "reviewedAt": "2026-11-10",
   "method": "Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.",
   "sourceImagesRedistributed": false,
   "sources": [
@@ -381,9 +381,60 @@
             {"at":0.53,"width":0.06,"bottom":0.79,"top":0.825},
             {"at":0.78,"width":0.07,"bottom":0.79,"top":0.825,"accent":"#559380"}
           ]
+        },
+        {
+          "a": [
+            6.8034052,
+            47.4954809
+          ],
+          "b": [
+            6.8039878,
+            47.4955952
+          ],
+          "kind": "libraryStone",
+          "openings": [
+            {
+              "at": 0.46,
+              "width": 0.76,
+              "bottom": 0.71,
+              "top": 0.765
+            },
+            {
+              "at": 0.36,
+              "width": 0.47,
+              "bottom": 0.485,
+              "top": 0.55
+            },
+            {
+              "at": 0.12,
+              "width": 0.025,
+              "bottom": 0.385,
+              "top": 0.435,
+              "accent": "#52745e"
+            },
+            {
+              "at": 0.72,
+              "width": 0.022,
+              "bottom": 0.4,
+              "top": 0.45,
+              "accent": "#a69a58"
+            },
+            {
+              "at": 0.88,
+              "width": 0.027,
+              "bottom": 0.5,
+              "top": 0.555
+            },
+            {
+              "at": 0.52,
+              "width": 0.78,
+              "bottom": 0.055,
+              "top": 0.23
+            }
+          ]
         }
       ],
-      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. Interior space and the undercroft are not accessible."
+      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope."
     },
     {
       "buildingId": "BATIMENT0000000292211747",
@@ -441,7 +492,20 @@
           ],
           "kind": "ribbon",
           "floors": 3,
-          "glazingBands": [[0.045,0.28],[0.465,0.585],[0.795,0.915]]
+          "glazingBands": [
+            [
+              0.045,
+              0.28
+            ],
+            [
+              0.465,
+              0.585
+            ],
+            [
+              0.795,
+              0.915
+            ]
+          ]
         }
       ],
       "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
@@ -466,7 +530,20 @@
           ],
           "kind": "ribbon",
           "floors": 3,
-          "glazingBands": [[0.045,0.28],[0.465,0.585],[0.795,0.915]]
+          "glazingBands": [
+            [
+              0.045,
+              0.28
+            ],
+            [
+              0.465,
+              0.585
+            ],
+            [
+              0.795,
+              0.915
+            ]
+          ]
         }
       ],
       "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
@@ -491,7 +568,20 @@
           ],
           "kind": "ribbon",
           "floors": 3,
-          "glazingBands": [[0.045,0.28],[0.465,0.585],[0.795,0.915]]
+          "glazingBands": [
+            [
+              0.045,
+              0.28
+            ],
+            [
+              0.465,
+              0.585
+            ],
+            [
+              0.795,
+              0.915
+            ]
+          ]
         }
       ],
       "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
