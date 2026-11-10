@@ -26,6 +26,15 @@
       "captureDate": null
     },
     {
+      "id": "stgi-painted-detail",
+      "institution": "Wikimedia Commons · UFR STGI Montbéliard",
+      "url": "https://commons.wikimedia.org/wiki/File:Ufr_stgi_univ_framche_comte.jpg",
+      "published": "2016-11",
+      "captureDate": "2016-11-10",
+      "author": "Noscium",
+      "license": "CC BY-SA 4.0"
+    },
+    {
       "id": "library",
       "institution": "UFR STGI · Bibliothèque universitaire",
       "url": "https://stgi.umlp.fr/wp-content/uploads/2021/06/BU-MONTBELIARD.jpg",
@@ -63,7 +72,8 @@
         "stgi-west",
         "stgi-court",
         "stgi-colour",
-        "plan"
+        "plan",
+        "stgi-painted-detail"
       ],
       "faces": [
         {
@@ -140,7 +150,8 @@
       "sourceIds": [
         "stgi-west",
         "stgi-colour",
-        "plan"
+        "plan",
+        "stgi-painted-detail"
       ],
       "faces": [
         {
@@ -234,7 +245,8 @@
       "sourceIds": [
         "stgi-court",
         "stgi-colour",
-        "plan"
+        "plan",
+        "stgi-painted-detail"
       ],
       "faces": [
         {
@@ -316,8 +328,8 @@
           "floors": 3,
           "layout": "stgi-colour",
           "accentBay": [
-            0.44,
-            0.7
+            0.3,
+            0.56
           ],
           "glazingBands": [
             [
@@ -344,7 +356,8 @@
       "sourceIds": [
         "stgi-court",
         "stgi-colour",
-        "plan"
+        "plan",
+        "stgi-painted-detail"
       ],
       "faces": [
         {

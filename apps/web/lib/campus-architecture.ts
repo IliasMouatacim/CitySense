@@ -1,5 +1,5 @@
 import type {CampusFace} from './campus-references';
-import {drawStgiFacade} from './stgi-architecture';
+import {drawStgiFacade,drawStgiPaint} from './stgi-architecture';
 
 export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
@@ -41,6 +41,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  if(drawStgiFacade(face,length,height,draw,pane)){
   // The specialised STGI layouts share the pane/material implementation.
  }else if(face.layout==='stgi-west'){
+  drawStgiPaint(length,height,draw);
   // The west photograph shows narrow paired upper lights, two taller lower
   // bands, a glazed stair bay and a solid concrete pier. Do not repeat three
   // identical window rows through those distinct parts of the elevation.

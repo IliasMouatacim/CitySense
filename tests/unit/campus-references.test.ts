@@ -55,6 +55,21 @@ test('STGI courtyard piers are continuous and the turquoise panel preserves the 
  const [left,right]=colour.accentBay!;
  assert.ok(panes.filter(p=>p[2]<1).some(p=>p[0]<right*22&&p[1]>left*22),'Ground-floor glazing continues below the upper panel');
  assert.ok(panes.some(p=>p[1]-p[0]<.3&&p[2]>2.5&&p[3]>8),'Keep the narrow yellow stair slit');
+ const slit=panes.find(p=>p[1]-p[0]<.3&&p[2]>2.5&&p[3]>8)!;
+ const smallWindow=panes.find(p=>p[2]===3.65)!;
+ assert.ok(slit[1]<smallWindow[0],'The right-to-left IGN edge must put the slit to the photographed right of the horizontal opening');
+});
+
+test('STGI painted infill remains distinct from its exposed concrete courtyard structure',()=>{
+ const panels:{color:string;bottom:number;top:number}[]=[];
+ for(const layout of ['stgi-west','stgi-ribbon','stgi-colour','stgi-court']){
+  panels.length=0;
+  const face=campusReferences.buildings.flatMap(b=>b.faces).find(f=>f.layout===layout)!;
+  drawCampusFacade(face,22,10,{panel:(_at,_w,bottom,top,color)=>panels.push({color,bottom,top}),box:()=>{},lettering:()=>{}});
+  const paint=panels.find(p=>p.color==='#eeeae0');
+  if(layout==='stgi-court')assert.equal(paint,undefined,'Keep the courtyard concrete frame exposed');
+  else {assert.ok(paint);assert.equal(paint.top,9,'Leave the upper parapet exposed');}
+ }
 });
 
 test('campus side-wall completion fits real envelopes and leaves non-academic uses alone',()=>{
@@ -122,7 +137,7 @@ test('institutional campus observations remain attached to actual IGN walls and 
  for(const profile of campusReferences.buildings){
   const building=data.buildings.features.find((f:any)=>f.properties.sourceId===profile.buildingId);assert.ok(building);
   for(const face of profile.faces)assert.ok(polygons(building).some(p=>p[0].slice(1).some((b,i)=>matchesFacadeEdge(face,p[0][i],b))),profile.buildingId);
-  for(const id of profile.sourceIds){const source=campusReferences.sources.find(s=>s.id===id);assert.ok(source);assert.equal(new URL(source.url).protocol,'https:');assert.equal(source.captureDate,null);}
+  for(const id of profile.sourceIds){const source=campusReferences.sources.find(s=>s.id===id);assert.ok(source);assert.equal(new URL(source.url).protocol,'https:');if(source.captureDate){assert.match(source.captureDate,/^\d{4}-\d{2}-\d{2}$/);assert.ok(source.author&&source.license);}}
  }
 });
 

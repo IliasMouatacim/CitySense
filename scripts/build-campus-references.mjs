@@ -6,6 +6,7 @@ const sources=[
  {id:'stgi-west',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe1.jpg',published:'2021-02',captureDate:null},
  {id:'stgi-court',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe2.jpg',published:'2021-02',captureDate:null},
  {id:'stgi-colour',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe3.jpg',published:'2021-02',captureDate:null},
+ {id:'stgi-painted-detail',institution:'Wikimedia Commons · UFR STGI Montbéliard',url:'https://commons.wikimedia.org/wiki/File:Ufr_stgi_univ_framche_comte.jpg',published:'2016-11',captureDate:'2016-11-10',author:'Noscium',license:'CC BY-SA 4.0'},
  {id:'library',institution:'UFR STGI · Bibliothèque universitaire',url:'https://stgi.umlp.fr/wp-content/uploads/2021/06/BU-MONTBELIARD.jpg',published:'2021-06',captureDate:null},
  {id:'utbm',institution:'Université de Technologie de Belfort-Montbéliard',url:'https://www.utbm.fr/wp-content/uploads/2015/04/site-utbm-montbeliard.jpg',published:'2015-04',captureDate:null},
  {id:'plan',institution:'UFR STGI · Plan du campus 2025',url:'https://stgi.umlp.fr/wp-content/uploads/2025/07/2025_Plan-Campus_Montbeliard.jpg',published:'2025-07',captureDate:null},
@@ -15,6 +16,7 @@ const buildings=[];
 function building(id,label,wallColor,sourceIds,faces,notes){
  const feature=world.buildings.features.find(f=>f.properties.sourceId===id);if(!feature)throw Error('Missing IGN building '+id);
  const ring=(feature.geometry.type==='Polygon'?feature.geometry.coordinates:feature.geometry.coordinates[0])[0];
+ if(label.startsWith('UFR STGI'))sourceIds.push('stgi-painted-detail');
  buildings.push({buildingId:id,label,wallColor,sourceIds,faces:faces.map(([edge,kind,extra={}])=>({a:ring[edge],b:ring[edge+1],kind,...extra})),notes});
 }
 building('BATIMENT0000000223563366','UFR STGI · aile sud','#d2d1c8',['stgi-west','stgi-court','stgi-colour','plan'],[
@@ -24,7 +26,7 @@ building('BATIMENT0000000223563368','UFR STGI · aile nord','#d2d1c8',['stgi-wes
  [9,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[11,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[21,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
 ],'Ribbon windows and red/green/yellow trim follow the institutional views. Small IGN jogs and hidden faces are simplified.');
 building('BATIMENT0000000223563452','UFR STGI · pavillon est','#d2d1c8',['stgi-court','stgi-colour','plan'],[
- [3,'frame',{floors:3,layout:'stgi-court'}],[5,'frame',{floors:3,layout:'stgi-court'}],[7,'frame',{floors:3,layout:'stgi-court'}],[8,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[9,'ribbon',{floors:3,layout:'stgi-colour',accentBay:[.44,.70],glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
+ [3,'frame',{floors:3,layout:'stgi-court'}],[5,'frame',{floors:3,layout:'stgi-court'}],[7,'frame',{floors:3,layout:'stgi-court'}],[8,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[9,'ribbon',{floors:3,layout:'stgi-colour',accentBay:[.30,.56],glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],
 ],'Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. The courtyard grid uses projecting continuous piers and cross beams. The colour reference supplies an upper turquoise projection, a small horizontal window and a yellow vertical slit above uninterrupted ground-floor glazing; the former inferred doorway is removed. Their registration to this approximate envelope is not a surveyed reconstruction.');
 building('BATIMENT0000000223563705','UFR STGI · pavillon nord-est','#d2d1c8',['stgi-court','stgi-colour','plan'],[
  [3,'frame',{floors:3,layout:'stgi-court'}],[5,'frame',{floors:3,layout:'stgi-court'}],[6,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[7,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],[8,'ribbon',{floors:3,layout:'stgi-ribbon',glazingBands:[[.055,.255],[.395,.585],[.735,.885]]}],

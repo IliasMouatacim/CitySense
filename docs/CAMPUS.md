@@ -1,5 +1,14 @@
 # Portes du Jura university campus
 
+The STGI ribbon elevations distinguish painted white infill from exposed concrete
+parapets and courtyard columns. Window rails have shallow support brackets; the
+turquoise projection retains its horizontal opening and segmented yellow slit.
+Its left/right arrangement follows the institutional colour photograph, correcting
+the formerly mirrored composition along the IGN edge. Surface finish is also
+checked against [Noscium's STGI photograph from 10 November 2016](https://commons.wikimedia.org/wiki/File:Ufr_stgi_univ_framche_comte.jpg)
+(CC BY-SA 4.0). That photograph informs materials and trim, not a new surveyed
+facade location. Original image pixels are not included in the application.
+
 The **Campus universitaire** viewpoint opens the Montbéliard campus around Place
 Lucien Tharradin. The nearby-place directory includes mapped IUT departments,
 UFR STGI buildings, the university library, restaurant and research facilities.
@@ -38,7 +47,7 @@ and pitch as well as its position.
   dataset. UTBM's two mapped main entrances now have estimated door geometry;
   other recorded entrances do not yet have individual reconstructions.
 - `public/city/campus-facades.json`: nine IGN envelopes and 27 facade sections
-  modelled from inspected institutional reference photographs. This is nine
+  modelled from inspected institutional and Wikimedia reference photographs. This is nine
   volumes/parts, not nine independently surveyed whole buildings.
 - The mapped pedestrian courtyard (OSM way `1334515492`) receives a terrain-following
   concrete-slab surface in both viewing modes. Its boundary is mapped; slab size,
@@ -278,3 +287,12 @@ against the mapped entrances. The generator reproduces the committed manifest.
 Four desktop/mobile browser cases passed for STGI/UTBM facade views and the
 ground/movement regression; both facade screenshots were inspected. No walking
 physics, building height or terrain geometry changed in this revision.
+
+STGI surface/detail validation (2026-11-10): 28 unit checks and the production
+build passed. Four desktop/mobile browser cases cover the west, courtyard and
+turquoise views, ground-material switching, eye height, movement and GPU errors.
+The captured elevations were visually reviewed. Walking samples advanced 8.55 m
+in 4.89 s on desktop and 9.96 m in 4.51 s on mobile software WebGL, with the camera
+remaining 1.65 m above support. Tests also retain collision against the courtyard
+columns and ensure the turquoise slit is no longer mirrored. These checks verify
+rendering and navigation; the photo-based dimensions remain approximate.
