@@ -5,13 +5,17 @@ test('photo-reviewed STGI and UTBM elevations render in grounded walking views',
  const errors:string[]=[];
  page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&/THREE|GL_INVALID|shader error|framebuffer|feedback loop/i.test(m.text()))errors.push(m.text());});
- const response=await page.request.get('/city/campus-facades.json');expect(response.ok()).toBe(true);
- const references=await response.json();
+ await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ // Use the browser's configured network path, including the cloud proxy.
+ const references=await page.evaluate(async()=>{
+  const response=await fetch('/city/campus-facades.json');
+  if(!response.ok)throw Error('Campus references unavailable: '+response.status);
+  return response.json();
+ });
  const west=references.buildings.flatMap((b:{faces:{layout?:string;label?:string}[]})=>b.faces).find((f:{layout?:string})=>f.layout==='stgi-west');
  expect(west?.label).toBe('UFR STGI');
  const utbm=references.buildings.find((b:{buildingId:string})=>b.buildingId==='BATIMENT0000000292211747');
  expect(utbm.faces.find((f:{kind:string})=>f.kind==='timber').entrances).toHaveLength(2);
- await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
  await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
  for(const sector of ['stgi','utbm']){
   await page.getByRole('combobox',{name:'Secteur du campus'}).selectOption(sector);
