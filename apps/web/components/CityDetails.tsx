@@ -13,6 +13,7 @@ import {CAMPUS_VISITS} from '../lib/campus-visits';
 export default function CityDetails({map,mood,scale,dimensional,walking,routeCoordinates,campusVisit='stgi',onCampusVisit}:{map:Map;mood:SceneMood;scale:number;dimensional:boolean;walking:boolean;routeCoordinates?:number[][];campusVisit?:string;onCampusVisit?:(id:string)=>void}){
   const [enabled,setEnabled]=useState(true),[open,setOpen]=useState(false),[query,setQuery]=useState(''),[error,setError]=useState('');
   const [photo,setPhoto]=useState(true),[photoError,setPhotoError]=useState(false);
+  const [walkingToolsOpen,setWalkingToolsOpen]=useState(false);
   const [status,setStatus]=useState<DetailStatus>({buildings:0,windows:0,signs:0,pois:[],street:''});
   const controller=useRef<ReturnType<typeof createCityDetails>|null>(null);
   const options=useRef({mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates});options.current={mood,scale,enabled:enabled&&dimensional,dimensional,walking,photo,routeCoordinates};
@@ -51,6 +52,9 @@ export default function CityDetails({map,mood,scale,dimensional,walking,routeCoo
   const list=status.pois.filter(p=>`${p.name} ${p.category}`.toLocaleLowerCase('fr').includes(query.toLocaleLowerCase('fr')));
   return <section className="architecture-panel" aria-label="Détails de la ville" data-buildings={status.buildings} data-windows={status.windows} data-signs={status.signs} data-enabled={enabled&&dimensional} data-photo-roofs={status.photoRoofTriangles||0} data-photo-ground={status.photoGroundTriangles||0} data-campus-ground={status.campusGroundTriangles||0} data-route-segments={status.routeSegments||0} data-model-meshes={status.modelMeshes||0} data-reference-buildings={status.referenceBuildings||0} data-facade-photo-faces={status.facadePhotoFaces||0} data-campus={status.campus||false} data-campus-buildings={status.campusBuildings||0} data-campus-facades={status.campusFacades||0} data-campus-finished-walls={status.campusFinishedWalls||0} data-campus-estimated-facades={status.campusEstimatedFacades||0} data-campus-reference-buildings={status.campusReferenceBuildings||0} data-campus-environment={status.campusEnvironment||false} data-campus-fixtures={status.campusFixtures||0} data-campus-shadows={status.campusShadowResolution||0}>
     {walking&&status.street&&<div className="street-name"><MapPin size={14}/>{status.street}</div>}
+    {walking&&status.campus&&<button className="walking-details-toggle" aria-expanded={walkingToolsOpen} aria-controls="walking-details-content" onClick={()=>setWalkingToolsOpen(!walkingToolsOpen)}><Building2 size={14}/>{walkingToolsOpen?'Masquer les détails':'Options et lieux'}<ChevronDown size={14}/></button>}
+    {error&&<p role="status">{error}</p>}
+    <div id="walking-details-content" className="walking-details-content" data-expanded={walkingToolsOpen}>
     <div className="architecture-actions"><button aria-pressed={enabled} disabled={!dimensional} onClick={()=>setEnabled(!enabled)}><Building2 size={15}/> Façades {enabled?'détaillées':'simples'}</button><button aria-expanded={open} aria-controls="city-businesses" onClick={()=>setOpen(!open)}><Store size={15}/> Noms et commerces <ChevronDown size={13}/></button></div>
     <label className="photo-choice"><span>{walking&&status.campus?'Toits':'Sol et toits'}</span><select aria-label="Style de la ville" value={photo?'photo':'map'} onChange={e=>{setPhoto(e.target.value==='photo');setPhotoError(false);if(walking)map.getCanvas().focus({preventScroll:true});}}><option value="photo">Photo + 3D</option><option value="map">Carte 3D</option></select></label>
     <p className="architecture-credit">{walking&&status.campus?(photo?'Sols texturés · Toits IGN':'Sols texturés · Carte 3D'):photo?'Photos IGN · Façades stylisées':'Noms OSM · Façades stylisées'}</p>
@@ -60,7 +64,7 @@ export default function CityDetails({map,mood,scale,dimensional,walking,routeCoo
     {!!status.referenceBuildings&&<p className="architecture-credit"><a href={facadeReferences.source.url} target="_blank" rel="noreferrer">Panoramax © {facadeReferences.source.author}</a> · <a href={facadeReferences.source.licenseUrl} target="_blank" rel="noreferrer">CC-BY-SA-4.0</a> · façades adaptées</p>}
     {status.facadePhotoFailed&&<p role="status">Textures de façade indisponibles ; volumes simplifiés affichés.</p>}
     {photoError&&<p role="status">Photos indisponibles. La carte reste utilisable.</p>}
-    {error&&<p role="status">{error}</p>}
     {open&&<div id="city-businesses" className="city-businesses"><strong>Autour de vous <span>{status.pois.length}</span></strong><label><Search size={14}/><input aria-label="Filtrer les commerces visibles" placeholder="Café, boutique, musée…" value={query} onChange={e=>setQuery(e.target.value)}/></label><ul>{list.slice(0,30).map(p=><li key={p.id}><button onClick={()=>focus(p)}><i style={{background:p.color}}/><span><strong>{p.name}</strong><small>{p.category} · {p.distance} m</small></span><MapPin size={13}/></button></li>)}</ul>{!list.length&&<p>{query?'Aucun lieu ne correspond.':'Zoomez sur les rues pour charger les lieux cartographiés.'}</p>}<small>{walking?'Choisissez un lieu pour regarder dans sa direction.':'Choisissez un lieu pour le voir sur la carte.'} Données OpenStreetMap, disponibilité non vérifiée.</small></div>}
+    </div>
   </section>;
 }

@@ -21,6 +21,16 @@ test('STGI west, courtyard and turquoise elevations have stable pedestrian viewp
   await expect.poll(async()=>Number(await hud.getAttribute('data-eye-elevation'))-Number(await hud.getAttribute('data-ground-elevation'))).toBeCloseTo(1.65,2);
   await expect(details).toHaveAttribute('data-photo-ground','0');
   await expect(page.locator('.walk-error')).toHaveCount(0);
+  if(test.info().project.name==='mobile'){
+   const toggle=page.getByRole('button',{name:'Options et lieux',exact:true});
+   await expect(toggle).toBeVisible();
+   await expect(page.getByLabel('Style de la ville')).toBeHidden();
+   expect((await details.boundingBox())!.height).toBeLessThan(120);
+   await toggle.click();
+   await expect(page.getByLabel('Style de la ville')).toBeVisible();
+   await page.getByRole('button',{name:'Masquer les détails',exact:true}).click();
+   await expect(page.getByLabel('Style de la ville')).toBeHidden();
+  }
   await page.screenshot({path:`test-results/${id}-review-${test.info().project.name}.png`,fullPage:true});
   await page.getByRole('button',{name:'Quitter la marche',exact:true}).click();
  }

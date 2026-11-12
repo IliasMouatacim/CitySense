@@ -1,5 +1,13 @@
 # Portes du Jura university campus
 
+On phones, campus walking starts with the facade/settings panel collapsed behind
+**Options et lieux**. The street name remains visible; expanding the panel gives
+access to building controls, roof style, nearby places and reference sources in
+a scrollable area. Desktop and city-centre controls retain their existing layout.
+Validation (2026-11-12): production build and two mobile browser cases passed,
+covering collapse/expand at all three STGI views plus ground/material switching
+and walking height/movement. The collapsed panel remains below 120 px tall.
+
 The STGI ribbon elevations distinguish painted white infill from exposed concrete
 parapets and courtyard columns. Window rails have shallow support brackets; the
 turquoise projection retains its horizontal opening and segmented yellow slit.

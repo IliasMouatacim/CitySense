@@ -19,6 +19,8 @@ test('library paths have stable materials and walking stays grounded and respons
  await expect.poll(async()=>Number(await details.getAttribute('data-campus-facades'))).toBeGreaterThanOrEqual(27);
  await expect.poll(async()=>Number(await hud.getAttribute('data-eye-elevation'))-Number(await hud.getAttribute('data-ground-elevation'))).toBeCloseTo(1.65,2);
  for(const mode of ['map','photo']){
+  const options=page.getByRole('button',{name:'Options et lieux',exact:true});
+  if(await options.isVisible())await options.click();
   await page.getByLabel('Style de la ville').selectOption(mode);
   await expect(details).toHaveAttribute('data-photo-ground','0');
   await expect.poll(async()=>Number(await details.getAttribute('data-campus-ground'))).toBeGreaterThan(0);
