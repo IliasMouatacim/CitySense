@@ -1,5 +1,6 @@
 import type {CampusFace} from './campus-references';
 import {drawStgiFacade,drawStgiPaint} from './stgi-architecture';
+import {drawCrousFacade} from './crous-architecture';
 
 export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
@@ -18,7 +19,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
   // The library's small punched openings have shallow frames. Reusing the
   // deep STGI concrete-grid relief made these read as projecting window boxes.
-  const relief=face.kind==='libraryStone'||face.layout?.startsWith('stgi-')?.5:1;
+  const relief=face.kind==='libraryStone'||face.painted||face.layout?.startsWith('stgi-')||face.layout?.startsWith('crous-')?.5:1;
   const offset=face.layout?.startsWith('stgi-')&&depth>.3?depth-.09:0;
   const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief+offset,back*relief+offset);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?Math.max(.04,offset+.04):depth);
@@ -38,7 +39,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
- if(drawStgiFacade(face,length,height,draw,pane)){
+ if(drawCrousFacade(face,length,height,draw,pane)||drawStgiFacade(face,length,height,draw,pane)){
   // The specialised STGI layouts share the pane/material implementation.
  }else if(face.layout==='stgi-west'){
   drawStgiPaint(length,height,draw);
@@ -85,6 +86,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   box(length/2,length,height-.12,height+.06,'#aeb3a8',.15,.03);
   if(face.label)lettering(face.label,length*.34,length*.59,height*.405,height*.565,true,.30);
  }else if(face.kind==='ribbon'||face.kind==='frame'){
+  if(face.painted)drawStgiPaint(length,height,draw);
   const floors=face.floors||3,step=height/floors,bays=Math.max(1,Math.round((length-.5)/(face.kind==='frame'?3.1:2.05))),pitch=(length-.5)/bays;
   panel(length/2,length,.08,.45,'#adafa4',.06);
   for(let floor=0;floor<floors;floor++){

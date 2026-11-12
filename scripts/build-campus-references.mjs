@@ -3,6 +3,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 const world=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const sources=[
+ {id:'crous-2012',institution:'Wikimedia Commons · Restaurant universitaire des Portes du Jura',url:'https://commons.wikimedia.org/wiki/File:URF_STGI_CROUS.JPG',published:'unknown',captureDate:'2012-11-13',author:'Antomoro',license:'Free Art License'},
  {id:'stgi-west',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe1.jpg',published:'2021-02',captureDate:null},
  {id:'stgi-court',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe2.jpg',published:'2021-02',captureDate:null},
  {id:'stgi-colour',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe3.jpg',published:'2021-02',captureDate:null},
@@ -43,9 +44,15 @@ building('BATIMENT0000000292211747','UTBM · façade du Cours Louis Leprince-Rin
  [3,'timber',{label:'UTBM',openings:[{at:.24,width:.055,bottom:.065,top:.09},{at:.585,width:.37,bottom:.015,top:.16},{at:.895,width:.17,bottom:.015,top:.16}]}],[2,'concrete'],
 ],'The observed southern timber screen, horizontal glazing, concrete base and large outline lettering are reconstructed as geometry. The west plinth remains mostly solid with a small slit and grouped glazing, following the photo. Door positions use OSM entrance nodes 6050160864 and 6050160865; door widths and hardware are estimated. The reference was published in 2015; present-day alterations are unverified.');
 for(const [id,edge] of [['BATIMENT0000000223563543',1],['BATIMENT0000000223563537',25],['BATIMENT0000000223563536',3]]){
- building(id,'IUT · Mesures physiques · côté cour','#d2d1c8',['stgi-court','iut-plan'],[[edge,'ribbon',{floors:3,glazingBands:[[.045,.28],[.465,.585],[.795,.915]]}]],'Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed.');
+ building(id,'IUT · Mesures physiques · côté cour','#d2d1c8',['stgi-court','iut-plan'],[[edge,'ribbon',{floors:3,painted:true,glazingBands:[[.045,.28],[.465,.585],[.795,.915]]}]],'Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed.');
 }
 // Register existing mapped entrances along the documented southern frontage.
+building('BATIMENT0000000223563747','CROUS · restaurant universitaire · accueil','#d2d1c8',['crous-2012','plan'],[
+ [4,'concrete',{layout:'crous-front'}],
+],'Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. Registration and dimensions are estimates. Doors remain closed; the interior and detached forecourt structure are not reconstructed.');
+building('BATIMENT0000000223563498','CROUS · restaurant universitaire · aile est','#d2d1c8',['crous-2012','plan'],[
+ [13,'concrete',{layout:'crous-corner'}],[12,'concrete',{layout:'crous-glass'}],[10,'concrete',{layout:'crous-east'}],
+],'White upper fascia, red/blue ribbon accents, glazed corner and tall narrow east-wing windows observed in the 2012 photograph. Obscured walls and current alterations remain unverified.');
 const campusMap=JSON.parse(readFileSync('apps/web/public/city/campus-osm.json','utf8'));
 const entranceFace=buildings.find(b=>b.buildingId==='BATIMENT0000000292211747').faces.find(f=>f.kind==='timber');
 const [a,b]=[entranceFace.a,entranceFace.b],cos=Math.cos(a[1]*Math.PI/180),dx=(b[0]-a[0])*cos,dy=b[1]-a[1];
@@ -58,5 +65,5 @@ entranceFace.entrances=[6050160864,6050160865].map(id=>{
  if(gap>8)throw Error('Mapped entrance too far from the IGN frontage');
  return {at:Number(at.toFixed(6)),width:1.8,sourceNode:id};
 });
-writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-10',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
+writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-12',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
 console.log(`Recorded ${buildings.length} building envelopes and ${buildings.reduce((sum,b)=>sum+b.faces.length,0)} observed-style faces.`);

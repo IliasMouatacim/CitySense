@@ -1,9 +1,18 @@
 {
   "version": 1,
-  "reviewedAt": "2026-11-10",
+  "reviewedAt": "2026-11-12",
   "method": "Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.",
   "sourceImagesRedistributed": false,
   "sources": [
+    {
+      "id": "crous-2012",
+      "institution": "Wikimedia Commons · Restaurant universitaire des Portes du Jura",
+      "url": "https://commons.wikimedia.org/wiki/File:URF_STGI_CROUS.JPG",
+      "published": "unknown",
+      "captureDate": "2012-11-13",
+      "author": "Antomoro",
+      "license": "Free Art License"
+    },
     {
       "id": "stgi-west",
       "institution": "UFR STGI · Université Marie et Louis Pasteur",
@@ -762,6 +771,7 @@
           ],
           "kind": "ribbon",
           "floors": 3,
+          "painted": true,
           "glazingBands": [
             [
               0.045,
@@ -800,6 +810,7 @@
           ],
           "kind": "ribbon",
           "floors": 3,
+          "painted": true,
           "glazingBands": [
             [
               0.045,
@@ -838,6 +849,7 @@
           ],
           "kind": "ribbon",
           "floors": 3,
+          "painted": true,
           "glazingBands": [
             [
               0.045,
@@ -855,6 +867,78 @@
         }
       ],
       "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563747",
+      "label": "CROUS · restaurant universitaire · accueil",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "crous-2012",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8038306,
+            47.4959653
+          ],
+          "b": [
+            6.803376,
+            47.4959117
+          ],
+          "kind": "concrete",
+          "layout": "crous-front"
+        }
+      ],
+      "notes": "Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. Registration and dimensions are estimates. Doors remain closed; the interior and detached forecourt structure are not reconstructed."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563498",
+      "label": "CROUS · restaurant universitaire · aile est",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "crous-2012",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8039996,
+            47.495986
+          ],
+          "b": [
+            6.8038306,
+            47.4959653
+          ],
+          "kind": "concrete",
+          "layout": "crous-corner"
+        },
+        {
+          "a": [
+            6.8039676,
+            47.4960591
+          ],
+          "b": [
+            6.8039996,
+            47.495986
+          ],
+          "kind": "concrete",
+          "layout": "crous-glass"
+        },
+        {
+          "a": [
+            6.8039802,
+            47.4961993
+          ],
+          "b": [
+            6.8040148,
+            47.4960684
+          ],
+          "kind": "concrete",
+          "layout": "crous-east"
+        }
+      ],
+      "notes": "White upper fascia, red/blue ribbon accents, glazed corner and tall narrow east-wing windows observed in the 2012 photograph. Obscured walls and current alterations remain unverified."
     }
   ]
 }

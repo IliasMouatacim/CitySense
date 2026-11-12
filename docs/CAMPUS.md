@@ -1,5 +1,12 @@
 # Portes du Jura university campus
 
+Restaurant/IUT expansion validation (2026-11-12): production build and 29 unit
+checks passed, including real-envelope geometry bounds and Rapier collision
+against the restaurant pilasters. Both desktop/mobile walkthrough cases passed
+after widening the entrance bays and adding canopy supports; restaurant and IUT
+screenshots were inspected. The new restaurant start resolves within 3 m of its
+mapped road position, with a 1.65 m eye height and no reported WebGL errors.
+
 On phones, campus walking starts with the facade/settings panel collapsed behind
 **Options et lieux**. The street name remains visible; expanding the panel gives
 access to building controls, roof style, nearby places and reference sources in
@@ -54,9 +61,20 @@ and pitch as well as its position.
   names and recorded capacities are retained. Entrances are recorded in the
   dataset. UTBM's two mapped main entrances now have estimated door geometry;
   other recorded entrances do not yet have individual reconstructions.
-- `public/city/campus-facades.json`: nine IGN envelopes and 27 facade sections
-  modelled from inspected institutional and Wikimedia reference photographs. This is nine
-  volumes/parts, not nine independently surveyed whole buildings.
+- `public/city/campus-facades.json`: eleven IGN envelopes and 31 facade sections
+  modelled from inspected institutional and Wikimedia reference photographs.
+  These are building volumes/parts, not eleven independently surveyed buildings.
+  The CROUS restaurant adds its entrance frontage, white corner with upper ribbon,
+  glazed return and eastern service wing with narrow upper windows. Its source is
+  [Antomoro's photograph from 13 November 2012](https://commons.wikimedia.org/wiki/File:URF_STGI_CROUS.JPG)
+  under the Free Art License; current alterations are unverified. The source is
+  consulted for modeling, and its pixels are not redistributed. The entrance
+  canopy and blue/red details are estimated on the IGN envelopes. The detached
+  forecourt structure and interiors are not modeled. Ground-level facade columns
+  share geometry with the walking collision system. A **CROUS · restaurant
+  universitaire** sector starts on the mapped Cours Louis le Prince-Ringuet.
+  IUT Mesures physiques also receives painted infill and shallower window frames
+  on its three previously documented courtyard-facing facade sections.
 - The mapped pedestrian courtyard (OSM way `1334515492`) receives a terrain-following
   concrete-slab surface in both viewing modes. Its boundary is mapped; slab size,
   material appearance and relief are estimates from the courtyard photograph.

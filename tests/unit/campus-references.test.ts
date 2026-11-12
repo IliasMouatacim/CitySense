@@ -14,6 +14,17 @@ import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '..
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
 
+test('CROUS restaurant preserves its distinct glazing and dated photographic source',()=>{
+ const profiles=campusReferences.buildings.filter(b=>b.label.startsWith('CROUS'));
+ assert.equal(profiles.length,2);
+ const source=campusReferences.sources.find(s=>s.id==='crous-2012')!;
+ assert.equal(source.captureDate,'2012-11-13');assert.equal(source.author,'Antomoro');
+ const face=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-east')!,panes:number[][]=[];
+ drawCampusFacade(face,16,8,{panel:()=>{},box:()=>{},lettering:()=>assert.fail('No invented departmental signs'),glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
+ assert.ok(panes.filter(p=>p[2]>3).every(p=>p[1]<.7&&p[3]-p[2]>3),'Tall narrow upper lights, not generic ribbon windows');
+ assert.ok(panes.filter(p=>p[2]<2).length<5,'Keep the service wall mostly solid');
+});
+
 test('STGI keeps its photographed solid pier, narrow upper lights and actual facade lettering',()=>{
  const profile=campusReferences.buildings.find(b=>b.buildingId==='BATIMENT0000000223563366')!,face=profile.faces.find(f=>f.layout==='stgi-west')!;
  assert.ok(face);const height=12,length=metersBetween(face.a,face.b),panes:number[][]=[],labels:string[]=[];
@@ -133,7 +144,7 @@ test('detailed benches remain inside existing walking collision envelopes',()=>{
 });
 
 test('institutional campus observations remain attached to actual IGN walls and credited reference URLs',()=>{
- assert.equal(campusReferences.buildings.length,9);assert.equal(campusReferences.sourceImagesRedistributed,false);
+ assert.equal(campusReferences.buildings.length,11);assert.equal(campusReferences.sourceImagesRedistributed,false);
  for(const profile of campusReferences.buildings){
   const building=data.buildings.features.find((f:any)=>f.properties.sourceId===profile.buildingId);assert.ok(building);
   for(const face of profile.faces)assert.ok(polygons(building).some(p=>p[0].slice(1).some((b,i)=>matchesFacadeEdge(face,p[0][i],b))),profile.buildingId);

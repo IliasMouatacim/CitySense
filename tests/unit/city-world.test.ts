@@ -50,6 +50,13 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    for(let step=0;step<70;step++)besidePier=physics.move(besidePier,offset(besidePier,-pier.normal[0]*.05,-pier.normal[1]*.05));
    assert.ok(distance(besidePier,pier.wallCenter)>pier.front+.25,'Camera capsule must stop outside the rendered concrete pier');
    assert.ok(distance(besidePier,pier.wallCenter)<pier.front+.5,'The collision must follow the visible pier rather than an oversized barrier');
+   const restaurantPiers=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563747'&&s.width===.9);
+   assert.ok(restaurantPiers.length>3);
+   const restaurantPier=restaurantPiers[Math.floor(restaurantPiers.length/2)];
+   let approach=offset(restaurantPier.wallCenter,restaurantPier.normal[0]*2,restaurantPier.normal[1]*2);
+   for(let step=0;step<60;step++)approach=physics.move(approach,offset(approach,-restaurantPier.normal[0]*.05,-restaurantPier.normal[1]*.05));
+   assert.ok(distance(approach,restaurantPier.wallCenter)>restaurantPier.front+.25,'Restaurant pilasters must block walking');
+   assert.ok(distance(approach,restaurantPier.wallCenter)<restaurantPier.front+.5,'Restaurant collision must match the facade');
    const from:[number,number]=[6.798113188684639,47.51017527332869],to=offset(from,-.25,.6),resolved=physics.move(from,to);
    assert.ok(distance(from,resolved)>.1);assert.ok(distance(from,resolved)<1);assert.ok(physics.height(resolved)!>1);
    assert.deepEqual(physics.move(from,[0,0]),from);
