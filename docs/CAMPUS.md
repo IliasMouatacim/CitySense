@@ -1,5 +1,15 @@
 # Portes du Jura university campus
 
+The library's glazed elevations now use individual fixed glass lights, thin
+vertical/horizontal framing and two stronger floor beams, following the cited
+institutional library photograph. Reflections are assigned per light rather than
+stretched over the full height. Classroom-style handles and repeated projecting
+sills are removed from these curtain walls. Grid dimensions remain estimates;
+the existing concrete jambs, plinth and collision envelopes are retained.
+Validation (2026-11-13): production build and 16 targeted geometry/physics checks
+passed. Desktop and mobile library walkthroughs passed, including material
+loading, a walk round to the north elevation and checks for WebGL errors.
+
 The restaurant's broad structural bays contain individual glass lights instead
 of one stretched reflection per bay. Its existing green door positions now have
 frames, kick plates, hinges and handles; hardware dimensions are illustrative.

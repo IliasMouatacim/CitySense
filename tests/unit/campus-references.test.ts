@@ -14,6 +14,16 @@ import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '..
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
 
+test('library curtain wall uses individual fixed lights without classroom handles or repeated sills',()=>{
+ const face=campusReferences.buildings.flatMap(p=>p.faces).find(f=>f.kind==='libraryGlass')!;
+ const panes:number[][]=[],boxes:number[][]=[];
+ drawCampusFacade(face,8,14,{panel:()=>{},lettering:()=>{},box:(at,w,b,t)=>boxes.push([at,w,b,t]),glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
+ assert.ok(panes.length>40);
+ assert.ok(panes.every(p=>p[3]-p[2]<1.1&&p[1]<1.7),'Do not stretch one reflection through multiple floors');
+ assert.ok(!boxes.some(b=>b[1]===.025&&Math.abs(b[3]-b[2]-.13)<1e-6),'Fixed lights should not inherit classroom handles');
+ assert.equal(boxes.filter(b=>b[1]===7.65&&Math.abs(b[3]-b[2]-.18)<1e-6).length,2,'Keep the photographed floor-beam structure');
+});
+
 test('CROUS restaurant preserves its distinct glazing and dated photographic source',()=>{
  const profiles=campusReferences.buildings.filter(b=>b.label.startsWith('CROUS'));
  assert.equal(profiles.length,2);

@@ -130,8 +130,25 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   const bottom=height*.22,top=height-.4;
   panel(length/2,length-.5,bottom,top,'#39575c',.12);
   const bays=Math.max(2,Math.round(length/1.5)),pitch=(length-.5)/bays;
-  for(let b=0;b<bays;b++)pane(.25+(b+.5)*pitch,pitch-.07,bottom+.07,top-.07,.15);
-  for(let z=bottom+.7;z<top;z+=.95)box(length/2,length-.35,z,z+.07,'#4a5956',.38,.1);
+  const rows=Math.max(2,Math.round((top-bottom)/.95)),rise=(top-bottom)/rows;
+  // The institutional photo shows fixed curtain-wall lights. Avoid applying
+  // classroom handles/sills and one stretched reflection to each tall strip.
+  for(let b=0;b<bays;b++)for(let row=0;row<rows;row++){
+   const at=.25+(b+.5)*pitch,z0=bottom+row*rise+.04,z1=bottom+(row+1)*rise-.04;
+   panel(at,pitch-.045,z0-.015,z1+.015,'#263b3c',.145);
+   if(draw.glazing)draw.glazing(at,pitch-.085,z0,z1,.16);
+   else panel(at,pitch-.085,z0,z1,glass,.16);
+   windows++;
+  }
+  for(let b=0;b<=bays;b++)box(.25+b*pitch,.065,bottom,top,'#4a5956',.28,.10);
+  for(let row=0;row<=rows;row++){
+   const z=bottom+row*rise;
+   box(length/2,length-.35,z-.035,z+.035,'#4a5956',.30,.10);
+  }
+  for(const fraction of [1/3,2/3]){
+   const z=bottom+(top-bottom)*fraction;
+   box(length/2,length-.35,z-.09,z+.09,'#aeb2a9',.34,.10);
+  }
   for(const at of [.13,length-.13])box(at,.26,.15,height,'#a3a497',.55,.03);
   box(length/2,length+.12,bottom-.3,bottom-.05,'#a9ac9f',.65,.03);
  }else if(face.kind==='libraryStone'){
