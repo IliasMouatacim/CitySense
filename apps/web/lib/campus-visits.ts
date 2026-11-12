@@ -1,6 +1,7 @@
 import type {Position} from './walk-geometry';
 export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position;lookAt:Position;pitch:number}[]=[
  {id:'crous',name:'CROUS · restaurant universitaire',center:[6.80367,47.49605],start:[6.80368147,47.49570043],lookAt:[6.80360,47.495938],pitch:90},
+ {id:'crous-east',name:'CROUS · aile est et verrière',center:[6.80400,47.49610],start:[6.80414611,47.49595398],lookAt:[6.8039975,47.49613385],pitch:90},
  {id:'stgi',name:'UFR STGI · façade ouest',center:[6.80435,47.49523],start:[6.804015,47.495225],lookAt:[6.80430,47.49515],pitch:90},
  {id:'stgi-court',name:'UFR STGI · galerie de la cour',center:[6.80445,47.49525],start:[6.80436406,47.49527313],lookAt:[6.80461,47.49515],pitch:90},
  {id:'stgi-colour',name:'UFR STGI · façade turquoise',center:[6.80486,47.49525],start:[6.80500018,47.49528259],lookAt:[6.804838,47.495239],pitch:90},

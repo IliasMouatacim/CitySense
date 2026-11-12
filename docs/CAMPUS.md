@@ -1,5 +1,17 @@
 # Portes du Jura university campus
 
+The restaurant's broad structural bays contain individual glass lights instead
+of one stretched reflection per bay. Its existing green door positions now have
+frames, kick plates, hinges and handles; hardware dimensions are illustrative.
+The canopy also has a metal edge. **CROUS · aile est et verrière** opens a second
+walking start on the mapped service road, facing the documented east elevation
+without another building crossing the view. It retains a horizontal camera and
+the same ground support/collision behavior as the other campus sectors.
+Validation: production build and 15 targeted geometry/physics checks passed.
+Desktop and phone walkthroughs cover the restaurant front, east wing and IUT;
+both cases passed, with the new start resolving within 3 m of its mapped road
+position, a 1.65 m supported eye height and no reported WebGL errors.
+
 Restaurant/IUT expansion validation (2026-11-12): production build and 29 unit
 checks passed, including real-envelope geometry bounds and Rapier collision
 against the restaurant pilasters. Both desktop/mobile walkthrough cases passed

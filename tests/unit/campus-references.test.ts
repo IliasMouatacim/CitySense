@@ -23,6 +23,21 @@ test('CROUS restaurant preserves its distinct glazing and dated photographic sou
  drawCampusFacade(face,16,8,{panel:()=>{},box:()=>{},lettering:()=>assert.fail('No invented departmental signs'),glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
  assert.ok(panes.filter(p=>p[2]>3).every(p=>p[1]<.7&&p[3]-p[2]>3),'Tall narrow upper lights, not generic ribbon windows');
  assert.ok(panes.filter(p=>p[2]<2).length<5,'Keep the service wall mostly solid');
+ const front=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-front')!;
+ panes.length=0;
+ drawCampusFacade(front,34,8.5,{panel:()=>{},box:()=>{},lettering:()=>{},glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
+ assert.ok(panes.length>=16&&panes.every(p=>p[1]<1.6),'Broad restaurant bays need individual glass lights, not one stretched texture');
+});
+
+test('restaurant east walking view faces a documented elevation without crossing another building',()=>{
+ const visit=CAMPUS_VISITS.find(v=>v.id==='crous-east')!;
+ const face=campusReferences.buildings.flatMap(b=>b.faces).find(f=>f.layout==='crous-east')!;
+ assert.ok(metersBetween(visit.lookAt,nearestOnLine(visit.lookAt,[face.a,face.b]))<.2);
+ const span=metersBetween(visit.start,visit.lookAt);assert.ok(span>15&&span<35);
+ for(let d=0;d<span-.5;d+=.5){
+  const p:[number,number]=[visit.start[0]+(visit.lookAt[0]-visit.start[0])*d/span,visit.start[1]+(visit.lookAt[1]-visit.start[1])*d/span];
+  assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),'Keep the east-wing view unobstructed');
+ }
 });
 
 test('STGI keeps its photographed solid pier, narrow upper lights and actual facade lettering',()=>{
