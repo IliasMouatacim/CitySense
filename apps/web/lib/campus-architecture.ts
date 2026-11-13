@@ -50,7 +50,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
- if(drawCrousFacade(face,length,height,draw,pane)||drawStgiFacade(face,length,height,draw,pane)){
+ if(drawCrousFacade(face,length,height,draw,pane,()=>{windows++;})||drawStgiFacade(face,length,height,draw,pane)){
   // The specialised STGI layouts share the pane/material implementation.
  }else if(face.layout==='stgi-west'){
   drawStgiPaint(length,height,draw);

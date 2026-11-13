@@ -36,7 +36,12 @@ test('CROUS restaurant preserves its distinct glazing and dated photographic sou
  const front=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-front')!;
  panes.length=0;
  drawCampusFacade(front,34,8.5,{panel:()=>{},box:()=>{},lettering:()=>{},glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
- assert.ok(panes.length>=16&&panes.every(p=>p[1]<1.6),'Broad restaurant bays need individual glass lights, not one stretched texture');
+ assert.ok(panes.length>=40&&panes.every(p=>p[1]<1.6&&p[3]-p[2]<1.3),'Restaurant curtain-wall reflections must stop at both horizontal and vertical divisions');
+ const corner=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-glass')!;
+ panes.length=0;
+ const count=drawCampusFacade(corner,12,8,{panel:()=>{},lettering:()=>{},box:()=>{},glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
+ assert.equal(count,panes.length,'Keep the rendered-window count accurate for fixed glazing');
+ assert.ok(panes.length>30&&panes.every(p=>p[3]-p[2]<1.3),'Continue the fixed-light grid around the glazed corner');
 });
 
 test('restaurant east walking view faces a documented elevation without crossing another building',()=>{

@@ -1,5 +1,16 @@
 # Portes du Jura university campus
 
+CROUS entrance and corner glazing now use fixed lights divided in both axes,
+following the grid in Antomoro's 2012 photograph. This removes classroom latches
+and full-height stretched reflections from the restaurant's curtain walls.
+Small wall-light housings sit on the entrance fascia; their shape and spacing
+are estimates and they add no realtime light sources. Existing door positions,
+structural piers and canopy remain in place.
+Validation (2026-11-13): production build and 17 targeted geometry/physics tests
+passed. Desktop/mobile walkthroughs covered the restaurant entrance, east wing
+and IUT, with supported eye height and no reported WebGL errors. Entrance and
+corner screenshots were inspected.
+
 STGI's west stairwell now has individual fixed glass lights and a full-height
 metal grid, following the institutional west-facade photo. Reflections no longer
 stretch through several storeys. Red guardrail uprights/brackets and the red/green

@@ -4,9 +4,30 @@ type Pane=(at:number,width:number,bottom:number,top:number,depth?:number)=>void;
 
 /** Restaurant elevations observed in Antomoro's 2012 Commons photograph.
  * Dimensions and registration to the IGN volumes are approximate. */
-export function drawCrousFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
+export function drawCrousFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane,onFixedLight:()=>void=()=>{}){
  if(!face.layout?.startsWith('crous-'))return false;
  const {panel,box,lettering}=draw,white='#eeeae0',concrete='#d2d1c8',frame='#344b4c';
+ function curtain(at:number,width:number,bottom:number,top:number){
+  const columns=Math.max(2,Math.ceil(width/1.6)),rows=Math.max(2,Math.round((top-bottom)/1.15));
+  const pitch=width/columns,rise=(top-bottom)/rows;
+  panel(at,width,bottom,top,'#263b3c',.06);
+  for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
+   const x=at-width/2+(col+.5)*pitch,z0=bottom+row*rise+.035,z1=bottom+(row+1)*rise-.035;
+   if(draw.glazing)draw.glazing(x,pitch-.07,z0,z1,.10);
+   else panel(x,pitch-.07,z0,z1,'#49636a',.10);
+   onFixedLight();
+  }
+  for(let col=0;col<=columns;col++)box(at-width/2+col*pitch,.065,bottom,top,frame,.22,.07);
+  for(let row=0;row<=rows;row++)box(at,width,bottom+row*rise-.035,bottom+row*rise+.035,frame,.23,.07);
+ }
+ function wallLight(at:number,z:number){
+  // Small wall-mounted fittings visible above the restaurant glazing.
+  // Shape and spacing are approximate; no additional realtime light sources.
+  box(at,.20,z-.12,z+.12,'#637268',.24,.04);
+  box(at,.055,z-.04,z+.02,frame,.42,.20);
+  box(at,.15,z-.06,z+.04,frame,.48,.34);
+  panel(at,.11,z-.045,z-.015,'#c5cbbf',.485);
+ }
  function greenDoor(at:number){
   // Keep the photographed green panel positions. Hardware is illustrative;
   // these doors do not provide access to an invented interior.
@@ -23,11 +44,10 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
    const at=(i+.5)*pitch,w=pitch-1.10;
    // Broad structural bays contain multiple glass panels. Dividing the glazing
    // also avoids stretching a single reflection texture across an entire bay.
-   const lights=Math.max(2,Math.ceil(w/1.6));
-   for(let light=0;light<lights;light++)pane(at-w/2+(light+.5)*w/lights,w/lights-.06,.15,height*.76,.10);
-   for(let z=.8;z<height*.76;z+=1.35)box(at,w,z,z+.065,frame,.22,.12);
+   curtain(at,w,.15,height*.76);
    panel(at+w*.30,Math.min(.65,w*.25),height*.66,height*.755,'#42658c',.25);
    box(at,pitch-.85,height*.78,height-.12,i%2?white:concrete,.20,.03);
+   if(i%2===1)wallLight(at,height*.89);
    if(i%2===0)greenDoor(at+w*.28);
   }
   for(let i=0;i<=bays;i++)box(Math.max(.45,Math.min(length-.45,i*pitch)),.90,.03,height-.1,concrete,.46,.03);
@@ -47,9 +67,7 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
   }
   for(const at of [.25,.66])pane(length*at,.60,height*.18,height*.35,.10);
  }else if(face.layout==='crous-glass'){
-  const bays=Math.max(2,Math.round(length/1.5)),pitch=length/bays;
-  for(let i=0;i<bays;i++)pane((i+.5)*pitch,pitch-.09,.18,height*.79,.10);
-  for(let z=.75;z<height*.79;z+=1.2)box(length/2,length,z,z+.07,frame,.23,.08);
+  curtain(length/2,length-.12,.18,height*.79);
   panel(length/2,length,height*.81,height-.15,white,.05);
  }else{
   // The photographed east wing has tall narrow upper lights, not three
