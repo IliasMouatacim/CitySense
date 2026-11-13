@@ -10,9 +10,40 @@ import {insidePolygon,nearestOnLine} from '../../apps/web/lib/walk-geometry';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {drawCampusBench} from '../../apps/web/lib/campus-furniture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '../../apps/web/lib/campus-envelope';
+import {campusGlassTile,campusSurface} from '../../apps/web/lib/campus-surfaces';
 
 const data=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const polygons=(f:any):number[][][][]=>f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;
+
+test('fixed campus glazing stays coherent and never receives classroom blinds',()=>{
+ for(const variant of [-17,0,7,125]){
+  const fixed=campusGlassTile(0,0,variant,'fixed');
+  assert.ok(fixed>=0&&fixed<8);
+  for(const at of [1,20,50])for(const z of [1,5,12]){
+   assert.equal(campusGlassTile(at,z,variant,'fixed'),fixed);
+   const classroom=campusGlassTile(at,z,variant);assert.ok(classroom>=8&&classroom<16);
+  }
+ }
+ for(const layout of ['stgi-west','crous-front','crous-glass']){
+  const face=campusReferences.buildings.flatMap(p=>p.faces).find(f=>f.layout===layout)!;
+  let fixed=0;drawCampusFacade(face,25,10,{panel:()=>{},box:()=>{},lettering:()=>{},glazing:(_a,_w,_b,_t,_d,kind)=>{if(kind==='fixed')fixed++;}});
+  assert.ok(fixed>10,layout+' must opt its curtain wall into the fixed-glass atlas');
+ }
+});
+
+test('glass atlas keeps blinds out of the canvas half sampled by fixed lights',()=>{
+ const original=Object.getOwnPropertyDescriptor(globalThis,'document'),blinds:number[]=[];
+ const context={fillStyle:'',strokeStyle:'',lineWidth:0,
+  createImageData:()=>({}),createLinearGradient:()=>({addColorStop:()=>{}}),
+  fillRect(_x:number,y:number){if(this.fillStyle==='#b8b8aa')blinds.push(y);},
+  beginPath(){},moveTo(){},lineTo(){},stroke(){}};
+ Object.defineProperty(globalThis,'document',{configurable:true,value:{createElement:()=>({getContext:()=>context})}});
+ try{
+  campusSurface('windows');
+  assert.ok(blinds.length>0,'Retain classroom blinds');
+  assert.ok(blinds.every(y=>y<256),'CanvasTexture flips Y: the lower canvas half must be blind-free');
+ }finally{if(original)Object.defineProperty(globalThis,'document',original);else Reflect.deleteProperty(globalThis,'document');}
+});
 
 test('library curtain wall uses individual fixed lights without classroom handles or repeated sills',()=>{
  const face=campusReferences.buildings.flatMap(p=>p.faces).find(f=>f.kind==='libraryGlass')!;
@@ -221,6 +252,9 @@ test('campus visit starts sit inside the measured terrain and outside building i
   assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),visit.id);
   assert.ok(visit.pitch>=90&&visit.pitch<120);
  }
+ const utbm=CAMPUS_VISITS.find(v=>v.id==='utbm')!;
+ const streets=JSON.parse(readFileSync('apps/web/public/city/campus-osm.json','utf8'));
+ assert.ok(streets.roads.some((r:any)=>(['path','pedestrian','footway'].includes(r.tags.highway)||r.tags.foot==='yes')&&metersBetween(utbm.start,nearestOnLine(utbm.start,r.coordinates))<.1),'UTBM must start directly on a mapped approach permitting pedestrians');
 });
 
 test('the IUT walking view reaches a documented windowed facade without another building blocking it',()=>{

@@ -1,3 +1,10 @@
+/** Fixed lights use the quiet half of the atlas; classroom lights may have blinds.
+ * Keep a whole curtain wall coherent instead of assigning random bright panes. */
+export function campusGlassTile(at:number,bottom:number,variant:number,kind:'fixed'|'classroom'='classroom'){
+ const index=kind==='fixed'?Math.floor(variant):Math.round(at*7+bottom*3)+variant;
+ return ((index%8)+8)%8+(kind==='fixed'?0:8);
+}
+
 /** Original procedural surfaces. These add material character, not surveyed detail. */
 export function campusSurface(kind:'concrete'|'paving'|'windows'){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
@@ -7,15 +14,17 @@ export function campusSurface(kind:'concrete'|'paving'|'windows'){
   // Sixteen quiet variations prevent every bay reflecting as one flat strip.
   // Interior shading/blinds are illustrative, not reconstructed rooms.
   for(let row=0;row<4;row++)for(let col=0;col<4;col++){
-   const x=col*128,y=row*128,v=105+random()*65;
+   // Canvas rows run downward; CanvasTexture flips Y, so UV tiles 0..7
+   // sample the lower half of this canvas.
+   const fixed=row>=2,x=col*128,y=row*128,v=fixed?151+random()*6:145+random()*15;
    const gradient=ctx.createLinearGradient(x,y,x+100,y+128);
-   gradient.addColorStop(0,`rgb(${v+30},${v+33},${v+31})`);gradient.addColorStop(.48,`rgb(${v},${v+8},${v+9})`);gradient.addColorStop(1,`rgb(${v-32},${v-20},${v-17})`);
+   gradient.addColorStop(0,`rgb(${v+12},${v+15},${v+13})`);gradient.addColorStop(.48,`rgb(${v},${v+8},${v+9})`);gradient.addColorStop(1,`rgb(${v-12},${v-5},${v-2})`);
    ctx.fillStyle=gradient;ctx.fillRect(x,y,128,128);
-   if((row+col*3)%5===0){
+   if(!fixed&&(row+col*3)%5===0){
     const drop=28+random()*48;ctx.fillStyle='#b8b8aa';ctx.fillRect(x+3,y+3,122,drop);
     ctx.strokeStyle='#777f76';ctx.lineWidth=1;for(let h=6;h<drop;h+=4){ctx.beginPath();ctx.moveTo(x+3,y+h);ctx.lineTo(x+125,y+h);ctx.stroke();}
    }
-   ctx.fillStyle='#182d3025';ctx.fillRect(x+5,y+100,118,23);
+   if(!fixed){ctx.fillStyle='#182d3010';ctx.fillRect(x+5,y+100,118,23);}
    ctx.strokeStyle='#cedbd21a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+9,y+6);ctx.lineTo(x+9,y+122);ctx.stroke();
   }
  }else{

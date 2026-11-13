@@ -12,7 +12,7 @@ import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
-import {campusSurface} from './campus-surfaces';
+import {campusSurface,campusGlassTile} from './campus-surfaces';
 import {withShadowDepthRange} from './render-depth';
 import {HemisphereLight,type SphereGeometry} from 'three';
 import {campusSkyGeometry} from './campus-sky';
@@ -34,6 +34,7 @@ const batch=():Batch=>({positions:[],colors:[],uvs:[]});
 const roofColors=['#ae6d50','#8f5848','#7c5550','#687880','#b57c5e'];
 const shutterColors=['#52695c','#526b7a','#80574a','#64756f','#6c6575'];
 const campusConcreteTones=new Set(['#d2d1c8','#b3b6aa','#a9ac9f','#a3a497','#a9a79a','#8c938b','#adafa4','#cac8bb','#b8b6a8']);
+const campusFrameTones=new Set(['#344b4c','#263b3c','#2d4141','#4a5956','#879087','#8c968e','#a8b3ac']);
 
 /** A bounded, shared-depth mesh layer; no per-frame tile decoding or geometry allocation. */
 export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(value:DetailStatus)=>void) {
@@ -191,7 +192,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
         const points=face.map(p=>[...local(p),p[2]]);
@@ -436,11 +437,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                   box:(at,w,bottom,top,hex,front,back)=>{
                     const wooden=face?.kind==='timber'&&['#9a7049','#aa8056','#88603f','#ad8259'].includes(hex);
                     const concrete=campusConcreteTones.has(hex);
-                    wallBox(wooden?timber:concrete?campusConcrete:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden||concrete,concrete?[4,2]:[3,.25]);
+                    wallBox(wooden?timber:concrete?campusConcrete:campusFrameTones.has(hex)?campusFrames:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden||concrete,concrete?[4,2]:[3,.25]);
                   },
                   lettering:(...args)=>campusLettering(wall,...args),
-                  glazing:(at,w,bottom,top,depth)=>{
-                    const tile=(Math.round(at*7+bottom*3)+wall.variant)%16,u=(tile%4)/4,v=Math.floor(tile/4)/4;
+                  glazing:(at,w,bottom,top,depth,kind)=>{
+                    const tile=campusGlassTile(at,bottom,wall.variant,kind),u=(tile%4)/4,v=Math.floor(tile/4)/4;
                     panel(campusGlazing,wall,at,w,base+bottom,base+top,'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
                   },
                 };
@@ -660,6 +661,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(campusRoofs.positions.length)physicalSurface(mesh(campusRoofs,concreteTexture(),true),'campus-concrete',.009);
     if(timber.positions.length)physicalSurface(mesh(timber,materialTexture('campus-timber-color'),true),'campus-timber',.004);
     const glazing=mesh(campusGlazing,surfaceTexture('windows'),true);
+    const frames=mesh(campusFrames,undefined,true);
+    if(frames){const material=frames.material as MeshStandardMaterial;material.metalness=.35;material.roughness=.46;material.envMapIntensity=.6;}
     if(glazing){
       const old=glazing.material as MeshStandardMaterial,glass=new MeshPhysicalMaterial({vertexColors:true,map:old.map,side:DoubleSide,metalness:.25,roughness:.18,envMap:environment?.texture||null,envMapIntensity:options.mood==='night'?.2:.8,clearcoat:1,clearcoatRoughness:.12});
       glass.envMapRotation.copy(scene.environmentRotation);orientPhysicalMaterial(glass);glazing.material=glass;glazing.castShadow=false;glazing.receiveShadow=false;resources.push(glass);old.dispose();

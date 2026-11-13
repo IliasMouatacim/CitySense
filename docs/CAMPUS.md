@@ -1,5 +1,30 @@
 # Portes du Jura university campus
 
+Campus-wide material/navigation pass: fixed curtain walls at STGI, the library
+and CROUS use a coherent, blind-free glass atlas; classroom windows at STGI, IUT
+and UTBM retain restrained individual variation. The procedural glass is an
+illustrative material, not a photograph of the interior or the opposite street.
+Frame/jamb hardware shares a separate batched painted-metal material, with
+moderate roughness rather than the concrete finish. UTBM's horizontal screen
+adds shallow staggered board-end joints; their spacing is an estimated assembly
+detail, not a measured reconstruction.
+
+The campus selector is also available while walking (under “Options et lieux”
+on phones). Choosing a stop recreates the pedestrian controller at that stop's
+mapped start, resets held movement/sprint, and restores the registered view.
+UTBM's start is now registered directly on its safe mapped pedestrian approach,
+removing the previous roughly 9.5 m snap from the nominal start.
+The original pre-walk view is retained for leaving walking mode. No new paid
+services, facade-image downloads or per-frame geometry generation are required.
+Validation (2026-11-13): production build and all 34 unit tests passed. The full
+eight-stop walking tour passed on desktop and mobile, including location/eye
+height checks, sprint reset, return-to-start and exit. Desktop/mobile floor and
+movement regressions also passed; software-WebGL samples advanced 8.58 m in
+4.63 s and 10.16 m in 4.17 s, respectively, with no supported-eye drift. This is
+not a hardware frame-rate benchmark. Screenshots across all campus sectors and
+representative mobile views were reviewed. Testing caught and corrected the
+glass atlas's flipped canvas coordinates and UTBM's off-path nominal start.
+
 CROUS entrance and corner glazing now use fixed lights divided in both axes,
 following the grid in Antomoro's 2012 photograph. This removes classroom latches
 and full-height stretched reflections from the restaurant's curtain walls.

@@ -13,7 +13,7 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
   panel(at,width,bottom,top,'#263b3c',.06);
   for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
    const x=at-width/2+(col+.5)*pitch,z0=bottom+row*rise+.035,z1=bottom+(row+1)*rise-.035;
-   if(draw.glazing)draw.glazing(x,pitch-.07,z0,z1,.10);
+   if(draw.glazing)draw.glazing(x,pitch-.07,z0,z1,.10,'fixed');
    else panel(x,pitch-.07,z0,z1,'#49636a',.10);
    onFixedLight();
   }

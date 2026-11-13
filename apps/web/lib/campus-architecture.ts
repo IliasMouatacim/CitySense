@@ -6,7 +6,7 @@ export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
  box:(at:number,width:number,bottom:number,top:number,color:string,front:number,back?:number)=>void;
  lettering:(text:string,at:number,width:number,bottom:number,top:number,outline?:boolean,depth?:number)=>void;
- glazing?:(at:number,width:number,bottom:number,top:number,depth:number)=>void;
+ glazing?:(at:number,width:number,bottom:number,top:number,depth:number,kind?:'fixed'|'classroom')=>void;
 };
 
 /** Estimated masonry joints inside the library's photo-observed red bands. */
@@ -100,7 +100,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    panel(at,width,bottom-.04,top+.04,frame,.06);
    for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
     const x=at-(width-.14)/2+(col+.5)*pitch,z0=bottom+row*rise+.03,z1=bottom+(row+1)*rise-.03;
-    if(draw.glazing)draw.glazing(x,pitch-.06,z0,z1,.10);
+    if(draw.glazing)draw.glazing(x,pitch-.06,z0,z1,.10,'fixed');
     else panel(x,pitch-.06,z0,z1,glass,.10);
     windows++;
    }
@@ -170,7 +170,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   for(let b=0;b<bays;b++)for(let row=0;row<rows;row++){
    const at=.25+(b+.5)*pitch,z0=bottom+row*rise+.04,z1=bottom+(row+1)*rise-.04;
    panel(at,pitch-.045,z0-.015,z1+.015,'#263b3c',.145);
-   if(draw.glazing)draw.glazing(at,pitch-.085,z0,z1,.16);
+   if(draw.glazing)draw.glazing(at,pitch-.085,z0,z1,.16,'fixed');
    else panel(at,pitch-.085,z0,z1,glass,.16);
    windows++;
   }
@@ -247,7 +247,12 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    for(let b=0;b<bays;b++)pane((b+.5)*length/bays,length/bays-.08,bottom,top,.16);
   }
   let rail=0;
-  for(let z=plinth+.12;z<height-.2;z+=.18){box(length/2,length,z,z+.095,['#9a7049','#aa8056','#88603f','#ad8259'][rail++%4],.38,.27);}
+  for(let z=plinth+.12;z<height-.2;z+=.18){
+   box(length/2,length,z,z+.095,['#9a7049','#aa8056','#88603f','#ad8259'][rail++%4],.38,.27);
+   // Estimated board ends at the existing screen supports, with staggered
+   // joints. Shallow dark cuts preserve the observed horizontal screen.
+   for(let x=1.85+(rail%2)*1.85;x<length-.03;x+=3.7)panel(x,.012,z,z+.095,'#594634',.384);
+  }
   for(let at=.1;at<=length;at+=3.7)box(at,.065,plinth,height-.1,'#bfc1b1',.46,.25);
   box(length/2,length,plinth-.1,plinth+.05,'#9b9f93',.52,.02);
   box(length/2,length,height-.08,height+.06,'#c3c5b7',.46,.02);
