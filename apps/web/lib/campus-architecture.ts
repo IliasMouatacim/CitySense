@@ -71,18 +71,41 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
      // Outside guard rails visible across the broad lower window bands.
      for(const z of [bottom+.28,bottom+.65,bottom+1.02])if(z<top-.1)box(at,width,z,z+.045,frame,.25,.19);
      box(at,width,top-.21,top-.17,'#884b42',.24,.18);
+     for(let bay=1;bay<bays;bay+=2){
+      const x=left*length+bay*pitch;
+      box(x,.055,bottom+.12,top-.16,'#884b42',.28,.18);
+      for(const z of [bottom+.28,top-.22])box(x,.09,z,z+.06,frame,.30,.12);
+     }
     }else{
      const split=bottom+(top-bottom)*.48;
      box(at,width,split-.075,split+.075,concrete,.25,.06);
      panel(at,width,bottom+.035,bottom+.085,'#367460',.16);
      panel(at,width,top-.08,top-.03,'#3e647b',.16);
+     for(let bay=1;bay<bays;bay+=2){
+      const x=left*length+bay*pitch;
+      box(x,.12,bottom-.06,split-.075,'#884b42',.29,.06);
+      box(x,.12,split+.075,top+.06,'#367460',.23,.06);
+     }
     }
     box(at,width,bottom-.18,bottom-.08,concrete,.27,.035);
    }
   }
   if(face.stairBay){
    const [left,right]=face.stairBay,at=(left+right)*length/2,width=(right-left)*length;
-   pane(at,width-.14,height*.06,height*.89,.10);
+   const bottom=height*.06,top=height*.89;
+   const columns=Math.max(2,Math.round(width/1.15)),rows=Math.max(3,Math.round((top-bottom)/1.05));
+   const pitch=(width-.14)/columns,rise=(top-bottom)/rows;
+   // Fixed stairwell lights in the west reference: reflections and framing
+   // stop at each light instead of stretching one classroom pane over floors.
+   panel(at,width,bottom-.04,top+.04,frame,.06);
+   for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
+    const x=at-(width-.14)/2+(col+.5)*pitch,z0=bottom+row*rise+.03,z1=bottom+(row+1)*rise-.03;
+    if(draw.glazing)draw.glazing(x,pitch-.06,z0,z1,.10);
+    else panel(x,pitch-.06,z0,z1,glass,.10);
+    windows++;
+   }
+   for(let col=0;col<=columns;col++)box(at-(width-.14)/2+col*pitch,.06,bottom,top,frame,.20,.06);
+   for(let row=0;row<=rows;row++)box(at,width,bottom+row*rise-.03,bottom+row*rise+.03,frame,.21,.06);
    for(const z of [.32,.62])box(at,width,height*z,height*z+.16,concrete,.30,.035);
    box(at,width*.9,height*.60,height*.72,'#278773',.28,.035);
    panel(at+width*.2,width*.27,height*.735,height*.83,'#94483e',.15);

@@ -1,5 +1,15 @@
 # Portes du Jura university campus
 
+STGI's west stairwell now has individual fixed glass lights and a full-height
+metal grid, following the institutional west-facade photo. Reflections no longer
+stretch through several storeys. Red guardrail uprights/brackets and the red/green
+upper-ribbon divisions add the photographed colour rhythm. Spacing and hardware
+dimensions remain estimates; the solid pier, stair-bay extent and footprint are
+unchanged.
+Validation (2026-11-13): production build and 17 targeted geometry/physics tests
+passed. Desktop/mobile STGI and UTBM walking checks passed with supported eye
+height and no reported rendering errors. The new STGI screenshots were inspected.
+
 The library's reddish bands now contain two staggered masonry courses with fine
 horizontal and vertical joints. The same treatment continues around its solid
 returns at close range; distant inferred returns keep simpler bands. Band

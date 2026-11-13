@@ -57,7 +57,11 @@ test('STGI keeps its photographed solid pier, narrow upper lights and actual fac
  assert.deepEqual(labels,['UFR STGI']);
  for(const [a,b] of face.solidBays!)assert.ok(panes.every(p=>p[1]<=a*length||p[0]>=b*length),'Do not run windows through the photographed concrete pier');
  const upper=panes.filter(p=>p[2]>height*.7);assert.ok(upper.length>3);assert.ok(upper.every(p=>p[3]-p[2]<height*.15));
- assert.ok(panes.some(p=>p[2]<height*.1&&p[3]>height*.8),'Keep the continuous stair glazing');
+ const [left,right]=face.stairBay!;
+ const stairs=panes.filter(p=>p[0]>=left*length&&p[1]<=right*length);
+ assert.ok(stairs.length>12,'Divide the photographed stair glazing into fixed lights');
+ assert.ok(stairs.every(p=>p[3]-p[2]<1.2&&p[1]-p[0]<1.3),'Do not stretch reflections over multiple floors');
+ assert.ok(Math.min(...stairs.map(p=>p[2]))<height*.1&&Math.max(...stairs.map(p=>p[3]))>height*.8,'Preserve the full-height glazed stair bay');
 });
 
 test('UTBM has a solid western plinth and doors registered to existing OSM entrances',()=>{
