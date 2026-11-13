@@ -1,5 +1,14 @@
 # Portes du Jura university campus
 
+UTBM's glazing frames and sills sit behind the wooden screen instead of piercing
+its slats. The two OSM-registered entrances retain their locations and now have
+estimated metal kick plates and hinges alongside their handles. These small
+hardware details are illustrative, not a claim of surveyed door construction.
+Validation (2026-11-13): build and 17 targeted geometry/physics checks passed,
+including a depth check that keeps window fittings behind the screen. Both
+desktop/mobile STGI and UTBM walkthrough cases passed without reported WebGL
+errors and retained the supported pedestrian eye height.
+
 The library's glazed elevations now use individual fixed glass lights, thin
 vertical/horizontal framing and two stronger floor beams, following the cited
 institutional library photograph. Reflections are assigned per light rather than

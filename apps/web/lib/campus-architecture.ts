@@ -19,7 +19,9 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
   // The library's small punched openings have shallow frames. Reusing the
   // deep STGI concrete-grid relief made these read as projecting window boxes.
-  const relief=face.kind==='libraryStone'||face.painted||face.layout?.startsWith('stgi-')||face.layout?.startsWith('crous-')?.5:1;
+  // UTBM's fittings also need to sit behind the timber screen (rear at .27 m),
+  // rather than protruding through its slats.
+  const relief=face.kind==='timber'?.45:face.kind==='libraryStone'||face.painted||face.layout?.startsWith('stgi-')||face.layout?.startsWith('crous-')?.5:1;
   const offset=face.layout?.startsWith('stgi-')&&depth>.3?depth-.09:0;
   const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief+offset,back*relief+offset);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?Math.max(.04,offset+.04):depth);
@@ -197,7 +199,9 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    const at=entrance.at*length,width=entrance.width;
    for(const side of [-1,1]){
     pane(at+side*width/4,width/2-.08,.18,2.55,.10);
+    panel(at+side*width/4,width/2-.13,.20,.40,'#8b9992',.245);
     box(at+side*.08,.025,.9,1.25,'#c0c5bb',.28,.22);
+    for(const z of [.48,1.20,2.15])box(at+side*(width/2-.045),.03,z,z+.10,'#94a49d',.25,.20);
    }
    box(at,width+.12,.10,.16,'#8c968e',.28,.03);
   }

@@ -77,6 +77,16 @@ test('UTBM has a solid western plinth and doors registered to existing OSM entra
  }
 });
 
+test('UTBM window fittings stay behind the timber screen',()=>{
+ const face=campusReferences.buildings.find(b=>b.buildingId==='BATIMENT0000000292211747')!.faces.find(f=>f.kind==='timber')!;
+ const fittings=new Set(['#344b4c','#aeb2a9','#879087','#8c968e','#263b3c','#2d4141','#a8b3ac']);
+ let checked=0;
+ drawCampusFacade(face,60,16.3,{panel:()=>{},lettering:()=>{},box:(_at,_w,bottom,_top,color,front)=>{
+  if(bottom>3.05&&fittings.has(color)){assert.ok(front<.27,'Window frames and sills must stay behind the rear of the wood slats');checked++;}
+ }});
+ assert.ok(checked>100);
+});
+
 test('STGI courtyard piers are continuous and the turquoise panel preserves the ground ribbon',()=>{
  const faces=campusReferences.buildings.flatMap(b=>b.faces),court=faces.find(f=>f.layout==='stgi-court')!,colour=faces.find(f=>f.layout==='stgi-colour')!;
  assert.ok(court&&colour);
