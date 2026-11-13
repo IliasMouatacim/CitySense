@@ -1,4 +1,5 @@
 import type {CampusDrawing} from './campus-architecture';
+import {drawLibraryMasonryJoints} from './campus-architecture';
 import type {CampusFace,CampusProfile} from './campus-references';
 import {campusProfile} from './campus-references';
 
@@ -42,7 +43,7 @@ export function drawCampusEnvelope(length:number,height:number,draw:CampusDrawin
   // Continue the library's characteristic brick courses round its solid returns.
   for(let z=1;z<height-.3;z+=1.5){
    panel(length/2,length,z,Math.min(z+.24,height-.22),'#947a70',.043);
-   if(close)for(let x=.3;x<length;x+=.65)panel(x,.015,z,Math.min(z+.24,height-.22),'#b9a69a',.046);
+   if(close)drawLibraryMasonryJoints(length,z,Math.min(z+.24,height-.22),draw,.046);
   }
  }
  if(!close)return;

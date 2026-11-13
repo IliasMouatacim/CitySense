@@ -1,5 +1,15 @@
 # Portes du Jura university campus
 
+The library's reddish bands now contain two staggered masonry courses with fine
+horizontal and vertical joints. The same treatment continues around its solid
+returns at close range; distant inferred returns keep simpler bands. Band
+locations follow the existing photo registration, while individual unit sizes
+and mortar widths are illustrative. All joints remain shallow, batched surfaces.
+Validation (2026-11-13): production build and 17 targeted geometry/physics checks
+passed. Both desktop/mobile library walkthroughs passed, including the north
+elevation, material loading and WebGL error checks. Captured views were inspected
+for surface overlap and continuity around the building corners.
+
 UTBM's glazing frames and sills sit behind the wooden screen instead of piercing
 its slats. The two OSM-registered entrances retain their locations and now have
 estimated metal kick plates and hinges alongside their handles. These small

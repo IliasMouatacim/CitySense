@@ -9,6 +9,15 @@ export type CampusDrawing={
  glazing?:(at:number,width:number,bottom:number,top:number,depth:number)=>void;
 };
 
+/** Estimated masonry joints inside the library's photo-observed red bands. */
+export function drawLibraryMasonryJoints(length:number,bottom:number,top:number,draw:CampusDrawing,depth=.078){
+ for(let z=bottom+.12;z<top-.006;z+=.12)draw.panel(length/2,length,z-.006,z+.006,'#b9a69a',depth);
+ for(let row=0;bottom+row*.12<top-.001;row++){
+  const z0=bottom+row*.12,z1=Math.min(top,z0+.12);
+  for(let x=.24+(row%2)*.24;x<length-.012;x+=.48)draw.panel(x,.014,z0,z1,'#b9a69a',depth+.001);
+ }
+}
+
 /** Batched solid architecture observed in institutional photographs.
  * Positions/relief are estimates on IGN envelopes. Inferred continuations are
  * selected separately by campus-envelope and counted separately in the UI.
@@ -157,7 +166,9 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   panel(length/2,length,.1,height,'#a9a79a',.05);
   for(let z=1;z<height-.3;z+=1.5){
    panel(length/2,length,z,z+.24,'#947a70',.065);
-   for(let x=.6;x<length;x+=1.3)panel(x,.025,z,z+.24,'#b9a69a',.078);
+   // Two staggered masonry courses within the photographed reddish bands.
+   // These shallow joints add close-range detail without projecting blocks.
+   drawLibraryMasonryJoints(length,z,z+.24,draw);
   }
   if(face.openings){
    // Uneven openings observed in the courtyard photograph, measured as
