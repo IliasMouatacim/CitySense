@@ -1,5 +1,25 @@
 # Portes du Jura university campus
 
+The blank north STGI return volumes `BATIMENT0000000223563706` and
+`BATIMENT0000000223563708` now share the adjoining gallery's concrete envelope
+finish. They previously had no academic association and bypassed the construction
+finishing pass. An explicit solid-only association adds the same material tint,
+roof coping, plinth, shallow formwork joints/tie holes and estimated rainwater
+pipe detailing. Empty face lists deliberately prevent the classroom-window
+continuation used on other cores. These are inferred construction details;
+the north elevations are not newly documented photographic reconstructions.
+The [2025 campus plan](https://stgi.umlp.fr/wp-content/uploads/2025/07/2025_Plan-Campus_Montbeliard.jpg)
+was inspected alongside the footprints. Lionel Vadam's [2023 B/C walkway photo](https://www.estrepublicain.fr/education/2023/03/05/la-fac-fete-ses-30-ans-vendredi-sur-le-campus-des-portes-du-jura)
+was also inspected for architectural context; it does not establish openings
+on these north walls. The photo is not redistributed or used as a texture.
+Validation (2026-11-14): production build and all 38 unit checks passed.
+New checks cover both real footprints, bounded surface geometry, roof/base
+finishing and the absence of inferred windows/signs. A desktop browser spot
+check at the library-side view was captured and inspected at device scale 0.5,
+with a test-only certificate exception for the external basemap. This was a
+rendering review, not a new complete campus walkthrough or hardware benchmark.
+
+
 Walking keyboard input now yields to focused inputs, text areas, selectors and
 editable fields before processing Escape. Dismissing a selector no longer exits
 walking. Moving focus into a form control clears held movement/turn keys; events

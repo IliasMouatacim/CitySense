@@ -15,7 +15,18 @@ const wingCores:Record<string,string>={
  BATIMENT0000000223563365:'BATIMENT0000000223563366',
  BATIMENT0000000223563704:'BATIMENT0000000223563705',
 };
-export const campusCompletionProfile=(id:unknown)=>typeof id==='string'?campusProfile(wingCores[id]):undefined;
+// The north return/core volumes beside the STGI gallery share its concrete
+// envelope. The plan establishes association, not the openings on these sides.
+const solidWingCores:Record<string,string>={
+ BATIMENT0000000223563706:'BATIMENT0000000223563705',
+ BATIMENT0000000223563708:'BATIMENT0000000223563705',
+};
+export const campusCompletionProfile=(id:unknown)=>{
+ if(typeof id!=='string')return;
+ const solid=campusProfile(solidWingCores[id]);
+ // An empty face list permits construction finishing without classroom windows.
+ return solid?{...solid,faces:[]}:campusProfile(wingCores[id]);
+};
 
 /** Estimated construction details, separate from the photo-observed openings.
  * No entrances, signage or equipment are invented on undocumented walls.

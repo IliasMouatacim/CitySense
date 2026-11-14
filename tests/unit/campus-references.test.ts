@@ -194,7 +194,7 @@ test('campus side-wall completion fits real envelopes and leaves non-academic us
 
 test('taller IUT cores and STGI connectors receive inferred detail without becoming photo observations',()=>{
  const cores=data.buildings.features.filter((f:any)=>campusCompletionProfile(f.properties.sourceId));
- assert.equal(cores.length,7);
+ assert.equal(cores.length,9);
  for(const core of cores){
   assert.ok(!campusReferences.buildings.some(b=>b.buildingId===core.properties.sourceId));
   const profile=campusCompletionProfile(core.properties.sourceId)!;
@@ -274,5 +274,28 @@ test('photo-observed courtyard fixtures are credited and stay outside building i
  for(const fixture of CAMPUS_COURTYARD.fixtures){
   assert.ok(fixture.height>0&&fixture.width>0&&fixture.depth>0);
   assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon([...fixture.coordinates],poly))));
+ }
+});
+
+test('the blank north STGI return receives construction finishing without guessed classroom openings',()=>{
+ for(const id of ['BATIMENT0000000223563706','BATIMENT0000000223563708']){
+  const profile=campusCompletionProfile(id);assert.ok(profile);
+  assert.equal(estimatedCampusFace(profile,undefined,20,11),undefined);
+  const building=data.buildings.features.find((f:any)=>f.properties.sourceId===id);assert.ok(building);
+  let roof=0,base=0,joints=0;
+  for(const polygon of polygons(building))for(let i=1;i<polygon[0].length;i++){
+   const length=metersBetween(polygon[0][i-1],polygon[0][i]);if(length<.5)continue;
+   const height=building.properties.render_height;
+   const check=(at:number,width:number,bottom:number,top:number)=>{
+    assert.ok(at-width/2>=-.01&&at+width/2<=length+.01);
+    assert.ok(bottom>=0&&top<=height+.1&&top>bottom);
+   };
+   drawCampusEnvelope(length,height,{
+    panel:(...args)=>{check(...args.slice(0,4) as [number,number,number,number]);joints++;},
+    box:(at,width,bottom,top)=>{check(at,width,bottom,top);if(top>height)roof++;if(bottom<.1)base++;},
+    lettering:()=>assert.fail('No invented signs'),glazing:()=>assert.fail('No invented windows'),
+   },true);
+  }
+  assert.ok(roof>0&&base>0&&joints>20);
  }
 });
