@@ -57,6 +57,12 @@ export function nearbyFootprints(features:Feature[],center:[number,number],radiu
 export function outwardUv(uv:number[][],dx:number,dy:number,normal:number[]) {
   return dy*normal[0]-dx*normal[1]<0?[uv[1],uv[0],uv[3],uv[2]]:uv;
 }
+/** Order a vertical wall face so its geometric normal faces the exterior.
+ * Reorder UVs with these same indices to preserve their existing orientation.
+ */
+export function outwardWallOrder(dx:number,dy:number,normal:number[]):[number,number,number,number]{
+  return dy*normal[0]-dx*normal[1]<0?[0,3,2,1]:[0,1,2,3];
+}
 export function stableVariant(id:string|number|undefined,ring:number[][]) {
   let hash=2166136261;const key=id===undefined?ring.map(p=>p.map(n=>n.toFixed(6)).join(',')).join(';'):String(id);
   for(let i=0;i<key.length;i++){hash^=key.charCodeAt(i);hash=Math.imul(hash,16777619);}

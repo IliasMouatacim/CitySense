@@ -1,7 +1,7 @@
 import {MercatorCoordinate,type Map as CityMap,type CustomLayerInterface} from 'maplibre-gl';
 import {BufferGeometry,Float32BufferAttribute,Mesh,MeshBasicMaterial,MeshStandardMaterial,MeshPhysicalMaterial,AmbientLight,DirectionalLight,TextureLoader,type Texture,Scene,Camera,WebGLRenderer,WebGLRenderTarget,Matrix4,Color,Vector3,DoubleSide,CanvasTexture,SRGBColorSpace,RepeatWrapping,ShapeUtils,Vector2,PMREMGenerator,PCFShadowMap,ACESFilmicToneMapping,NoToneMapping} from 'three';
 import {HDRLoader} from 'three/addons/loaders/HDRLoader.js';
-import {readCityPois,mappedHeight,stableVariant,metersBetween,nearbyFootprints,outwardUv,type CityPoi} from './city-details-data';
+import {readCityPois,mappedHeight,stableVariant,metersBetween,nearbyFootprints,outwardUv,outwardWallOrder,type CityPoi} from './city-details-data';
 import type {SceneMood} from './city-scene';
 import {roofPhotoRequest} from './photo-city';
 import {cityBuildingFeatures,getCityWorld,terrainHeight} from './city-world';
@@ -99,7 +99,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const dx=(wall.b[0]-wall.a[0])/wall.length,dy=(wall.b[1]-wall.a[1])/wall.length;
     const x=wall.a[0]+dx*along+wall.normal[0]*depth,y=wall.a[1]+dy*along+wall.normal[1]*depth;
     const a=[x-dx*width/2,y-dy*width/2,bottom],b=[x+dx*width/2,y+dy*width/2,bottom];
-    quad(target,a,b,[b[0],b[1],top],[a[0],a[1],top],hex,.83+Math.max(0,wall.normal[0]*-.6+wall.normal[1]*-.8)*.17,uv&&outwardUv(uv,dx,dy,wall.normal));
+    const points=[a,b,[b[0],b[1],top],[a[0],a[1],top]],order=outwardWallOrder(dx,dy,wall.normal),textureUv=uv&&outwardUv(uv,dx,dy,wall.normal);
+    quad(target,points[order[0]],points[order[1]],points[order[2]],points[order[3]],hex,.83+Math.max(0,wall.normal[0]*-.6+wall.normal[1]*-.8)*.17,textureUv&&order.map(i=>textureUv[i]));
   }
   // Actual solid trim near the camera: side and underside faces make sills,
   // frames and cornices read as architecture rather than decals on a box.
@@ -111,8 +112,10 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const e=point(l,bottom,back),f=point(r,bottom,back),g=point(r,top,back),h=point(l,top,back);
     const faceUv=(w:number,h:number)=>textured?[[0,0],[w/textureSpan[0],0],[w/textureSpan[0],h/textureSpan[1]],[0,h/textureSpan[1]]]:undefined;
     const uv=faceUv(width,top-bottom),sideUv=faceUv(front-back,top-bottom),topUv=faceUv(width,front-back);
-    quad(target,a,b,c,d,hex,.92,uv);quad(target,e,a,d,h,hex,.64,sideUv);quad(target,b,f,g,c,hex,.72,sideUv);
-    quad(target,d,c,g,h,hex,1,topUv);quad(target,e,f,b,a,hex,.5,topUv);
+    const order=outwardWallOrder(dx,dy,wall.normal);
+    const face=(points:number[][],shade:number,uv?:number[][])=>quad(target,points[order[0]],points[order[1]],points[order[2]],points[order[3]],hex,shade,uv&&order.map(i=>uv[i]));
+    face([a,b,c,d],.92,uv);face([e,a,d,h],.64,sideUv);face([b,f,g,c],.72,sideUv);
+    face([d,c,g,h],1,topUv);face([e,f,b,a],.5,topUv);
   }
   function mesh(data:Batch,texture?:Texture,physical=false,cutout=false){
     if(!data.positions.length)return;
@@ -246,8 +249,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       const p=local(center),ground=terrainHeight(...center)||0,radius=options.walking?95:180;
       sun.position.set(p[0]-90,p[1]-70,ground+260);sun.target.position.set(p[0],p[1],ground);sun.castShadow=options.mood!=='night';
       const resolution=map.getCanvas().clientWidth>=1000?2048:1024;sun.shadow.mapSize.set(resolution,resolution);
-      // The mirrored ENU normal needs a small opposite offset at mobile shadow resolution.
-      Object.assign(sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:1,far:600});sun.shadow.camera.up.set(0,0,1);sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=resolution===1024?-.10:.035;sun.shadow.bias=-.0006;resources.push(sun.shadow);
+      Object.assign(sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:1,far:600});sun.shadow.camera.up.set(0,0,1);sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.035;sun.shadow.bias=-.0006;resources.push(sun.shadow);
     }else sun.position.set(-100,-100,300);
     scene.add(sun,sun.target);
     if(city?.streets){

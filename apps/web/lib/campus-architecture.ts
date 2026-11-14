@@ -35,7 +35,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief+offset,back*relief+offset);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?Math.max(.04,offset+.04):depth);
   // Dark reveal at the back, with substantial solid jambs and a projecting sill.
-  if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09));
+  if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09),face.layout==='stgi-return'?'fixed':undefined);
   else{panel(at,width,bottom,top,glass,depth+.015);panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);}
   for(const x of [-1,1])trim(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
   trim(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
@@ -47,7 +47,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    const split=at+width*.18,z=bottom+(top-bottom)*.72;
    trim(split,.045,bottom+.035,top-.035,'#263b3c',.24,.10);
    trim(at,width-.07,z,z+.035,'#2d4141',.245,.10);
-   trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
+   if(face.layout!=='stgi-return')trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
  if(drawCrousFacade(face,length,height,draw,pane,()=>{windows++;})||drawStgiFacade(face,length,height,draw,pane)){

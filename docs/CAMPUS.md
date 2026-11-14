@@ -1,5 +1,28 @@
 # Portes du Jura university campus
 
+Wall panels and solid trim now orient triangle winding to the footprint's
+exterior normal. Reordering texture coordinates with the same vertex indices
+preserves the existing lettering and reflection orientation. Previously,
+double-sided rendering concealed inward normals on reversed rings while shadow
+sampling still used those normals. A geometry regression checks exterior wall
+normals and upward cap normals for both windings and several wall directions.
+The normal shadow offset now uses the same positive 3.5 cm setting at both
+shadow resolutions.
+The MULTIMEDIA west glazing now uses the coherent glass-atlas range without
+invented classroom blinds. Generic opening handles are omitted on this return;
+its mullions, transoms, reveals and sills remain. The source images do not
+establish room interiors or opening hardware. This material choice does not
+assert that the real windows are unopenable.
+The small mobile corner speckle remains unresolved. Diagnostic changes to
+shadow reception and paint depth offset did not clear it and were discarded.
+Physical shadow reception remains enabled on the painted wall.
+Validation (2026-11-14): production build and all 46 unit tests passed. North,
+west and close west views were rendered and visually inspected on desktop
+(device scale 0.5) and mobile (device scale 1), with no page/WebGL errors.
+The check uses a test-only external-basemap certificate exception and camera
+position changes; it is not a full walking tour or hardware benchmark.
+
+
 The MULTIMEDIA return now uses the pale painted sign fascia visible in the
 anniversary aerial, with a narrow concrete cap and distinct metal coping.
 The west infill is built as a shallow wall shell around the existing openings.

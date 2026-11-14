@@ -373,3 +373,14 @@ test('MULTIMEDIA return has painted sign fascia and solid reveals clear of all s
  assert.ok(fascia&&coping);assert.equal(reveals,24);assert.equal(panes.length,6);assert.ok(infill.length>6);
  for(const p of panes)assert.ok(infill.every(f=>Math.min(f[1],p[1])-Math.max(f[0],p[0])<1e-8||Math.min(f[3],p[3])-Math.max(f[2],p[2])<1e-8),'Solid infill must leave the glazing open');
 });
+
+
+test('MULTIMEDIA glazing avoids invented classroom blinds and opening handles',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-return')!;
+ let panes=0;
+ assert.equal(drawCampusFacade(face,8.8,10.9,{panel:()=>{},lettering:()=>{},
+  glazing:(_a,_w,_b,_t,_d,kind)=>{assert.equal(kind,'fixed');panes++;},
+  box:(_a,width,bottom,top,color)=>assert.ok(!(color==='#a8b3ac'&&width===.025&&Math.abs(top-bottom-.13)<1e-7),'No generic classroom latch on this glazing'),
+ }),6);
+ assert.equal(panes,6);
+});
