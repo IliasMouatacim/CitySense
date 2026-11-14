@@ -1,5 +1,23 @@
 # Portes du Jura university campus
 
+The STGI north block now has a registered west-return elevation on IGN edge 8
+of `BATIMENT0000000223563706`, based on the part visible behind the C stair
+tower in [Lionel Vadam’s 2023 photograph](https://cdn-s-www.estrepublicain.fr/images/2e6275e0-3db9-4841-a417-c2630b763634/NW_raw/les-30-ans-de-l-ufr-stgi-%28unite-de-formation-et-de-recherche-sciences-techniques-et-gestion-de-l-industrie%29-de-l-universite-de-franche-comte-a-montbeliard-photo-er-lionel-vadam-1677954176.jpg).
+Three glazing bands, projecting concrete ledges and the broad parapet replace
+the formerly blank west end. The photo is oblique and partly obscured: registering
+it to this return, opening fractions, bay subdivisions and ledge depths remain
+estimates. It is not a surveyed elevation. The long north wall is not documented
+by this photo and remains solid; no doorway, lettering or north-side openings
+have been inferred. The photo is linked as evidence, not redistributed or used
+as a texture. The manifest generator now reproduces this source and facade.
+Validation (2026-11-14): production build and all 39 unit checks passed, including
+real IGN edge registration, bounded geometry and six panes/three ledges confined
+to the single registered edge. West and north render checks passed on desktop
+and mobile with no page/WebGL errors, and the captures were visually inspected.
+The review used device scale 0.5 and a test-only external-basemap certificate
+exception. These were render spot checks, not a new full campus walking tour.
+
+
 The blank north STGI return volumes `BATIMENT0000000223563706` and
 `BATIMENT0000000223563708` now share the adjoining gallery's concrete envelope
 finish. They previously had no academic association and bypassed the construction

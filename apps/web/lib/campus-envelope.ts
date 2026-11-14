@@ -18,7 +18,6 @@ const wingCores:Record<string,string>={
 // The north return/core volumes beside the STGI gallery share its concrete
 // envelope. The plan establishes association, not the openings on these sides.
 const solidWingCores:Record<string,string>={
- BATIMENT0000000223563706:'BATIMENT0000000223563705',
  BATIMENT0000000223563708:'BATIMENT0000000223563705',
 };
 export const campusCompletionProfile=(id:unknown)=>{

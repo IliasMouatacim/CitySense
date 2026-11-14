@@ -3,6 +3,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 const world=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const sources=[
+ {id:'stgi-c-2023',institution:'L’Est Républicain · Lionel Vadam',url:'https://www.estrepublicain.fr/education/2023/03/05/la-fac-fete-ses-30-ans-vendredi-sur-le-campus-des-portes-du-jura',published:'2023-03-05',captureDate:null,author:'Lionel Vadam'},
  {id:'crous-2012',institution:'Wikimedia Commons · Restaurant universitaire des Portes du Jura',url:'https://commons.wikimedia.org/wiki/File:URF_STGI_CROUS.JPG',published:'unknown',captureDate:'2012-11-13',author:'Antomoro',license:'Free Art License'},
  {id:'stgi-west',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe1.jpg',published:'2021-02',captureDate:null},
  {id:'stgi-court',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe2.jpg',published:'2021-02',captureDate:null},
@@ -20,6 +21,9 @@ function building(id,label,wallColor,sourceIds,faces,notes){
  if(label.startsWith('UFR STGI'))sourceIds.push('stgi-painted-detail');
  buildings.push({buildingId:id,label,wallColor,sourceIds,faces:faces.map(([edge,kind,extra={}])=>({a:ring[edge],b:ring[edge+1],kind,...extra})),notes});
 }
+building('BATIMENT0000000223563706','STGI · retour nord · élévation ouest','#d2d1c8',['stgi-c-2023','plan'],[
+ [8,'concrete',{layout:'stgi-return'}],
+],'The west return visible behind the C stair tower in Lionel Vadam’s 2023 photograph has three stacked glazing bands, projecting concrete ledges and a broad solid parapet. Registration, window subdivisions and dimensions are approximate from an oblique partial view. Only this west edge is reconstructed; the long north wall and hidden elevations remain solid and unverified. No doors or lettering are inferred.');
 building('BATIMENT0000000223563366','UFR STGI · aile sud','#d2d1c8',['stgi-west','stgi-court','stgi-colour','plan'],[
  [0,'ribbon',{floors:3,label:'UFR STGI',layout:'stgi-west',solidBays:[[.69,.83]],stairBay:[.34,.43],glazingBands:[[.055,.29],[.36,.60],[.77,.88]]}],[3,'frame',{floors:3,layout:'stgi-court'}],[16,'frame',{floors:3,layout:'stgi-court'}],
 ],'West reference: two broad lower glazing bands, paired narrow upper lights, outside guardrails, a glazed stair bay, a solid concrete pier and UFR STGI outline lettering. Positions and registration are estimated from the oblique photo; no new entrance is inferred.');
@@ -65,5 +69,5 @@ entranceFace.entrances=[6050160864,6050160865].map(id=>{
  if(gap>8)throw Error('Mapped entrance too far from the IGN frontage');
  return {at:Number(at.toFixed(6)),width:1.8,sourceNode:id};
 });
-writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-12',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
+writeFileSync('apps/web/public/city/campus-facades.json',JSON.stringify({version:1,reviewedAt:'2026-11-14',method:'Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.',sourceImagesRedistributed:false,sources,buildings},null,2)+'\n');
 console.log(`Recorded ${buildings.length} building envelopes and ${buildings.reduce((sum,b)=>sum+b.faces.length,0)} observed-style faces.`);

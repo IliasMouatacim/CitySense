@@ -1,9 +1,17 @@
 {
   "version": 1,
-  "reviewedAt": "2026-11-12",
+  "reviewedAt": "2026-11-14",
   "method": "Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.",
   "sourceImagesRedistributed": false,
   "sources": [
+    {
+      "id": "stgi-c-2023",
+      "institution": "L’Est Républicain · Lionel Vadam",
+      "url": "https://www.estrepublicain.fr/education/2023/03/05/la-fac-fete-ses-30-ans-vendredi-sur-le-campus-des-portes-du-jura",
+      "published": "2023-03-05",
+      "captureDate": null,
+      "author": "Lionel Vadam"
+    },
     {
       "id": "crous-2012",
       "institution": "Wikimedia Commons · Restaurant universitaire des Portes du Jura",
@@ -73,6 +81,30 @@
     }
   ],
   "buildings": [
+    {
+      "buildingId": "BATIMENT0000000223563706",
+      "label": "STGI · retour nord · élévation ouest",
+      "wallColor": "#d2d1c8",
+      "sourceIds": [
+        "stgi-c-2023",
+        "plan"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8043987,
+            47.4956701
+          ],
+          "b": [
+            6.8044319,
+            47.4955942
+          ],
+          "kind": "concrete",
+          "layout": "stgi-return"
+        }
+      ],
+      "notes": "The west return visible behind the C stair tower in Lionel Vadam’s 2023 photograph has three stacked glazing bands, projecting concrete ledges and a broad solid parapet. Registration, window subdivisions and dimensions are approximate from an oblique partial view. Only this west edge is reconstructed; the long north wall and hidden elevations remain solid and unverified. No doors or lettering are inferred."
+    },
     {
       "buildingId": "BATIMENT0000000223563366",
       "label": "UFR STGI · aile sud",

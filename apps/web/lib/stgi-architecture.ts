@@ -14,9 +14,23 @@ export function drawStgiPaint(length:number,height:number,draw:CampusDrawing){
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
- if(!['stgi-court','stgi-colour','stgi-ribbon'].includes(face.layout||''))return false;
+ if(!['stgi-court','stgi-colour','stgi-ribbon','stgi-return'].includes(face.layout||''))return false;
  const {panel,box}=draw,concrete='#d2d1c8',frame='#344b4c';
  const bands=face.glazingBands||[[.055,.255],[.395,.585],[.735,.885]];
+ if(face.layout==='stgi-return'){
+  // West return visible behind the stair tower in Lionel Vadam's 2023 C view.
+  // Registration, bay splits and relief are approximate; other faces stay solid.
+  panel(length/2,length,.04,height*.84,'#eeeae0',.043);
+  const margin=.45,bays=2,pitch=(length-margin*2)/bays;
+  for(const [bottom,top] of [[.09,.27],[.365,.545],[.64,.80]]){
+   for(let bay=0;bay<bays;bay++)pane(margin+(bay+.5)*pitch,pitch-.07,height*bottom,height*top,.10);
+   box(length/2,length+.12,height*bottom-.18,height*bottom-.045,concrete,.65,.035);
+   box(length/2,length+.12,height*bottom-.19,height*bottom-.165,'#7d8980',.67,.56);
+  }
+  box(length/2,length,height*.82,height,concrete,.20,.03);
+  for(const at of [.12,length-.12])box(at,.24,.03,height*.82,concrete,.28,.035);
+  return true;
+ }
  if(face.layout==='stgi-court'){
   const pier=.38,bays=Math.max(1,Math.round((length-pier)/3.05)),pitch=(length-pier)/bays;
   for(const [row,band] of bands.entries()){

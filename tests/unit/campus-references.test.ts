@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {campusReferences} from '../../apps/web/lib/campus-references';
+import {campusReferences,campusProfile} from '../../apps/web/lib/campus-references';
 import {drawCampusFacade} from '../../apps/web/lib/campus-architecture';
 import {CAMPUS_VISITS} from '../../apps/web/lib/campus-visits';
 import {matchesFacadeEdge} from '../../apps/web/lib/facade-references';
@@ -194,7 +194,7 @@ test('campus side-wall completion fits real envelopes and leaves non-academic us
 
 test('taller IUT cores and STGI connectors receive inferred detail without becoming photo observations',()=>{
  const cores=data.buildings.features.filter((f:any)=>campusCompletionProfile(f.properties.sourceId));
- assert.equal(cores.length,9);
+ assert.equal(cores.length,8);
  for(const core of cores){
   assert.ok(!campusReferences.buildings.some(b=>b.buildingId===core.properties.sourceId));
   const profile=campusCompletionProfile(core.properties.sourceId)!;
@@ -219,7 +219,7 @@ test('detailed benches remain inside existing walking collision envelopes',()=>{
 });
 
 test('institutional campus observations remain attached to actual IGN walls and credited reference URLs',()=>{
- assert.equal(campusReferences.buildings.length,11);assert.equal(campusReferences.sourceImagesRedistributed,false);
+ assert.equal(campusReferences.buildings.length,12);assert.equal(campusReferences.sourceImagesRedistributed,false);
  for(const profile of campusReferences.buildings){
   const building=data.buildings.features.find((f:any)=>f.properties.sourceId===profile.buildingId);assert.ok(building);
   for(const face of profile.faces)assert.ok(polygons(building).some(p=>p[0].slice(1).some((b,i)=>matchesFacadeEdge(face,p[0][i],b))),profile.buildingId);
@@ -279,7 +279,7 @@ test('photo-observed courtyard fixtures are credited and stay outside building i
 
 test('the blank north STGI return receives construction finishing without guessed classroom openings',()=>{
  for(const id of ['BATIMENT0000000223563706','BATIMENT0000000223563708']){
-  const profile=campusCompletionProfile(id);assert.ok(profile);
+  const profile=campusProfile(id)||campusCompletionProfile(id);assert.ok(profile);
   assert.equal(estimatedCampusFace(profile,undefined,20,11),undefined);
   const building=data.buildings.features.find((f:any)=>f.properties.sourceId===id);assert.ok(building);
   let roof=0,base=0,joints=0;
@@ -298,4 +298,15 @@ test('the blank north STGI return receives construction finishing without guesse
   }
   assert.ok(roof>0&&base>0&&joints>20);
  }
+});
+
+test('STGI north return reconstructs only the west edge supported by the 2023 partial photograph',()=>{
+ const p=campusProfile('BATIMENT0000000223563706')!;assert.ok(p.sourceIds.includes('stgi-c-2023'));
+ assert.equal(p.faces.length,1);assert.equal(p.faces[0].layout,'stgi-return');
+ let ledges=0,glass=0;
+ const windows=drawCampusFacade(p.faces[0],8.8,10.9,{
+  panel:()=>{},box:(_at,_w,_bottom,_top,_hex,front)=>{if(front===.65)ledges++;},
+  glazing:()=>{glass++;},lettering:()=>assert.fail('No invented signage'),
+ });
+ assert.equal(ledges,3);assert.equal(windows,6);assert.equal(glass,6);
 });
