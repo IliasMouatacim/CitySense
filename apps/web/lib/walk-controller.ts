@@ -81,12 +81,14 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   const keyCodes=['KeyW','KeyZ','KeyS','KeyA','KeyQ','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'];
   const typing=(target:EventTarget|null)=>target instanceof HTMLElement&&Boolean(target.closest('input,textarea,select,[contenteditable=true]'));
   function keyDown(event:KeyboardEvent){
-    if(paused)return;
+    if(paused||event.defaultPrevented)return;
+    if(typing(event.target)){clear();return;}
     if(event.code==='Escape'){event.preventDefault();onExit();return;}
-    if(typing(event.target)||!keyCodes.includes(event.code))return;
+    if(!keyCodes.includes(event.code))return;
     event.preventDefault();if(!keys.size)last=performance.now();keys.add(event.code);
   }
   function keyUp(event:KeyboardEvent){keys.delete(event.code);}
+  function focusIn(event:FocusEvent){if(typing(event.target))clear();}
   function clear(){keys.clear();drag=null;last=performance.now();}
   function pause(event:{paused?:boolean}){paused=Boolean(event.paused);clear();}
   map.on('citysense-walk-pause',pause);
@@ -131,7 +133,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     if(now-reported>150){status();reported=now;}
     frame=requestAnimationFrame(tick);
   }
-  window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);document.addEventListener('mousemove',lockedMove);document.addEventListener('pointerlockchange',lockChange);
+  window.addEventListener('focusin',focusIn);window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);document.addEventListener('mousemove',lockedMove);document.addEventListener('pointerlockchange',lockChange);
   canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);map.on('sourcedata',sourceData);map.on('idle',idleGeometry);
   const controller={
     press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){if(!keys.size)last=performance.now();keys.add('touch:'+action);}else keys.delete('touch:'+action);},
@@ -140,7 +142,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     reset(){clear();sprintMode=false;bob=0;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;},
     dispose(){
       if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);map.off('idle',idleGeometry);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
-      window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
+      window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();
       try{for(const layer of symbolLayers)if(map.getLayer(layer.id))map.setLayoutProperty(layer.id,'visibility',layer.visibility);map.setCenterClampedToGround(centerClamped);map.setVerticalFieldOfView(verticalFov);map.setPixelRatio(pixelRatio);map.jumpTo(saved);map.setMaxPitch(maxPitch);map.setMaxZoom(maxZoom);handlers.forEach((h,i)=>{if(enabled[i])h.enable();});}catch{/* Map may already be removed during page teardown. */}

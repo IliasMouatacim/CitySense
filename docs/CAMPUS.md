@@ -1,5 +1,17 @@
 # Portes du Jura university campus
 
+Walking keyboard input now yields to focused inputs, text areas, selectors and
+editable fields before processing Escape. Dismissing a selector no longer exits
+walking. Moving focus into a form control clears held movement/turn keys; events
+already handled by another control are respected. The focus listener is removed
+when the controller is disposed. Escape from the scene continues to exit walking.
+Validation (2026-11-14): production build, 37 unit checks and two desktop/mobile
+browser regressions passed. The browser check holds W while focusing the campus
+selector, verifies movement stays stopped across subsequent animation frames,
+then checks Escape both inside the selector and from the scene. Cloud browser
+checks used device scale 0.5 and a test-only external-basemap certificate exception.
+
+
 Walking feedback now reports physical stops against furniture and facade relief,
 not only footprint/water exclusions. The controller compares requested movement
 with the capsule's resolved movement; less than 20% progress signals a stop.
