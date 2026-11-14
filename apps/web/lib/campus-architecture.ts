@@ -45,8 +45,9 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   // The institutional images show fine divisions inside the larger ribbon bays.
   if(width>.85){
    const split=at+width*.18,z=bottom+(top-bottom)*.72;
-   trim(split,.045,bottom+.035,top-.035,'#263b3c',.24,.10);
-   trim(at,width-.07,z,z+.035,'#2d4141',.245,.10);
+   const connected=face.layout==='stgi-return';
+   trim(split,.045,connected?bottom-.06:bottom+.035,connected?top+.06:top-.035,'#263b3c',.24,.10);
+   trim(at,connected?width+.035:width-.07,z,z+.035,'#2d4141',.245,.10);
    if(face.layout!=='stgi-return')trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }

@@ -1,5 +1,16 @@
 # Portes du Jura university campus
 
+The MULTIMEDIA west window mullions now meet their head and sill frames, and
+transoms extend into both jambs. This closes the small floating gaps in the
+previous assembly. Member sizes and bay divisions remain photo-based estimates.
+Validation (2026-11-14): production build and all 47 unit checks passed, including
+frame-intersection checks for all six panes. Six north, west and close-west
+renders were inspected on desktop (device scale 0.5) and mobile (device scale 1),
+with no page/WebGL errors. The existing small mobile north-corner speckle remains.
+These camera-position checks use the test-only external-basemap certificate
+exception and are not a new full walking tour.
+
+
 Wall panels and solid trim now orient triangle winding to the footprint's
 exterior normal. Reordering texture coordinates with the same vertex indices
 preserves the existing lettering and reflection orientation. Previously,

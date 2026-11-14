@@ -384,3 +384,14 @@ test('MULTIMEDIA glazing avoids invented classroom blinds and opening handles',(
  }),6);
  assert.equal(panes,6);
 });
+
+
+test('MULTIMEDIA mullions and transoms connect into their surrounding frames',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-return')!;
+ const panes:number[][]=[],boxes:{at:number;width:number;bottom:number;top:number;color:string}[]=[];
+ drawCampusFacade(face,8.8,10.9,{panel:()=>{},lettering:()=>{},glazing:(at,width,bottom,top)=>panes.push([at,width,bottom,top]),box:(at,width,bottom,top,color)=>boxes.push({at,width,bottom,top,color})});
+ for(const [at,width,bottom,top] of panes){
+  assert.ok(boxes.some(b=>b.color==='#263b3c'&&Math.abs(b.at-(at+width*.18))<1e-8&&b.bottom<=bottom-.055&&b.top>=top+.045),'Mullion must meet sill and head frame');
+  assert.ok(boxes.some(b=>b.color==='#2d4141'&&b.at===at&&b.bottom>bottom&&b.top<top&&b.width>=width+.015),'Transom must meet both jambs');
+ }
+});
