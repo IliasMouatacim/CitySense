@@ -59,8 +59,9 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
    Array.from({length:bays},(_,bay)=>{const at=margin+(bay+.5)*pitch,width=pitch-.07;return {left:at-width/2,right:at+width/2,bottom:height*bottom,top:height*top};})),draw);
   for(const [bottom,top] of returnBands){
    for(let bay=0;bay<bays;bay++)pane(margin+(bay+.5)*pitch,pitch-.07,height*bottom,height*top,.10);
-   box(length/2,length+.12,height*bottom-.18,height*bottom-.045,concrete,.65,.035);
-   box(length/2,length+.12,height*bottom-.19,height*bottom-.165,'#7d8980',.67,.56);
+   // The partial west view shows projecting shades over each window band.
+   box(length/2,length+.12,height*top+.10,height*top+.235,concrete,.65,.035);
+   box(length/2,length+.12,height*top+.09,height*top+.115,'#7d8980',.67,.56);
   }
   box(length/2,length,height*.82,height-.20,'#eeeae0',.20,.03);
   box(length/2,length,height-.20,height,concrete,.20,.03);

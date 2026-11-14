@@ -395,3 +395,13 @@ test('MULTIMEDIA mullions and transoms connect into their surrounding frames',()
   assert.ok(boxes.some(b=>b.color==='#2d4141'&&b.at===at&&b.bottom>bottom&&b.top<top&&b.width>=width+.015),'Transom must meet both jambs');
  }
 });
+
+
+test('west sunshades sit over each glazing band and leave the glass unobstructed',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-return')!;
+ const panes:number[][]=[],shades:number[][]=[];
+ drawCampusFacade(face,8.8,10.9,{panel:()=>{},lettering:()=>{},glazing:(_a,_w,bottom,top)=>panes.push([bottom,top]),box:(_a,_w,bottom,top,_color,front)=>{if(front===.65)shades.push([bottom,top]);}});
+ assert.equal(shades.length,3);
+ for(const top of new Set(panes.map(p=>p[1])))assert.ok(shades.some(s=>s[0]>top&&s[0]-top<.15&&s[1]-top<.3),'Each sunshade must be just above a window head');
+ assert.ok(shades.every(s=>panes.every(p=>s[1]<=p[0]||s[0]>=p[1])),'No slab may cut through glazing');
+});

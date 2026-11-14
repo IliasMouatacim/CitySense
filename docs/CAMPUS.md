@@ -1,5 +1,18 @@
 # Portes du Jura university campus
 
+The three west projecting slabs are now above the glazing bands, matching the
+sunshade placement visible on the MULTIMEDIA return behind the stair tower in
+Lionel Vadam's 2023 photograph. The earlier model incorrectly placed them below
+the windows. Each slab clears its window head and carries its lower outer lip;
+ordinary window sills remain below the glass. Projection, thickness and clearance
+remain visual estimates on the IGN envelope.
+Validation (2026-11-14): production build and all 48 unit checks passed, including
+window-head clearance checks for all three shades. Six desktop/mobile north, west
+and close-west renders were inspected with no page/WebGL errors. The existing
+small mobile north-wall speckle remains. These are camera-position checks, not a
+new full walking tour; the test-only external-basemap certificate exception applies.
+
+
 The MULTIMEDIA west window mullions now meet their head and sill frames, and
 transoms extend into both jambs. This closes the small floating gaps in the
 previous assembly. Member sizes and bay divisions remain photo-based estimates.
