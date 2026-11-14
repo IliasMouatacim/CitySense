@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {advance,distance,offset,insidePolygon,makeObstacle,blocked,nearestOnLine,withinPilot,walkFrame} from '../../apps/web/lib/walk-geometry.ts';
+import {advance,distance,movementStopped,offset,insidePolygon,makeObstacle,blocked,nearestOnLine,withinPilot,walkFrame} from '../../apps/web/lib/walk-geometry.ts';
 import {WALK_SPEED,RUN_SPEED,walkBob} from '../../apps/web/lib/walk-settings.ts';
 const start=[6.8,47.51];
 test('walking covers the same distance down to 1 fps while checking short collision steps',()=>{
@@ -40,4 +40,16 @@ test('water blocks walking except on a mapped bridge, while pilot bounds are enf
  assert.equal(blocked(offset(start,0,4),[water],[bridge]),true);
  assert.ok(distance(nearestOnLine(offset(start,0,3),bridge),start)<.01);
  assert.equal(withinPilot(start),true);assert.equal(withinPilot(offset(start,3000,0)),false);
+});
+
+test('physical-stop feedback distinguishes a blocked capsule from sliding and tiny idle corrections',()=>{
+ for(const step of [.002,.05,.275]){
+  const requested=offset(start,step,0);
+  assert.equal(movementStopped(start,requested,start),true);
+  assert.equal(movementStopped(start,requested,offset(start,step*.05,0)),true);
+  assert.equal(movementStopped(start,requested,requested),false);
+  assert.equal(movementStopped(start,requested,offset(start,step*.5,step*.5)),false);
+ }
+ assert.equal(movementStopped(start,start,start),false);
+ assert.equal(movementStopped(start,offset(start,1e-7,0),start),false);
 });

@@ -1,5 +1,5 @@
 import {LngLat,type Map} from 'maplibre-gl';
-import {advance,blocked,distance,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
+import {advance,blocked,distance,movementStopped,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
 import {cityBuildingFeatures,getCityWorld} from './city-world';
 import type {createCityPhysics} from './city-physics';
 import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED,walkBob} from './walk-settings';
@@ -119,7 +119,9 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
       for(let step=0;step<timing.steps;step++){
         const next=advance(position,bearing,forward,strafe,speed*timing.step);
         if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blocked(next,obstacles,bridges)){
-          const resolved=physics?physics.move(position,next):next;meters+=distance(position,resolved);position=resolved;dirty=true;
+          const resolved=physics?physics.move(position,next):next;
+          collision=movementStopped(position,next,resolved);
+          meters+=distance(position,resolved);position=resolved;dirty=true;
         }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);break;}
       }
     }

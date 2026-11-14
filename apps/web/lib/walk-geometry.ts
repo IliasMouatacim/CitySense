@@ -8,6 +8,11 @@ export function offset(position:Position,east:number,north:number):Position {
 export function distance(a:Position,b:Position) {
   return Math.hypot((a[0]-b[0])*METERS_PER_DEGREE*Math.cos((a[1]+b[1])*Math.PI/360),(a[1]-b[1])*METERS_PER_DEGREE);
 }
+/** Report a physical stop, while allowing normal wall sliding and step correction. */
+export function movementStopped(from:Position,requested:Position,resolved:Position){
+  const intended=distance(from,requested);
+  return intended>1e-5&&distance(from,resolved)<intended*.2;
+}
 export function advance(position:Position,bearing:number,forward:number,strafe:number,meters:number):Position {
   const length=Math.hypot(forward,strafe);if(!length)return position;
   const angle=bearing*Math.PI/180,f=forward/length,s=strafe/length;

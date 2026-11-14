@@ -1,5 +1,16 @@
 # Portes du Jura university campus
 
+Walking feedback now reports physical stops against furniture and facade relief,
+not only footprint/water exclusions. The controller compares requested movement
+with the capsule's resolved movement; less than 20% progress signals a stop.
+Normal sliding and negligible idle corrections do not trigger that message.
+The boundary warning remains reserved for leaving supported terrain.
+Validation (2026-11-14): production build and all 37 unit checks passed, including
+an actual Rapier bin collision triggering the feedback and checks for sliding,
+small movement steps and idle corrections. No new browser run was performed
+for this feedback-only change.
+
+
 Street-furniture collision now follows the rendered object type instead of
 assigning a tall capsule to every OSM node. Bicycle parking has separate hoop
 bounds, bins have their visible width, and bus shelters retain an open front

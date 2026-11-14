@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
 import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
-import {distance,offset,advance} from '../../apps/web/lib/walk-geometry.ts';
+import {distance,offset,advance,movementStopped} from '../../apps/web/lib/walk-geometry.ts';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {walkingGroundHeight} from '../../apps/web/lib/walking-ground';
 import {campusFacadeSolids} from '../../apps/web/lib/campus-facade-solids';
@@ -92,6 +92,9 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
     position=furniture.move(position,[position[0]+(bin[0]-position[0])*fraction,position[1]+(bin[1]-position[1])*fraction]);
    }
    assert.ok(distance(position,bin)>.5&&distance(position,bin)<.7,'The capsule must stop outside the visible bin rather than its former thin post');
+   const fraction=.05/distance(position,bin);
+   const requested:[number,number]=[position[0]+(bin[0]-position[0])*fraction,position[1]+(bin[1]-position[1])*fraction];
+   assert.ok(movementStopped(position,requested,furniture.move(position,requested)),'A real furniture collision must trigger the blocked feedback');
   }finally{furniture.dispose();}
  }finally{globalThis.fetch=original;}
 });
