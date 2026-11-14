@@ -1,5 +1,24 @@
 # Portes du Jura university campus
 
+Street-furniture collision now follows the rendered object type instead of
+assigning a tall capsule to every OSM node. Bicycle parking has separate hoop
+bounds, bins have their visible width, and bus shelters retain an open front
+with collision at their posts, back panel and seat. Entrance markers and
+unrendered barrier metadata no longer create invisible posts. This does not
+add interior access through building walls or infer the state of mapped gates.
+Furniture dimensions remain illustrative, as in the rendered model.
+Validation (2026-11-14): production build and all 36 unit checks passed, including
+actual Rapier movement through an entrance marker and stopping at a bin, plus
+rack bounds checked against rendered hoop/base-plate geometry. Four desktop/mobile
+browser cases passed for all eight stops, reset/exit, eye height and movement;
+representative captures were inspected. These cloud software-WebGL checks used
+a test-only certificate exception for the external basemap and device scale 0.5.
+The original desktop movement assertion failed at 0.92 fps (2.91 m in 4.36 s);
+the reduced-raster rerun advanced 5.71 m in 4.22 s on desktop and 10.10 m in
+4.85 s on mobile. This validates functional navigation at that test resolution,
+not performance on physical devices.
+
+
 Campus-wide material/navigation pass: fixed curtain walls at STGI, the library
 and CROUS use a coherent, blind-free glass atlas; classroom windows at STGI, IUT
 and UTBM retain restrained individual variation. The procedural glass is an

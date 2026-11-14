@@ -72,5 +72,26 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    for(let step=0;step<80;step++){const next=physics.move(position,advance(position,337,1,0,.05));total+=distance(position,next);position=next;}
    assert.ok(total>3.5&&total<4.5,'The capsule must keep walking across terrain cells without becoming embedded');
   }finally{physics.dispose();physics.dispose();}
+  // Place semantic entrance metadata in a previously verified clear route,
+  // followed by a visible bin. The entrance must be passable; the bin must stop us.
+  const objects=data.streets!.objects;
+  const start:[number,number]=[6.798113188684639,47.51017527332869];
+  data.streets!.objects=[
+   {id:-1,coordinates:advance(start,337,1,0,1.3),tags:{entrance:'main'}},
+   {id:-2,coordinates:advance(start,337,1,0,3.2),tags:{amenity:'waste_basket'}},
+  ];
+  let furniture:Awaited<ReturnType<typeof createCityPhysics>>;
+  try{furniture=await createCityPhysics();}finally{data.streets!.objects=objects;}
+  try{
+   let position=start;
+   for(let step=0;step<40;step++)position=furniture.move(position,advance(position,337,1,0,.05));
+   assert.ok(distance(start,position)>1.9,'An entrance marker must not become an invisible bollard');
+   const bin=advance(start,337,1,0,3.2);
+   for(let step=0;step<80;step++){
+    const fraction=.05/distance(position,bin);
+    position=furniture.move(position,[position[0]+(bin[0]-position[0])*fraction,position[1]+(bin[1]-position[1])*fraction]);
+   }
+   assert.ok(distance(position,bin)>.5&&distance(position,bin)<.7,'The capsule must stop outside the visible bin rather than its former thin post');
+  }finally{furniture.dispose();}
  }finally{globalThis.fetch=original;}
 });

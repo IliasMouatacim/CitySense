@@ -4,6 +4,7 @@ import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
 import {campusFacadeSolids} from './campus-facade-solids';
+import {streetObjectSolids} from './street-object-solids';
 const anchor:Position=[6.8,47.51],meters=111319.4908,cos=Math.cos(anchor[1]*Math.PI/180);
 const local=(p:Position)=>({x:(p[0]-anchor[0])*meters*cos,z:-(p[1]-anchor[1])*meters});
 let initialized:Promise<void>|undefined;
@@ -35,8 +36,10 @@ export async function createCityPhysics(){
  }
  for(const object of data.streets?.objects||[]){
   const ground=terrainHeight(...object.coordinates);if(ground===null)continue;const p=local(object.coordinates);
-  if(object.tags.amenity==='bench')world.createCollider(RAPIER.ColliderDesc.cuboid(.8,.45,.25).setTranslation(p.x,ground+.45,p.z));
-  else world.createCollider(RAPIER.ColliderDesc.capsule(2.2,object.tags.natural==='tree'?.2:.08).setTranslation(p.x,ground+2.4,p.z));
+  for(const solid of streetObjectSolids(object.tags)){
+   const shape=solid.kind==='box'?RAPIER.ColliderDesc.cuboid(solid.width/2,solid.height/2,solid.depth/2):RAPIER.ColliderDesc.cylinder(solid.height/2,solid.radius);
+   world.createCollider(shape.setTranslation(p.x+solid.x,ground+solid.z+solid.height/2,p.z-solid.y));
+  }
  }
  for(const fixture of CAMPUS_COURTYARD.fixtures){
   const coordinates:Position=[...fixture.coordinates],ground=terrainHeight(...coordinates);if(ground===null)continue;const p=local(coordinates);
