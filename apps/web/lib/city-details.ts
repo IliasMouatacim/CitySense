@@ -13,6 +13,7 @@ import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './
 import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
 import {campusSurface,campusGlassTile} from './campus-surfaces';
+import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
 import {withShadowDepthRange} from './render-depth';
 import {HemisphereLight,type SphereGeometry} from 'three';
 import {campusSkyGeometry} from './campus-sky';
@@ -169,12 +170,13 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(!texture){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e7e3d7';ctx.fillRect(0,0,512,96);ctx.fillStyle='#242633';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 33px sans-serif';ctx.fillText(text,256,48,490);texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);}
     const sign=batch();panel(sign,wall,at,width,wall.base+3.05,wall.base+3.55,'#ffffff',.5,[[0,0],[1,0],[1,1],[0,1]]);mesh(sign,texture);
   }
-  function campusLettering(wall:Wall,text:string,at:number,width:number,bottom:number,top:number,outline=false,depth=.4){
-    const key=`campus-lettering:${text}:${outline}`;let texture=materials.get(key);
+  function campusLettering(wall:Wall,text:string,at:number,width:number,bottom:number,top:number,outline=false,depth=.4,ink?:string){
+    const color=ink||(outline?'#e5e8dc':'#e2e6d8');
+    const key=`campus-lettering:${text}:${outline}:${color}`;let texture=materials.get(key);
     if(!texture){
       const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=512;const ctx=canvas.getContext('2d')!;
       ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${outline?'200':'400'} 320px sans-serif`;
-      if(outline){ctx.strokeStyle='#e5e8dc';ctx.lineWidth=5;ctx.strokeText(text,1024,260,1980);}else{ctx.fillStyle='#e2e6d8';ctx.fillText(text,1024,260,1980);}
+      if(outline){ctx.strokeStyle=color;ctx.lineWidth=5;ctx.strokeText(text,1024,260,1980);}else{ctx.fillStyle=color;ctx.fillText(text,1024,260,1980);}
       texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);
     }
     const letters=batch();panel(letters,wall,at,width,wall.base+bottom,wall.base+top,'#ffffff',depth,[[0,0],[1,0],[1,1],[0,1]]);mesh(letters,texture,false,true);
@@ -244,7 +246,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       const p=local(center),ground=terrainHeight(...center)||0,radius=options.walking?95:180;
       sun.position.set(p[0]-90,p[1]-70,ground+260);sun.target.position.set(p[0],p[1],ground);sun.castShadow=options.mood!=='night';
       const resolution=map.getCanvas().clientWidth>=1000?2048:1024;sun.shadow.mapSize.set(resolution,resolution);
-      Object.assign(sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:1,far:600});sun.shadow.camera.up.set(0,0,1);sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.035;sun.shadow.bias=-.0006;resources.push(sun.shadow);
+      // The mirrored ENU normal needs a small opposite offset at mobile shadow resolution.
+      Object.assign(sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:1,far:600});sun.shadow.camera.up.set(0,0,1);sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=resolution===1024?-.10:.035;sun.shadow.bias=-.0006;resources.push(sun.shadow);
     }else sun.position.set(-100,-100,300);
     scene.add(sun,sun.target);
     if(city?.streets){
@@ -349,6 +352,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         else groundSurface(green?groundAreas:asphalt,polygon,hex,.035);
       }
     }
+    if(campus&&(options.walking||!options.photo)&&CAMPUS_NORTH_LAWN.polygon.some(p=>metersBetween(center,p)<280)){
+      const polygon=CAMPUS_NORTH_LAWN.polygon;
+      for(const indices of ShapeUtils.triangulateShape(polygon.map(p=>new Vector2(...local(p))),[]))
+        groundSurface(groundAreas,indices.map(i=>polygon[i]),'#71855f',CAMPUS_NORTH_LAWN.lift);
+    }
     const routeCoordinates=options.routeCoordinates||[];let routeSegments=0;
     for(let i=1;i<routeCoordinates.length;i++){
       const a=routeCoordinates[i-1],b=routeCoordinates[i],parts=Math.max(1,Math.ceil(metersBetween(a,b)/5));
@@ -409,8 +417,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             const flip=(area>0?1:-1)*(ringIndex===0?1:-1);
             const normal:Point=[(b[1]-a[1])/length*flip,-(b[0]-a[0])/length*flip];
             const wall:Wall={a,b,normal,length,height,base,variant};if(ringIndex===0&&!profile&&!campusBuilding)walls.push(wall);
+            const observed=campusBuilding&&university?campusFace(university,polygon[ringIndex][i],polygon[ringIndex][i+1]):undefined;
             const materialWidth=campusBuilding?4:2;
-            panel(campusBuilding?campusConcrete:profile?referenceFacades:facades,wall,length/2,length,base,height,facade,.025,[[0,0],[length/materialWidth,0],[length/materialWidth,(height-base)/2],[0,(height-base)/2]]);
+            // The north infill and solid parapet form this wall themselves.
+            // A second concrete skin behind them causes self-shadow speckling.
+            const bodyTop=observed?.layout==='stgi-north-openings'?base+.04:height;
+            panel(campusBuilding?campusConcrete:profile?referenceFacades:facades,wall,length/2,length,base,bodyTop,facade,.025,[[0,0],[length/materialWidth,0],[length/materialWidth,(bodyTop-base)/2],[0,(bodyTop-base)/2]]);
             if(campusBuilding){
               // IGN gives one base elevation per volume. Extend its foundation
               // down to the sloping terrain instead of leaving an air gap.
@@ -422,7 +434,6 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 const p0=[a[0]+(b[0]-a[0])*t0+normal[0]*.025,a[1]+(b[1]-a[1])*t0+normal[1]*.025],p1=[a[0]+(b[0]-a[0])*t1+normal[0]*.025,a[1]+(b[1]-a[1])*t1+normal[1]*.025];
                 quad(campusConcrete,[...p0,z0],[...p1,z1],[...p1,base],[...p0,base],facade,1,[[length*t0/4,z0/2],[length*t1/4,z1/2],[length*t1/4,base/2],[length*t0/4,base/2]]);
               }
-              const observed=university&&campusFace(university,polygon[ringIndex][i],polygon[ringIndex][i+1]);
               const academic=!!completion||['university','college','research','sports_hall','restaurant'].includes(String(p.campusUse));
               // Suppress detail on shared walls hidden inside another volume.
               const exposed=!academic||[.2,.5,.8].some(t=>{
@@ -446,7 +457,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                   },
                 };
                 if(academic&&exposed){
-                  drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
+                  if(face?.layout!=='stgi-north-openings')drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
                   campusFinishedWalls++;
                 }
                 if(face){

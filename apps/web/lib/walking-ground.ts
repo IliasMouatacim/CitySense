@@ -1,3 +1,4 @@
+import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
 import {getCityWorld,terrainHeight,type CityWorld} from './city-world';
 import {insidePolygon,nearestOnLine,distance,offset,type Position} from './walk-geometry';
 type Surface={bounds:number[];line:number[][];area:boolean;lift:number;width:number};
@@ -12,6 +13,7 @@ export function walkingGroundHeight(position:Position){
    const margin=width/75400;
    surfaces!.push({line,area,lift,width,bounds:[Math.min(...line.map(p=>p[0]))-margin,Math.min(...line.map(p=>p[1]))-margin,Math.max(...line.map(p=>p[0]))+margin,Math.max(...line.map(p=>p[1]))+margin]});
   };
+  add(CAMPUS_NORTH_LAWN.polygon,true,CAMPUS_NORTH_LAWN.lift);
   for(const a of world.campus.areas)add(a.coordinates,true,a.tags.highway==='pedestrian'&&a.tags.surface!=='asphalt'?.12:.035);
   for(const road of world.campus.roads){
    const t=road.tags;if(['motorway','motorway_link','trunk','trunk_link','steps','construction','proposed'].includes(t.highway)||t.tunnel==='yes')continue;

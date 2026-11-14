@@ -7,6 +7,7 @@ import {CAMPUS_VISITS} from '../../apps/web/lib/campus-visits';
 import {matchesFacadeEdge} from '../../apps/web/lib/facade-references';
 import {metersBetween} from '../../apps/web/lib/city-details-data';
 import {insidePolygon,nearestOnLine} from '../../apps/web/lib/walk-geometry';
+import {CAMPUS_NORTH_LAWN} from '../../apps/web/lib/campus-north-lawn';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
 import {drawCampusBench} from '../../apps/web/lib/campus-furniture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from '../../apps/web/lib/campus-envelope';
@@ -300,13 +301,60 @@ test('the blank north STGI return receives construction finishing without guesse
  }
 });
 
-test('STGI north return reconstructs only the west edge supported by the 2023 partial photograph',()=>{
+test('STGI west return retains the three ledges supported by the 2023 partial photograph',()=>{
  const p=campusProfile('BATIMENT0000000223563706')!;assert.ok(p.sourceIds.includes('stgi-c-2023'));
- assert.equal(p.faces.length,1);assert.equal(p.faces[0].layout,'stgi-return');
+ assert.equal(p.faces.length,2);assert.equal(p.faces[0].layout,'stgi-return');
  let ledges=0,glass=0;
  const windows=drawCampusFacade(p.faces[0],8.8,10.9,{
   panel:()=>{},box:(_at,_w,_bottom,_top,_hex,front)=>{if(front===.65)ledges++;},
-  glazing:()=>{glass++;},lettering:()=>assert.fail('No invented signage'),
+  glazing:()=>{glass++;},lettering:(text,_at,_w,_bottom,_top,_outline,_depth,ink)=>{assert.equal(text,'MULTIMEDIA');assert.equal(ink,'#6a4442');},
  });
  assert.equal(ledges,3);assert.equal(windows,6);assert.equal(glass,6);
+});
+
+test('the anniversary aerial registers glazing on the formerly blank north side and identifies its sign',()=>{
+ const p=campusProfile('BATIMENT0000000223563706')!;
+ assert.ok(p.sourceIds.includes('stgi-history-aerial'));
+ const face=p.faces.find(f=>f.layout==='stgi-north-openings')!;assert.ok(face);
+ assert.equal(p.faces.find(f=>f.layout==='stgi-return')!.label,'MULTIMEDIA');
+ assert.equal(face.openings!.length,9);
+ for(const opening of face.openings!){
+  assert.ok(opening.at-opening.width/2>0&&opening.at+opening.width/2<1);
+  assert.ok(opening.bottom>0&&opening.top<.88);
+ }
+ let panes=0;
+ assert.equal(drawCampusFacade(face,22.55,10.9,{panel:()=>{},box:()=>{},lettering:()=>assert.fail('No north-side signs'),glazing:()=>{panes++;}}),9);
+ assert.equal(panes,9);
+});
+
+test('the photo-registered north lawn is bounded, credited and outside building interiors',()=>{
+ assert.ok(campusReferences.sources.some(s=>s.id===CAMPUS_NORTH_LAWN.sourceId));
+ const [w,s,e,n]=data.bounds;
+ for(const p of CAMPUS_NORTH_LAWN.polygon){
+  assert.ok(p[0]>w&&p[0]<e&&p[1]>s&&p[1]<n);
+  assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))));
+ }
+ assert.ok(CAMPUS_NORTH_LAWN.lift>0&&CAMPUS_NORTH_LAWN.lift<.05);
+});
+
+test('north parapet and coping have separate front planes instead of coplanar overlap',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-north-openings')!;
+ const boxes:{bottom:number;top:number;front:number}[]=[];
+ drawCampusFacade(face,22.55,10.9,{panel:()=>{},glazing:()=>{},lettering:()=>{},box:(_at,_w,bottom,top,_color,front)=>boxes.push({bottom,top,front})});
+ const coping=boxes.find(b=>b.top>10.9)!;
+ const parapet=boxes.find(b=>b.bottom===10.9*.88)!;
+ assert.ok(coping.front-parapet.front>=.05,'Coping must project distinctly beyond the parapet');
+});
+
+test('north painted infill leaves real gaps around the recessed glazing',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-north-openings')!;
+ const paint:number[][]=[];
+ drawCampusFacade(face,22.55,10.9,{panel:(at,width,bottom,top,color,depth)=>{
+  if(color==='#eeeae0')paint.push([at-width/2,at+width/2,bottom,top,depth!]);
+ },box:()=>{},glazing:()=>{},lettering:()=>{}});
+ assert.ok(paint.length>1);
+ for(const o of face.openings!){
+  const left=22.55*(o.at-o.width/2),right=22.55*(o.at+o.width/2),bottom=10.9*o.bottom,top=10.9*o.top;
+  assert.ok(paint.every(p=>Math.min(p[1],right)-Math.max(p[0],left)<1e-8||Math.min(p[3],top)-Math.max(p[2],bottom)<1e-8),'Paint must not cover a glazed opening');
+ }
 });

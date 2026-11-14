@@ -1,14 +1,45 @@
 # Portes du Jura university campus
 
-The STGI north block now has a registered west-return elevation on IGN edge 8
+The anniversary booklet’s aerial image (PDF spread 24, printed pp. 46–47) now
+adds evidence for the north MULTIMEDIA return. The long north wall of
+`BATIMENT0000000223563706` is no longer treated as an entirely blank concrete
+surface: edge 7 receives pale painted panels and grouped glazing; the west
+return retains its ledges and now has the photographed `MULTIMEDIA` lettering.
+The opening groups, bay splits and vertical fractions remain approximate because
+the aerial view is oblique. The nine rendered groups are a reconstruction, not
+a surveyed window count. Other hidden faces remain simplified.
+A small lawn follows the north wall instead of continuous asphalt, based on the
+same aerial. Its nine-metre depth is estimated. The surface follows every IGN
+terrain triangle; walking eye support includes its 3.5 cm surface lift. Existing
+mapped paths remain above it. No new trees, entrances or fences are invented.
+Sources: [UFR anniversary booklet](https://stgi.umlp.fr/wp-content/uploads/2023/10/Livre-30ans_v1.pdf)
+and the [CAUE site plan](https://www.caue-observatoire.fr/wp-content/uploads/2020/12/campus-montbeliard-plan-masse.pdf).
+Source imagery is inspected only and is not redistributed or used as a texture.
+Painted infill is split around the glazed openings, leaving the glass recessed.
+The painted face supplies its own envelope rather than overlapping a second
+concrete skin. The roof coping projects beyond the parapet; MULTIMEDIA uses
+muted red-brown lettering. The lower-resolution mobile shadow setting is reviewed separately for
+close-view self-shadow marks; desktop retains the existing 2048-pixel map.
+The reviewed mobile normal bias is -10 cm in the mirrored ENU scene.
+Validation (2026-11-14): production build and all 43 unit checks passed. The
+facade manifest regenerates byte for byte. North and west views were rendered
+and visually inspected on desktop (device scale 0.5) and mobile (device scale 1),
+with no page/WebGL errors. The final mobile bias change was rebuilt and both
+mobile views were checked again; desktop uses the previously reviewed setting.
+Browser checks use a test-only exception for external-basemap certificates.
+These are camera-position render checks, not a complete walking tour or a
+hardware performance benchmark. Opening positions and lawn depth remain estimates.
+
+
+In the earlier west-only pass, the STGI north block received a registered west-return elevation on IGN edge 8
 of `BATIMENT0000000223563706`, based on the part visible behind the C stair
 tower in [Lionel Vadam’s 2023 photograph](https://cdn-s-www.estrepublicain.fr/images/2e6275e0-3db9-4841-a417-c2630b763634/NW_raw/les-30-ans-de-l-ufr-stgi-%28unite-de-formation-et-de-recherche-sciences-techniques-et-gestion-de-l-industrie%29-de-l-universite-de-franche-comte-a-montbeliard-photo-er-lionel-vadam-1677954176.jpg).
 Three glazing bands, projecting concrete ledges and the broad parapet replace
 the formerly blank west end. The photo is oblique and partly obscured: registering
 it to this return, opening fractions, bay subdivisions and ledge depths remain
-estimates. It is not a surveyed elevation. The long north wall is not documented
-by this photo and remains solid; no doorway, lettering or north-side openings
-have been inferred. The photo is linked as evidence, not redistributed or used
+estimates. It is not a surveyed elevation. The long north wall was not documented
+by this photo and was left solid in that pass; no doorway, lettering or north-side openings
+were inferred then. The photo is linked as evidence, not redistributed or used
 as a texture. The manifest generator now reproduces this source and facade.
 Validation (2026-11-14): production build and all 39 unit checks passed, including
 real IGN edge registration, bounded geometry and six panes/three ledges confined

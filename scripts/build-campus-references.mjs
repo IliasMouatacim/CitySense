@@ -3,6 +3,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 const world=JSON.parse(readFileSync('apps/web/public/city/campus-portes-du-jura.json','utf8'));
 const sources=[
+ {id:'stgi-history-aerial',institution:'UFR STGI · Livret des 30 ans · aerial image, pp. 46–47',url:'https://stgi.umlp.fr/wp-content/uploads/2023/10/Livre-30ans_v1.pdf',published:'2023-10',captureDate:null},
  {id:'stgi-c-2023',institution:'L’Est Républicain · Lionel Vadam',url:'https://www.estrepublicain.fr/education/2023/03/05/la-fac-fete-ses-30-ans-vendredi-sur-le-campus-des-portes-du-jura',published:'2023-03-05',captureDate:null,author:'Lionel Vadam'},
  {id:'crous-2012',institution:'Wikimedia Commons · Restaurant universitaire des Portes du Jura',url:'https://commons.wikimedia.org/wiki/File:URF_STGI_CROUS.JPG',published:'unknown',captureDate:'2012-11-13',author:'Antomoro',license:'Free Art License'},
  {id:'stgi-west',institution:'UFR STGI · Université Marie et Louis Pasteur',url:'https://stgi.umlp.fr/wp-content/uploads/2021/02/ufr-stgi-montbe1.jpg',published:'2021-02',captureDate:null},
@@ -21,9 +22,14 @@ function building(id,label,wallColor,sourceIds,faces,notes){
  if(label.startsWith('UFR STGI'))sourceIds.push('stgi-painted-detail');
  buildings.push({buildingId:id,label,wallColor,sourceIds,faces:faces.map(([edge,kind,extra={}])=>({a:ring[edge],b:ring[edge+1],kind,...extra})),notes});
 }
-building('BATIMENT0000000223563706','STGI · retour nord · élévation ouest','#d2d1c8',['stgi-c-2023','plan'],[
- [8,'concrete',{layout:'stgi-return'}],
-],'The west return visible behind the C stair tower in Lionel Vadam’s 2023 photograph has three stacked glazing bands, projecting concrete ledges and a broad solid parapet. Registration, window subdivisions and dimensions are approximate from an oblique partial view. Only this west edge is reconstructed; the long north wall and hidden elevations remain solid and unverified. No doors or lettering are inferred.');
+building('BATIMENT0000000223563706','STGI · retour nord · élévation ouest','#d2d1c8',['stgi-c-2023','stgi-history-aerial','plan'],[
+ [8,'concrete',{layout:'stgi-return',label:'MULTIMEDIA'}],
+ [7,'concrete',{layout:'stgi-north-openings',openings:[
+  ...[.18,.5,.82].map(at=>({at,width:.17,bottom:.075,top:.255})),
+  ...[.18,.5,.82].map(at=>({at,width:.17,bottom:.385,top:.565})),
+  ...[.18,.5,.82].map(at=>({at,width:.17,bottom:.705,top:.825})),
+ ]}],
+],'The west return visible behind the C stair tower in Lionel Vadam’s 2023 photograph has three stacked glazing bands, projecting concrete ledges and a broad solid parapet. Registration, window subdivisions and dimensions are approximate from an oblique partial view. The anniversary booklet aerial identifies the MULTIMEDIA lettering on this return and glazing on the long north side. Painted north panels and grouped openings are registered approximately on edge 7; group positions, subdivisions and heights remain estimates from an oblique image, not surveyed fenestration. Hidden elevations remain simplified; no doors are inferred.');
 building('BATIMENT0000000223563366','UFR STGI · aile sud','#d2d1c8',['stgi-west','stgi-court','stgi-colour','plan'],[
  [0,'ribbon',{floors:3,label:'UFR STGI',layout:'stgi-west',solidBays:[[.69,.83]],stairBay:[.34,.43],glazingBands:[[.055,.29],[.36,.60],[.77,.88]]}],[3,'frame',{floors:3,layout:'stgi-court'}],[16,'frame',{floors:3,layout:'stgi-court'}],
 ],'West reference: two broad lower glazing bands, paired narrow upper lights, outside guardrails, a glazed stair bay, a solid concrete pier and UFR STGI outline lettering. Positions and registration are estimated from the oblique photo; no new entrance is inferred.');

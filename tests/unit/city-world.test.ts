@@ -5,6 +5,7 @@ import {loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
 import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
 import {distance,offset,advance,movementStopped} from '../../apps/web/lib/walk-geometry.ts';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
+import {CAMPUS_NORTH_LAWN} from '../../apps/web/lib/campus-north-lawn';
 import {walkingGroundHeight} from '../../apps/web/lib/walking-ground';
 import {campusFacadeSolids} from '../../apps/web/lib/campus-facade-solids';
 
@@ -31,6 +32,8 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
   assert.ok(data.campus?.pois.some(p=>p.tags.short_name==='UTBM'));
   const courtyard:[number,number]=[6.804015,47.495204];
   assert.ok(Math.abs(walkingGroundHeight(courtyard)-terrainHeight(...courtyard)!-.12)<1e-7,'The camera stands on the visible courtyard slabs');
+  const lawnCenter=CAMPUS_NORTH_LAWN.polygon.reduce((p,a)=>[p[0]+a[0]/4,p[1]+a[1]/4],[0,0]) as [number,number];
+  assert.ok(walkingGroundHeight(lawnCenter)>=terrainHeight(...lawnCenter)!+CAMPUS_NORTH_LAWN.lift-.000001,'Eye support must include the visible lawn surface');
   const sidewalkRoad=data.campus!.roads.find(r=>r.tags.sidewalk==='yes')!;
   const [a,b]=sidewalkRoad.coordinates.slice(1).map((b,i)=>[sidewalkRoad.coordinates[i],b]).find(([a,b])=>terrainHeight(...a)!==null&&terrainHeight(...b)!==null)!;
   const dx=(b[0]-a[0])*Math.cos(a[1]*Math.PI/180),dy=b[1]-a[1],length=Math.hypot(dx,dy);

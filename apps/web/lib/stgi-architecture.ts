@@ -14,9 +14,33 @@ export function drawStgiPaint(length:number,height:number,draw:CampusDrawing){
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
- if(!['stgi-court','stgi-colour','stgi-ribbon','stgi-return'].includes(face.layout||''))return false;
+ if(!['stgi-court','stgi-colour','stgi-ribbon','stgi-return','stgi-north-openings'].includes(face.layout||''))return false;
  const {panel,box}=draw,concrete='#d2d1c8',frame='#344b4c';
  const bands=face.glazingBands||[[.055,.255],[.395,.585],[.735,.885]];
+ if(face.layout==='stgi-north-openings'){
+  // The anniversary booklet aerial identifies painted panels and grouped
+  // north-side openings. Fractions are estimated from the oblique view.
+  // Build infill around the openings, leaving the glazing recessed behind it.
+  // A continuous thin decal over the IGN envelope flickers in close views.
+  const openings=face.openings||[];
+  const levels=[.04,...openings.flatMap(o=>[height*o.bottom,height*o.top]),height*.88];
+  const edges=[...new Set(levels)].sort((a,b)=>a-b);
+  for(let row=1;row<edges.length;row++){
+   const bottom=edges[row-1],top=edges[row],mid=(bottom+top)/2;
+   const gaps=openings.filter(o=>height*o.bottom<mid&&height*o.top>mid)
+    .map(o=>[o.at-o.width/2,o.at+o.width/2]).sort((a,b)=>a[0]-b[0]);
+   let left=0;
+   for(const [start,end] of [...gaps,[1,1]]){
+    if(start>left)panel(length*(left+start)/2,length*(start-left),bottom,top,'#eeeae0',.12);
+    left=Math.max(left,end);
+   }
+  }
+  for(const opening of face.openings||[])pane(length*opening.at,length*opening.width,height*opening.bottom,height*opening.top,.10);
+  box(length/2,length,height*.88,height,concrete,.14,.035);
+  box(length/2,length,height-.12,height+.06,'#637268',.20,.028);
+  box(length/2,length,.035,.26,'#929a90',.16,.028);
+  return true;
+ }
  if(face.layout==='stgi-return'){
   // West return visible behind the stair tower in Lionel Vadam's 2023 C view.
   // Registration, bay splits and relief are approximate; other faces stay solid.
@@ -29,6 +53,7 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   }
   box(length/2,length,height*.82,height,concrete,.20,.03);
   for(const at of [.12,length-.12])box(at,.24,.03,height*.82,concrete,.28,.035);
+  if(face.label)draw.lettering(face.label,length/2,length*.82,height*.85,height*.94,false,.22,'#6a4442');
   return true;
  }
  if(face.layout==='stgi-court'){
