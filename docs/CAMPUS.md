@@ -1,5 +1,23 @@
 # Portes du Jura university campus
 
+The MULTIMEDIA return now uses the pale painted sign fascia visible in the
+anniversary aerial, with a narrow concrete cap and distinct metal coping.
+The west infill is built as a shallow wall shell around the existing openings.
+Solid opening boundaries supply window reveals and close exposed edges in
+oblique views; glazing remains recessed. The north face retains its reviewed
+painted infill without the additional reveal boxes. The west face also omits the
+generic bare-concrete finishing pass, avoiding tie-hole dots and joints across
+painted surfaces. Its three projecting ledges and all opening positions are
+retained. Infill thickness, colours and cap dimensions remain visual estimates.
+Validation (2026-11-14): production build and all 44 unit tests passed. North,
+west and oblique close west views were rendered and inspected on desktop
+(device scale 0.5) and mobile (device scale 1), with no page/WebGL errors.
+A faint patch of shadow speckling remains near the far north corner on mobile;
+this pass does not claim to resolve that residual renderer issue. The west
+facade and close window views show the intended fascia, cap and reveal changes.
+Checks used the existing test-only external-basemap certificate exception.
+
+
 The anniversary booklet’s aerial image (PDF spread 24, printed pp. 46–47) now
 adds evidence for the north MULTIMEDIA return. The long north wall of
 `BATIMENT0000000223563706` is no longer treated as an entirely blank concrete

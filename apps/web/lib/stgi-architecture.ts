@@ -11,6 +11,27 @@ export function drawStgiPaint(length:number,height:number,draw:CampusDrawing){
   draw.panel(length/2,length,height*z+offset,height*z+offset+.012,'#c6c8c0',.051);
 }
 
+type InfillOpening={left:number;right:number;bottom:number;top:number};
+/** Painted wall shell with window voids and solid opening reveals. */
+function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:CampusDrawing,reveals=true){
+ const edges=[...new Set([.04,...openings.flatMap(o=>[o.bottom,o.top]),top])].sort((a,b)=>a-b);
+ for(let row=1;row<edges.length;row++){
+  const bottom=edges[row-1],upper=edges[row],mid=(bottom+upper)/2;
+  const gaps=openings.filter(o=>o.bottom<mid&&o.top>mid).sort((a,b)=>a.left-b.left);
+  let left=0;
+  for(const gap of [...gaps,{left:length,right:length}]){
+   if(gap.left>left)draw.panel((left+gap.left)/2,gap.left-left,bottom,upper,'#eeeae0',.12);
+   left=Math.max(left,gap.right);
+  }
+ }
+ // Only the opening boundaries need side faces. Avoid hidden internal faces
+ // between adjacent infill strips, which produce self-shadow speckling.
+ if(reveals)for(const opening of openings){
+  for(const x of [opening.left,opening.right])draw.box(x,.018,opening.bottom,opening.top,'#d8d6cd',.12,.028);
+  for(const z of [opening.bottom,opening.top])draw.box((opening.left+opening.right)/2,opening.right-opening.left,z-.009,z+.009,'#d8d6cd',.12,.028);
+ }
+}
+
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
@@ -22,19 +43,7 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // north-side openings. Fractions are estimated from the oblique view.
   // Build infill around the openings, leaving the glazing recessed behind it.
   // A continuous thin decal over the IGN envelope flickers in close views.
-  const openings=face.openings||[];
-  const levels=[.04,...openings.flatMap(o=>[height*o.bottom,height*o.top]),height*.88];
-  const edges=[...new Set(levels)].sort((a,b)=>a-b);
-  for(let row=1;row<edges.length;row++){
-   const bottom=edges[row-1],top=edges[row],mid=(bottom+top)/2;
-   const gaps=openings.filter(o=>height*o.bottom<mid&&height*o.top>mid)
-    .map(o=>[o.at-o.width/2,o.at+o.width/2]).sort((a,b)=>a[0]-b[0]);
-   let left=0;
-   for(const [start,end] of [...gaps,[1,1]]){
-    if(start>left)panel(length*(left+start)/2,length*(start-left),bottom,top,'#eeeae0',.12);
-    left=Math.max(left,end);
-   }
-  }
+  drawStgiInfill(length,height*.88,(face.openings||[]).map(o=>({left:length*(o.at-o.width/2),right:length*(o.at+o.width/2),bottom:height*o.bottom,top:height*o.top})),draw,false);
   for(const opening of face.openings||[])pane(length*opening.at,length*opening.width,height*opening.bottom,height*opening.top,.10);
   box(length/2,length,height*.88,height,concrete,.14,.035);
   box(length/2,length,height-.12,height+.06,'#637268',.20,.028);
@@ -44,15 +53,20 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
  if(face.layout==='stgi-return'){
   // West return visible behind the stair tower in Lionel Vadam's 2023 C view.
   // Registration, bay splits and relief are approximate; other faces stay solid.
-  panel(length/2,length,.04,height*.84,'#eeeae0',.043);
   const margin=.45,bays=2,pitch=(length-margin*2)/bays;
-  for(const [bottom,top] of [[.09,.27],[.365,.545],[.64,.80]]){
+  const returnBands=[[.09,.27],[.365,.545],[.64,.80]];
+  drawStgiInfill(length,height*.82,returnBands.flatMap(([bottom,top])=>
+   Array.from({length:bays},(_,bay)=>{const at=margin+(bay+.5)*pitch,width=pitch-.07;return {left:at-width/2,right:at+width/2,bottom:height*bottom,top:height*top};})),draw);
+  for(const [bottom,top] of returnBands){
    for(let bay=0;bay<bays;bay++)pane(margin+(bay+.5)*pitch,pitch-.07,height*bottom,height*top,.10);
    box(length/2,length+.12,height*bottom-.18,height*bottom-.045,concrete,.65,.035);
    box(length/2,length+.12,height*bottom-.19,height*bottom-.165,'#7d8980',.67,.56);
   }
-  box(length/2,length,height*.82,height,concrete,.20,.03);
-  for(const at of [.12,length-.12])box(at,.24,.03,height*.82,concrete,.28,.035);
+  box(length/2,length,height*.82,height-.20,'#eeeae0',.20,.03);
+  box(length/2,length,height-.20,height,concrete,.20,.03);
+  box(length/2,length,height-.12,height+.06,'#637268',.26,.028);
+  box(length/2,length,.035,.26,'#929a90',.16,.028);
+  for(const at of [.12,length-.12])box(at,.24,.03,height*.82,'#eeeae0',.28,.035);
   if(face.label)draw.lettering(face.label,length/2,length*.82,height*.85,height*.94,false,.22,'#6a4442');
   return true;
  }

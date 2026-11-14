@@ -421,7 +421,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             const materialWidth=campusBuilding?4:2;
             // The north infill and solid parapet form this wall themselves.
             // A second concrete skin behind them causes self-shadow speckling.
-            const bodyTop=observed?.layout==='stgi-north-openings'?base+.04:height;
+            const bodyTop=['stgi-north-openings','stgi-return'].includes(observed?.layout||'')?base+.04:height;
             panel(campusBuilding?campusConcrete:profile?referenceFacades:facades,wall,length/2,length,base,bodyTop,facade,.025,[[0,0],[length/materialWidth,0],[length/materialWidth,(bodyTop-base)/2],[0,(bodyTop-base)/2]]);
             if(campusBuilding){
               // IGN gives one base elevation per volume. Extend its foundation
@@ -457,7 +457,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                   },
                 };
                 if(academic&&exposed){
-                  if(face?.layout!=='stgi-north-openings')drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
+                  if(!['stgi-north-openings','stgi-return'].includes(face?.layout||''))drawCampusEnvelope(length,height-base,drawing,distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
                   campusFinishedWalls++;
                 }
                 if(face){

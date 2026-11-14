@@ -358,3 +358,18 @@ test('north painted infill leaves real gaps around the recessed glazing',()=>{
   assert.ok(paint.every(p=>Math.min(p[1],right)-Math.max(p[0],left)<1e-8||Math.min(p[3],top)-Math.max(p[2],bottom)<1e-8),'Paint must not cover a glazed opening');
  }
 });
+
+
+test('MULTIMEDIA return has painted sign fascia and solid reveals clear of all six panes',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-return')!;
+ const infill:number[][]=[],panes:number[][]=[];let fascia=false,coping=false,reveals=0;
+ drawCampusFacade(face,8.8,10.9,{panel:(at,width,bottom,top,color)=>{if(color==='#eeeae0')infill.push([at-width/2,at+width/2,bottom,top]);},lettering:()=>{},
+ glazing:(at,width,bottom,top)=>panes.push([at-width/2,at+width/2,bottom,top]),
+ box:(at,width,bottom,top,color,front,back)=>{
+  if(color==='#eeeae0'&&bottom===10.9*.82)fascia=true;
+  if(top>10.9&&front===.26)coping=true;
+  if(color==='#d8d6cd'){assert.ok(back!<.09&&front>.09,'Reveals extend across the recessed glazing plane');reveals++;}
+ }});
+ assert.ok(fascia&&coping);assert.equal(reveals,24);assert.equal(panes.length,6);assert.ok(infill.length>6);
+ for(const p of panes)assert.ok(infill.every(f=>Math.min(f[1],p[1])-Math.max(f[0],p[0])<1e-8||Math.min(f[3],p[3])-Math.max(f[2],p[2])<1e-8),'Solid infill must leave the glazing open');
+});
