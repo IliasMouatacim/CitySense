@@ -13,7 +13,7 @@ export function drawStgiPaint(length:number,height:number,draw:CampusDrawing){
 
 type InfillOpening={left:number;right:number;bottom:number;top:number};
 /** Painted wall shell with window voids and solid opening reveals. */
-function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:CampusDrawing,reveals=true){
+function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:CampusDrawing){
  const edges=[...new Set([.04,...openings.flatMap(o=>[o.bottom,o.top]),top])].sort((a,b)=>a-b);
  for(let row=1;row<edges.length;row++){
   const bottom=edges[row-1],upper=edges[row],mid=(bottom+upper)/2;
@@ -26,7 +26,7 @@ function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:C
  }
  // Only the opening boundaries need side faces. Avoid hidden internal faces
  // between adjacent infill strips, which produce self-shadow speckling.
- if(reveals)for(const opening of openings){
+ for(const opening of openings){
   for(const x of [opening.left,opening.right])draw.box(x,.018,opening.bottom,opening.top,'#d8d6cd',.12,.028);
   for(const z of [opening.bottom,opening.top])draw.box((opening.left+opening.right)/2,opening.right-opening.left,z-.009,z+.009,'#d8d6cd',.12,.028);
  }
@@ -43,7 +43,7 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // north-side openings. Fractions are estimated from the oblique view.
   // Build infill around the openings, leaving the glazing recessed behind it.
   // A continuous thin decal over the IGN envelope flickers in close views.
-  drawStgiInfill(length,height*.88,(face.openings||[]).map(o=>({left:length*(o.at-o.width/2),right:length*(o.at+o.width/2),bottom:height*o.bottom,top:height*o.top})),draw,false);
+  drawStgiInfill(length,height*.88,(face.openings||[]).map(o=>({left:length*(o.at-o.width/2),right:length*(o.at+o.width/2),bottom:height*o.bottom,top:height*o.top})),draw);
   for(const opening of face.openings||[])pane(length*opening.at,length*opening.width,height*opening.bottom,height*opening.top,.10);
   box(length/2,length,height*.88,height,concrete,.14,.035);
   box(length/2,length,height-.12,height+.06,'#637268',.20,.028);

@@ -24,6 +24,7 @@ export function drawLibraryMasonryJoints(length:number,bottom:number,top:number,
  */
 export function drawCampusFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing){
  const {panel,box,lettering}=draw;let windows=0;
+ const multimedia=face.layout==='stgi-return'||face.layout==='stgi-north-openings';
  const joint='#a5a69c',concrete='#d2d1c8',frame='#344b4c',glass='#49636a';
  function pane(at:number,width:number,bottom:number,top:number,depth=.12){
   // The library's small punched openings have shallow frames. Reusing the
@@ -35,7 +36,7 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   const trim=(x:number,w:number,z0:number,z1:number,color:string,front:number,back:number)=>box(x,w,z0,z1,color,front*relief+offset,back*relief+offset);
   panel(at,width+.12,bottom-.08,top+.08,frame,draw.glazing?Math.max(.04,offset+.04):depth);
   // Dark reveal at the back, with substantial solid jambs and a projecting sill.
-  if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09),face.layout==='stgi-return'?'fixed':undefined);
+  if(draw.glazing)draw.glazing(at,width,bottom,top,Math.max(depth>.3?depth+.015:0,face.kind==='timber'?.19:face.kind==='libraryGlass'?.16:.09),multimedia?'fixed':undefined);
   else{panel(at,width,bottom,top,glass,depth+.015);panel(at-width*.22,width*.42,bottom+.04,top-.04,'#708a8e',depth+.025);}
   for(const x of [-1,1])trim(at+x*(width/2+.025),.085,bottom-.06,top+.06,frame,.34,.07);
   trim(at,width+.13,bottom-.12,bottom-.055,'#aeb2a9',.48,.06);
@@ -45,10 +46,10 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   // The institutional images show fine divisions inside the larger ribbon bays.
   if(width>.85){
    const split=at+width*.18,z=bottom+(top-bottom)*.72;
-   const connected=face.layout==='stgi-return';
+   const connected=multimedia;
    trim(split,.045,connected?bottom-.06:bottom+.035,connected?top+.06:top-.035,'#263b3c',.24,.10);
    trim(at,connected?width+.035:width-.07,z,z+.035,'#2d4141',.245,.10);
-   if(face.layout!=='stgi-return')trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
+   if(!multimedia)trim(split-.065,.025,bottom+(top-bottom)*.38,bottom+(top-bottom)*.38+.13,'#a8b3ac',.285,.24);
   }
  }
  if(drawCrousFacade(face,length,height,draw,pane,()=>{windows++;})||drawStgiFacade(face,length,height,draw,pane)){

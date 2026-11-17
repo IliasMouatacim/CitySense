@@ -405,3 +405,21 @@ test('west sunshades sit over each glazing band and leave the glass unobstructed
  for(const top of new Set(panes.map(p=>p[1])))assert.ok(shades.some(s=>s[0]>top&&s[0]-top<.15&&s[1]-top<.3),'Each sunshade must be just above a window head');
  assert.ok(shades.every(s=>panes.every(p=>s[1]<=p[0]||s[0]>=p[1])),'No slab may cut through glazing');
 });
+
+
+test('north MULTIMEDIA openings have solid reveals and continuous plain glazing frames',()=>{
+ const face=campusProfile('BATIMENT0000000223563706')!.faces.find(f=>f.layout==='stgi-north-openings')!;
+ const panes:number[][]=[],boxes:{at:number;width:number;bottom:number;top:number;color:string;front:number;back:number}[]=[];
+ drawCampusFacade(face,22.55,10.9,{panel:()=>{},lettering:()=>{},
+  glazing:(at,width,bottom,top,_depth,kind)=>{assert.equal(kind,'fixed');panes.push([at,width,bottom,top]);},
+  box:(at,width,bottom,top,color,front,back)=>boxes.push({at,width,bottom,top,color,front,back:back!})});
+ assert.equal(panes.length,face.openings!.length);
+ const reveals=boxes.filter(b=>b.color==='#d8d6cd');
+ assert.equal(reveals.length,panes.length*4);
+ assert.ok(reveals.every(b=>b.back<.09&&b.front>.09),'Opening edges enclose the recessed glass plane');
+ assert.ok(!boxes.some(b=>b.color==='#a8b3ac'),'Do not invent opening handles');
+ for(const [at,width,bottom,top] of panes){
+  assert.ok(boxes.some(b=>b.color==='#263b3c'&&Math.abs(b.at-(at+width*.18))<1e-8&&b.bottom<=bottom-.055&&b.top>=top+.045),'Mullion meets head and sill');
+  assert.ok(boxes.some(b=>b.color==='#2d4141'&&b.at===at&&b.width>=width+.015),'Transom meets jambs');
+ }
+});

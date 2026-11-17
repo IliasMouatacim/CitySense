@@ -1,5 +1,18 @@
 # Portes du Jura university campus
 
+The north MULTIMEDIA elevation now has solid side, head and sill returns around
+all nine grouped openings. Its mullions meet the surrounding frames and transoms
+reach the jambs. Plain glazing replaces generic classroom blinds and handles:
+the distant anniversary aerial does not establish those fittings. Opening
+positions, frame divisions and reveal depths remain estimates, not surveyed
+construction details. This brings the north openings into the same construction
+system as the west return without adding unsupported facade ornaments.
+Validation: production build and all 49 unit checks passed. Six north, west and
+close-west renders were inspected on desktop and mobile, with no page/WebGL
+errors. The existing mobile north-wall speckle remains. These are camera-position
+checks using a test-only external-basemap certificate exception; they do not
+constitute a new full walking tour.
+
 The three west projecting slabs are now above the glazing bands, matching the
 sunshade placement visible on the MULTIMEDIA return behind the stair tower in
 Lionel Vadam's 2023 photograph. The earlier model incorrectly placed them below
