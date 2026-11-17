@@ -1,5 +1,20 @@
 # Portes du Jura university campus
 
+Rendering investigation (2026-11-17): the mobile north-wall marks remain open.
+At the fixed north review camera (6.80440, 47.49586; eye 40.5), removing non-paint
+triangles from the detail mesh clears the marks. Binary isolation reproduced a
+subset with two underside triangles of distant roof trim: ENU vertices near
+(384.770, -1693.571, 52.910), (358.835, -1701.230, 52.910), and
+(358.801, -1701.115, 52.910), relative to the renderer origin (6.8, 47.51).
+Disabling received shadows, environment reflections, or using an unlit material
+did not clear the marks; separating the paint mesh also did not clear them.
+The opaque draw reports 24 depth bits, depth testing and writes enabled,
+LEQUAL, and depth range [0, 0.974578857421875]. The inspected wall and distant
+trim project to distinct NDC depths (~0.914 and ~0.988). These observations
+identify a reproducible contributor, not a proven root cause. No diagnostic
+renderer changes were retained or deployed.
+
+
 The north MULTIMEDIA elevation now has solid side, head and sill returns around
 all nine grouped openings. Its mullions meet the surrounding frames and transoms
 reach the jambs. Plain glazing replaces generic classroom blinds and handles:
