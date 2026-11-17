@@ -1,3 +1,4 @@
+import {thinQuadSpans} from './thin-quads';
 import {MercatorCoordinate,type Map as CityMap,type CustomLayerInterface} from 'maplibre-gl';
 import {BufferGeometry,Float32BufferAttribute,Mesh,MeshBasicMaterial,MeshStandardMaterial,MeshPhysicalMaterial,AmbientLight,DirectionalLight,TextureLoader,type Texture,Scene,Camera,WebGLRenderer,WebGLRenderTarget,Matrix4,Color,Vector3,DoubleSide,CanvasTexture,SRGBColorSpace,RepeatWrapping,ShapeUtils,Vector2,PMREMGenerator,PCFShadowMap,ACESFilmicToneMapping,NoToneMapping} from 'three';
 import {HDRLoader} from 'three/addons/loaders/HDRLoader.js';
@@ -93,7 +94,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     for(const [i,p] of [a,b,c].entries()){target.positions.push(p[0],p[1],p[2]*options.scale);target.colors.push(...rgb);if(uv)target.uvs.push(...uv[i]);}
   }
   function quad(target:Batch,a:number[],b:number[],c:number[],d:number[],hex:string,shade=1,uv?:number[][]){
-    const rgb=tint(hex,shade);triangle(target,a,b,c,rgb,uv?.slice(0,3));triangle(target,a,c,d,rgb,uv&&[uv[0],uv[2],uv[3]]);
+    const rgb=tint(hex,shade);
+    for(const face of thinQuadSpans([a,b,c,d],uv)){
+      const [p,q,r,s]=face.points,t=face.uv;
+      triangle(target,p,q,r,rgb,t?.slice(0,3));triangle(target,p,r,s,rgb,t&&[t[0],t[2],t[3]]);
+    }
   }
   function panel(target:Batch,wall:Wall,along:number,width:number,bottom:number,top:number,hex:string,depth=.085,uv?:number[][]){
     const dx=(wall.b[0]-wall.a[0])/wall.length,dy=(wall.b[1]-wall.a[1])/wall.length;

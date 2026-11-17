@@ -1,5 +1,20 @@
 # Portes du Jura university campus
 
+Thin-surface refinement (2026-11-17): elongated quadrilateral surfaces now split
+along their long dimension when their aspect ratio exceeds 20:1, with at most
+64 spans. This preserves face winding, planar surface area and continuous UV
+coordinates while reducing depth artifacts from distant thin trim. At the fixed
+390 × 844 north review view, the number of dark pixels (red < 126) inside
+[335,360]–[389,425] decreased from 90 to 9. This is a comparison of one controlled
+SwiftShader view, not a claim of a 90% improvement across devices. A few marks
+remain at the far edge; the earlier investigation below records the baseline.
+Validation: production build and 51 unit checks passed, including surface-area,
+winding, UV continuity and bounded-subdivision checks. Six desktop/mobile north,
+west and close-west renders were inspected with no page/WebGL errors. The test
+uses an external-basemap certificate exception and does not benchmark physical
+mobile hardware or constitute a new full walking tour.
+
+
 Rendering investigation (2026-11-17): the mobile north-wall marks remain open.
 At the fixed north review camera (6.80440, 47.49586; eye 40.5), removing non-paint
 triangles from the detail mesh clears the marks. Binary isolation reproduced a
