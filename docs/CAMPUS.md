@@ -631,3 +631,10 @@ in 4.89 s on desktop and 9.96 m in 4.51 s on mobile software WebGL, with the cam
 remaining 1.65 m above support. Tests also retain collision against the courtyard
 columns and ensure the turquoise slit is no longer mirrored. These checks verify
 rendering and navigation; the photo-based dimensions remain approximate.
+
+The “Arrêt de bus · Campus” viewpoint looks across Cours Louis le Prince-Ringuet
+toward a mapped platform. The seven OSM shelters in the campus extract face the
+nearest boarding road, with transparent rear glazing and mapped names. OSM bench,
+bin, lighting and realtime-board tags control the fittings. The boards represent
+the equipment only. Shelter dimensions, orientation and finishes are estimates.
+Walking collision uses the same orientation for the posts, back, bench and bin.

@@ -7,14 +7,14 @@ test('restaurant and IUT elevations load at grounded walking viewpoints',async({
  page.on('console',m=>{if(m.type()==='error'&&/THREE|GL_INVALID|shader error|framebuffer/i.test(m.text()))errors.push(m.text());});
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
  await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
- for(const id of ['crous','crous-east','iut-mp']){
+ for(const id of ['campus-bus','crous','crous-east','iut-mp']){
   await page.getByRole('combobox',{name:'Secteur du campus'}).selectOption(id);
   await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
   const hud=page.locator('.walk-hud'),details=page.locator('.architecture-panel');
   await expect(details).toHaveAttribute('data-campus-environment','true');
   await expect(hud).toHaveAttribute('data-look-pitch','90');
   await expect.poll(async()=>Number(await hud.getAttribute('data-eye-elevation'))-Number(await hud.getAttribute('data-ground-elevation'))).toBeCloseTo(1.65,2);
-  if(id.startsWith('crous')){
+  if(id.startsWith('crous')||id==='campus-bus'){
    const visit=CAMPUS_VISITS.find(v=>v.id===id)!;
    await expect.poll(async()=>Math.hypot((Number(await hud.getAttribute('data-lon'))-visit.start[0])*75400,(Number(await hud.getAttribute('data-lat'))-visit.start[1])*111319)).toBeLessThan(3);
   }

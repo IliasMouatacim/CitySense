@@ -5,7 +5,7 @@
 export type StreetObjectSolid=
  | {kind:'box';x:number;y:number;z:number;width:number;depth:number;height:number}
  | {kind:'cylinder';x:number;y:number;z:number;radius:number;height:number};
-export function streetObjectSolids(tags:Record<string,string>):StreetObjectSolid[]{
+export function streetObjectSolids(tags:Record<string,string>, detailedShelter=false):StreetObjectSolid[]{
  const solids:StreetObjectSolid[]=[];
  const box=(x:number,y:number,z:number,width:number,depth:number,height:number)=>solids.push({kind:'box',x,y,z,width,depth,height});
  if(tags.natural==='tree')solids.push({kind:'cylinder',x:0,y:0,z:0,radius:.2,height:4.6});
@@ -18,6 +18,7 @@ export function streetObjectSolids(tags:Record<string,string>):StreetObjectSolid
   for(let i=0;i<stands;i++)box((i-(stands-1)/2)*.75,0,0,.15,.70,.842);
  }else if(tags.amenity==='waste_basket')box(0,0,0,.44,.44,.77);
  else if(tags.highway==='bus_stop'&&tags.shelter==='yes'){
+  if(detailedShelter&&tags.bin==='yes')box(1.20,.18,.10,.32,.32,.62);
   for(const x of [-1.4,1.4])box(x,.5,0,.07,.07,2.3);
   box(0,.52,.45,2.8,.035,1.75);
   if(tags.bench==='yes')box(0,.2,0,2.3,.4,.53);

@@ -13,6 +13,7 @@ import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
+import {shelterAngle,shelterOffset} from './campus-shelter';
 import {campusZebras,streetWidth} from './campus-streetscape';
 import {campusSurface,campusGlassTile} from './campus-surfaces';
 import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
@@ -204,7 +205,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),lawns=batch(),sand=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),lawns=batch(),sand=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),shelterGlass=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
         const points=face.map(p=>[...local(p),p[2]]);
@@ -320,6 +321,31 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           }
         }else if(object.tags.amenity==='waste_basket'){box(0,0,0,.4,.4,.72,'#52635e');box(0,0,.72,.44,.44,.05,'#394a45');}
         else if(object.tags.highway==='bus_stop'&&object.tags.shelter==='yes'){
+          if(campus&&city.campus){
+            const angle=shelterAngle(object.coordinates,city.campus.roads);
+            const axis=shelterOffset(angle,1,0),normal=shelterOffset(angle,0,-1);
+            const wall:Wall={a:p,b:[p[0]+axis[0],p[1]+axis[1]],length:1,normal,height:2.5,base:ground,variant:0};
+            // The shelter frame uses the same local offsets as the walking colliders.
+            const part=(x:number,y:number,z:number,w:number,d:number,h:number,hex:string)=>
+              wallBox(metal,wall,x,w,ground+z,ground+z+h,hex,-y+d/2,-y-d/2);
+            for(const x of [-1.4,1.4])part(x,.5,0,.07,.07,2.32,'#576762');
+            part(0,0,2.30,3.12,1.4,.10,'#73817c');
+            part(0,-.68,2.27,3.14,.05,.15,'#384e4c');
+            for(const x of [-.7,.7])panel(shelterGlass,wall,x,1.38,ground+.45,ground+2.2,'#b1c9c6',-.52);
+            for(const z of [.46,1.05,1.19,2.18])part(0,.50,z,2.8,.025,.022,'#96a7a2');
+            if(object.tags.bench==='yes'){
+              for(const y of [.05,.19,.33])part(0,y,.45,2.3,.12,.08,'#798b80');
+              for(const x of [-.8,.8])part(x,.2,.02,.07,.31,.43,'#586562');
+            }
+            if(object.tags.bin==='yes'){
+              part(1.20,.18,.10,.30,.30,.57,'#4f635e');
+              part(1.20,.18,.67,.32,.32,.05,'#293c38');
+            }
+            if(object.tags.lit==='yes')part(0,-.24,2.28,1.8,.08,.02,'#ebe7cb');
+            if(object.tags.departures_board==='realtime')part(-.92,.43,1.70,.76,.11,.28,'#243733');
+            if(object.tags.name)campusLettering(wall,object.tags.name,0,1.05,2.27,2.42,false,.72);
+            continue;
+          }
           for(const x of [-1.4,1.4])box(x,.5,0,.07,.07,2.3,'#58696a');
           box(0,0,2.3,3.1,1.4,.12,'#657477');box(0,.52,.45,2.8,.035,1.75,'#a1b8b7');
           if(object.tags.bench==='yes'){box(0,.2,.45,2.3,.4,.08,'#63706d');for(const x of [-.8,.8])box(x,.2,0,.06,.3,.45,'#586562');}
@@ -691,6 +717,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(campusRoofs.positions.length)physicalSurface(mesh(campusRoofs,concreteTexture(),true),'campus-concrete',.009);
     if(timber.positions.length)physicalSurface(mesh(timber,materialTexture('campus-timber-color'),true),'campus-timber',.004);
     const glazing=mesh(campusGlazing,surfaceTexture('windows'),true);
+    const panes=mesh(shelterGlass);
+    if(panes){
+      const material=panes.material as MeshBasicMaterial;
+      material.transparent=true;material.opacity=.23;material.depthWrite=false;
+    }
     const frames=mesh(campusFrames,undefined,true);
     if(frames){const material=frames.material as MeshStandardMaterial;material.metalness=.35;material.roughness=.46;material.envMapIntensity=.6;}
     if(glazing){

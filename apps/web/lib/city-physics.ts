@@ -4,6 +4,7 @@ import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
 import {campusFacadeSolids} from './campus-facade-solids';
+import {shelterAngle,shelterOffset} from './campus-shelter';
 import {streetObjectSolids} from './street-object-solids';
 const anchor:Position=[6.8,47.51],meters=111319.4908,cos=Math.cos(anchor[1]*Math.PI/180);
 const local=(p:Position)=>({x:(p[0]-anchor[0])*meters*cos,z:-(p[1]-anchor[1])*meters});
@@ -34,11 +35,16 @@ export async function createCityPhysics(){
   const collider=RAPIER.ColliderDesc.convexHull(new Float32Array(vertices));
   if(collider)world.createCollider(collider);
  }
+ const shelterNodes=new Set(data.campus?.objects.filter(o=>o.tags.highway==='bus_stop'&&o.tags.shelter==='yes').map(o=>o.id));
  for(const object of data.streets?.objects||[]){
   const ground=terrainHeight(...object.coordinates);if(ground===null)continue;const p=local(object.coordinates);
-  for(const solid of streetObjectSolids(object.tags)){
+  const detailed=shelterNodes.has(object.id);
+  const angle=detailed?shelterAngle(object.coordinates,data.campus!.roads):0;
+  for(const solid of streetObjectSolids(object.tags,detailed)){
    const shape=solid.kind==='box'?RAPIER.ColliderDesc.cuboid(solid.width/2,solid.height/2,solid.depth/2):RAPIER.ColliderDesc.cylinder(solid.height/2,solid.radius);
-   world.createCollider(shape.setTranslation(p.x+solid.x,ground+solid.z+solid.height/2,p.z-solid.y));
+   const [east,north]=shelterOffset(angle,solid.x,solid.y);
+   if(angle)shape.setRotation({x:0,y:Math.sin(angle/2),z:0,w:Math.cos(angle/2)});
+   world.createCollider(shape.setTranslation(p.x+east,ground+solid.z+solid.height/2,p.z-north));
   }
  }
  for(const fixture of CAMPUS_COURTYARD.fixtures){

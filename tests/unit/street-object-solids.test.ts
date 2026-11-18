@@ -27,3 +27,18 @@ test('bus shelters keep their open front clear and unrendered map markers create
  assert.ok(shelter.every(s=>s.kind==='box'&&s.y-s.depth/2>=0),'No wall across the open front');
  for(const tags of [{entrance:'main'},{barrier:'gate',foot:'yes'},{highway:'bus_stop',shelter:'no'}])assert.deepEqual(streetObjectSolids(tags),[]);
 });
+
+test('opposite platforms face the carriageway regardless of road digitisation direction',async()=>{
+ const {shelterAngle,shelterOffset}=await import('../../apps/web/lib/campus-shelter');
+ const coordinates:[number,number][]=[[6.8,47.49],[6.801,47.49]];
+ for(const line of [coordinates,[...coordinates].reverse()]){
+  const road={id:1,coordinates:line,tags:{highway:'service'}};
+  for(const side of [-1,1]){
+   const angle=shelterAngle([6.8005,47.49+side*.00004],[road]);
+   const [east,north]=shelterOffset(angle,0,-1);
+   assert.ok(Math.abs(east)<1e-6 && north*side<-.99);
+  }
+ }
+ const tags={highway:'bus_stop',shelter:'yes',bin:'yes'};
+ assert.equal(streetObjectSolids(tags,true).length,streetObjectSolids(tags).length+1);
+});
