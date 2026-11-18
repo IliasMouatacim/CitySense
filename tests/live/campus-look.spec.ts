@@ -3,14 +3,15 @@ import {test,expect} from '@playwright/test';
 test('library glazing and concrete remain readable in the shaded campus elevation',async({page})=>{
  test.setTimeout(210000);await page.emulateMedia({reducedMotion:'reduce'});
  const loadedMaterials=new Set<string>();
- page.on('response',response=>{if(/\/materials\/campus-.*\.jpg$/.test(response.url())&&response.ok())loadedMaterials.add(response.url());});
+ page.on('response',response=>{if(/\/materials\/campus-.*\.jpg$/.test(response.url())&&response.ok())loadedMaterials.add(new URL(response.url()).pathname.split('/').pop()!);});
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  page.on('console',message=>{if(message.type()==='error'&&/THREE|WebGL|GL_INVALID|shader error|framebuffer|feedback loop/i.test(message.text()))errors.push(message.text());});
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
  await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
  await page.getByRole('combobox',{name:'Secteur du campus'}).selectOption('library');
  await expect(page.locator('.architecture-panel')).toHaveAttribute('data-campus-environment','true',{timeout:45000});
- await expect.poll(()=>loadedMaterials.size,{timeout:45000}).toBe(9);
+ const facadeMaps=['concrete','paving','timber'].flatMap(name=>['color','height','roughness'].map(map=>'campus-'+name+'-'+map+'.jpg'));
+ await expect.poll(()=>facadeMaps.filter(name=>!loadedMaterials.has(name)),{timeout:45000}).toEqual([]);
  await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
  await expect(page.locator('.walk-hud')).toHaveAttribute('data-lat',/47\.49/,{timeout:45000});
  await expect(page.locator('.walk-error')).toHaveCount(0);
@@ -25,6 +26,10 @@ test('library glazing and concrete remain readable in the shaded campus elevatio
    await page.mouse.move(x-step/2,y);await page.mouse.down();await page.mouse.move(x+step/2,y,{steps:2});await page.mouse.up();dx-=step;
   }
  }
+ // Face the mapped zebra crossing west of the library from the pedestrian start.
+ await expect.poll(()=>loadedMaterials.has('campus-grass.jpg')).toBe(true);
+ await turnTo(292);
+ await page.screenshot({path:`test-results/campus-library-crossing-${test.info().project.name}.png`,fullPage:true});
  await turnTo(0);
  await page.evaluate(()=>new Promise<void>(resolve=>{
   const start=performance.now(),hud=document.querySelector<HTMLElement>('.walk-hud')!;

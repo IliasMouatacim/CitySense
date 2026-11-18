@@ -20,7 +20,7 @@ for obj in osmium.FileProcessor(sys.argv[1]).with_locations().with_filter(keys):
         if not inside(point):
             continue
         tags = dict(obj.tags)
-        if any(k in tags for k in ['entrance', 'barrier']) or tags.get('natural') == 'tree' or tags.get('highway') in ['street_lamp', 'bus_stop'] or tags.get('amenity') in ['bench', 'bicycle_parking', 'waste_basket']:
+        if any(k in tags for k in ['entrance', 'barrier']) or tags.get('natural') == 'tree' or tags.get('highway') in ['street_lamp', 'bus_stop', 'crossing'] or tags.get('amenity') in ['bench', 'bicycle_parking', 'waste_basket']:
             objects.append({'id': obj.id, 'coordinates': point, 'tags': tags})
         if tags.get('name') and any(k in tags for k in ['amenity', 'office', 'public_transport']):
             pois.append({'id': str(obj.id), 'coordinates': point, 'tags': tags})

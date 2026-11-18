@@ -49,3 +49,6 @@ https://polyhaven.com/a/kloofendal_48d_partly_cloudy
 Official download: https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_1k.hdr
 Supplies generic outdoor reflections and the upper sky hemisphere. It is not
 Montbéliard imagery; mapped ground and buildings remain in the scene.
+
+The campus grass and sand JPEGs are original procedural textures. Run
+`python scripts/build-campus-landscape-textures.py` with Pillow to reproduce them.

@@ -348,11 +348,14 @@ and pitch as well as its position.
 - `public/city/campus-portes-du-jura.json`: 570 IGN BD TOPO building volumes;
   a separate 41 × 41 RGE ALTI terrain tile, bounds
   `[6.798, 47.4915, 6.81, 47.4985]`.
-- `public/city/campus-osm.json`: 287 mapped roads/paths, 242 mapped objects
+- `public/city/campus-osm.json`: 287 mapped roads/paths, 290 mapped objects
   (including 189 trees, 16 benches, eight bicycle parking locations and four
-  entrance nodes), 48 public-space areas, 581 building outlines and 49 named
+  entrance nodes, plus 48 crossing nodes), 48 public-space areas, 581 building outlines and 49 named
   places. These counts include the surrounding neighbourhood, not only the
   university estate. Relations and detailed indoor layouts are not imported.
+- The 30 crossing nodes tagged `crossing:markings=zebra` carry terrain-following
+  paint aligned to the connected road. Stripe dimensions are illustrative.
+  Mapped lawns and the sand athletics area use locally generated textures.
 - IGN orthophotos supply ground and roof imagery in **Photo + 3D** mode.
   At walking height on the campus, the ground instead uses repeating surface
   materials, including in photo mode; IGN roof images remain available. This

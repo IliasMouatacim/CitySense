@@ -13,6 +13,7 @@ import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
+import {campusZebras,streetWidth} from './campus-streetscape';
 import {campusSurface,campusGlassTile} from './campus-surfaces';
 import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
 import {withShadowDepthRange} from './render-depth';
@@ -51,6 +52,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
   const color=new Color();
+  let zebraCache: ReturnType<typeof campusZebras> | undefined;
   const resources:{dispose:()=>void}[]=[];
   const materials=new Map<string,Texture>();
   const facadeImages=new Map<string,HTMLImageElement>(),facadeTextures=new Map<string,CanvasTexture>(),failedFacadeImages=new Set<string>();
@@ -202,7 +204,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();
-    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),groundAreas=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
+    const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),lawns=batch(),sand=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
         const points=face.map(p=>[...local(p),p[2]]);
@@ -262,8 +264,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         if(cityModel&&!campus)continue;
         const tags=road.tags,kind=tags.highway;if(['motorway','motorway_link','trunk','trunk_link','steps','construction','proposed'].includes(kind)||tags.tunnel==='yes')continue;
         if(!road.coordinates.some(p=>metersBetween(center,p)<300))continue;
-        const pedestrian=['footway','pedestrian','path','cycleway','living_street'].includes(kind),lanes=Number(tags.lanes),mappedWidth=Number.parseFloat(tags.width||'');
-        const width=Math.max(1,Math.min(20,Number.isFinite(mappedWidth)?mappedWidth:lanes>0?lanes*3:pedestrian?3:kind==='service'?4:6));
+        const pedestrian=['footway','pedestrian','path','cycleway','living_street'].includes(kind),lanes=Number(tags.lanes);
+        const width=streetWidth(tags,pedestrian);
         const coordinates=road.coordinates.flatMap((a,i)=>{const b=road.coordinates[i+1];if(!b)return [a];const parts=Math.max(1,Math.ceil(metersBetween(a,b)/6));return Array.from({length:parts},(_,k)=>[a[0]+(b[0]-a[0])*k/parts,a[1]+(b[1]-a[1])*k/parts] as [number,number]);});
         let along=0;
         for(let i=1;i<coordinates.length;i++){
@@ -277,7 +279,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
             }
             quad(target,[...points[0],za+bottom],[...points[1],zb+bottom],[...points[2],zb+bottom],[...points[3],za+bottom],color,1,[[along/2,0],[(along+length)/2,0],[(along+length)/2,span/2],[along/2,span/2]]);
           }
-          strip(pedestrian?paving:asphalt,0,width,pedestrian?'#c4bfb2':'#aaa9a4',pedestrian?.075:.065);
+          const pavedPath=pedestrian&&(!campus||tags.surface!=='asphalt');
+          strip(pavedPath?paving:asphalt,0,width,pavedPath?'#c4bfb2':'#aaa9a4',pedestrian?.075:.065);
           const sidewalk=tags.sidewalk;
           if(['yes','both','left'].includes(sidewalk))strip(paving,width/2+.8,1.6,'#c9c4b6',.19);
           if(['yes','both','right'].includes(sidewalk))strip(paving,-width/2-.8,1.6,'#c9c4b6',.19);
@@ -348,6 +351,13 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         branch([p[0],p[1],ground+fixture.height-.05],[p[0],p[1],ground+fixture.height+.03],.33,'#717c70');
       }
     }
+    if(campus&&city?.campus){
+      zebraCache ??= campusZebras(city.campus,local);
+      for(const crossing of zebraCache){
+        if(metersBetween(center,crossing.position)>280)continue;
+        for(const stripe of crossing.stripes)localGroundSurface(details,stripe,'#e8e4d7',.145);
+      }
+    }
     if(campus&&city?.campus)for(const area of city.campus.areas){
       if(options.photo&&!options.walking&&area.tags.highway!=='pedestrian')continue;
       if(!area.coordinates.some(p=>metersBetween(center,p)<280))continue;
@@ -356,13 +366,15 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       for(const indices of ShapeUtils.triangulateShape(points.map(p=>new Vector2(p[0],p[1])),[])){
         const polygon=indices.map(i=>ring[i]);
         if(area.tags.highway==='pedestrian'&&area.tags.surface!=='asphalt')groundSurface(campusPaving,polygon,'#b4b6aa',.12,3.2);
-        else groundSurface(green?groundAreas:asphalt,polygon,hex,.035);
+        else if(green||area.tags.surface==='grass')groundSurface(lawns,polygon,'#d1d5b6',.035,2.5);
+        else if(area.tags.surface==='sand')groundSurface(sand,polygon,'#e3d8bd',.035,1.6);
+        else groundSurface(asphalt,polygon,hex,.035);
       }
     }
     if(campus&&(options.walking||!options.photo)&&CAMPUS_NORTH_LAWN.polygon.some(p=>metersBetween(center,p)<280)){
       const polygon=CAMPUS_NORTH_LAWN.polygon;
       for(const indices of ShapeUtils.triangulateShape(polygon.map(p=>new Vector2(...local(p))),[]))
-        groundSurface(groundAreas,indices.map(i=>polygon[i]),'#71855f',CAMPUS_NORTH_LAWN.lift);
+        groundSurface(lawns,indices.map(i=>polygon[i]),'#c7d1b4',CAMPUS_NORTH_LAWN.lift,2.5);
     }
     const routeCoordinates=options.routeCoordinates||[];let routeSegments=0;
     for(let i=1;i<routeCoordinates.length;i++){
@@ -671,7 +683,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       signCount++;
     }
     mesh(terrain);mesh(facades,materialTexture('plaster'),true);
-    for(const floor of [mesh(campusGround,materialTexture('asphalt'),true),mesh(asphalt,materialTexture('asphalt'),true),mesh(paving,materialTexture('paving'),true),mesh(groundAreas,materialTexture('asphalt'),campus)])if(floor)floor.castShadow=false;
+    for(const floor of [mesh(campusGround,materialTexture('asphalt'),true),mesh(asphalt,materialTexture('asphalt'),true),mesh(paving,materialTexture('paving'),true),lawns.positions.length&&mesh(lawns,materialTexture('campus-grass'),true),sand.positions.length&&mesh(sand,materialTexture('campus-sand'),true)])if(floor)floor.castShadow=false;
     mesh(details,undefined,campus);mesh(roofs,roofTexture());
     const hardware=mesh(metal,undefined,true);if(hardware){const mat=hardware.material as MeshStandardMaterial;mat.metalness=.7;mat.roughness=.34;mat.envMapIntensity=.55;}
     const concrete=campusConcrete.positions.length?mesh(campusConcrete,concreteTexture(),true):undefined;
