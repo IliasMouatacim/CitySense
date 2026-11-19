@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
+import {cityBuildingFeatures,inMontbeliard,loadCityWorld,terrainHeight} from '../../apps/web/lib/city-world.ts';
 import {createCityPhysics} from '../../apps/web/lib/city-physics.ts';
 import {distance,offset,advance,movementStopped} from '../../apps/web/lib/walk-geometry.ts';
 import {CAMPUS_COURTYARD} from '../../apps/web/lib/campus-courtyard';
@@ -17,6 +17,15 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
  };
  try{
   const data=await loadCityWorld();assert.ok(data.buildings.features.length>1000);assert.equal(data.heights.length,1681);
+  for(const feature of data.buildings.features){
+   const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
+   assert.ok(polygons.every(p=>p[0].every(inMontbeliard)),'Every modeled footprint must be inside Montbéliard');
+  }
+  const ring=(x:number,y:number)=>[[x,y],[x+.0001,y],[x,y+.0001],[x,y]];
+  const local=ring(6.794,47.515),distant=ring(6.832,47.482);
+  const tile={id:99,properties:{testTile:true},geometry:{type:'MultiPolygon',coordinates:[[local],[distant]]}};
+  const map={querySourceFeatures:()=>[tile]} as unknown as Parameters<typeof cityBuildingFeatures>[0];
+  assert.deepEqual(cityBuildingFeatures(map).filter(f=>f.properties.testTile).map(f=>f.geometry.coordinates),[[local]]);
   const [w,s,e,n]=data.bounds;
   assert.ok(Math.abs(terrainHeight(w,s)!-(data.heights[0]-data.datum))<.001);
   assert.ok(Math.abs(terrainHeight(e,n)!-(data.heights.at(-1)!-data.datum))<.001);

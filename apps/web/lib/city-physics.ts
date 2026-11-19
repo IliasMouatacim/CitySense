@@ -1,5 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat';
-import {terrainHeight,loadCityWorld} from './city-world';
+import {terrainHeight,loadCityWorld,inMontbeliard,municipalTerrainVertices} from './city-world';
 import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
 import {CAMPUS_COURTYARD} from './campus-courtyard';
@@ -13,11 +13,11 @@ export async function createCityPhysics(){
  initialized??=RAPIER.init();await initialized;
  const data=await loadCityWorld(),world=new RAPIER.World({x:0,y:-9.81,z:0});
  for(const tile of [data,...data.terrainPatches||[]]){
-  const vertices:number[]=[],indices:number[]=[],[w,s,e,n]=tile.bounds;
+  const vertices:number[]=[],indices:number[]=[],[w,s,e,n]=tile.bounds,mask=municipalTerrainVertices(tile);
   for(let y=0;y<tile.size;y++)for(let x=0;x<tile.size;x++){
    const lon=w+x/(tile.size-1)*(e-w),lat=s+y/(tile.size-1)*(n-s),p=local([lon,lat]);vertices.push(p.x,terrainHeight(lon,lat)!,p.z);
   }
-  for(let y=0;y<tile.size-1;y++)for(let x=0;x<tile.size-1;x++){const a=y*tile.size+x,b=a+1,c=a+tile.size,d=c+1;indices.push(a,b,c,b,d,c);}
+  for(let y=0;y<tile.size-1;y++)for(let x=0;x<tile.size-1;x++){const a=y*tile.size+x,b=a+1,c=a+tile.size,d=c+1;if(mask[a]&&mask[b]&&mask[c])indices.push(a,b,c);if(mask[b]&&mask[d]&&mask[c])indices.push(b,d,c);}
   world.createCollider(RAPIER.ColliderDesc.trimesh(new Float32Array(vertices),new Uint32Array(indices)));
  }
  for(const feature of data.buildings.features){
@@ -56,9 +56,9 @@ export async function createCityPhysics(){
  const character=world.createCharacterController(.025);character.enableAutostep(.3,.2,true);character.enableSnapToGround(.5);character.setMaxSlopeClimbAngle(Math.PI/4);character.setMinSlopeSlideAngle(Math.PI/3);
  world.step();let disposed=false;
  return {
-  height:(p:Position)=>terrainHeight(...p),
+  height:(p:Position)=>inMontbeliard(p)?terrainHeight(...p):null,
   move(from:Position,to:Position):Position{
-   if(disposed||terrainHeight(...to)===null)return from;
+   if(disposed||!inMontbeliard(to)||terrainHeight(...to)===null)return from;
    const a=local(from),b=local(to),ground=terrainHeight(...from)??0,target=terrainHeight(...to)!;
    body.setTranslation({x:a.x,y:ground+.9,z:a.z},true);world.step();
    character.computeColliderMovement(collider,{x:b.x-a.x,y:target-ground-.05,z:b.z-a.z});

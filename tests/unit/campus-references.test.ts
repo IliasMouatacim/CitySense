@@ -62,7 +62,10 @@ test('CROUS restaurant preserves its distinct glazing and dated photographic sou
  const source=campusReferences.sources.find(s=>s.id==='crous-2012')!;
  assert.equal(source.captureDate,'2012-11-13');assert.equal(source.author,'Antomoro');
  const face=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-east')!,panes:number[][]=[];
- drawCampusFacade(face,16,8,{panel:()=>{},box:()=>{},lettering:()=>assert.fail('No invented departmental signs'),glazing:(at,w,b,t)=>panes.push([at,w,b,t])});
+ drawCampusFacade(face,16,8,{panel:()=>{},box:()=>{},lettering:()=>assert.fail('No invented departmental signs'),glazing:(at,w,b,t,_depth,kind)=>{
+  assert.equal(kind,'fixed','Restaurant windows use the blind-free glass atlas');
+  panes.push([at,w,b,t]);
+ }});
  assert.ok(panes.filter(p=>p[2]>3).every(p=>p[1]<.7&&p[3]-p[2]>3),'Tall narrow upper lights, not generic ribbon windows');
  assert.ok(panes.filter(p=>p[2]<2).length<5,'Keep the service wall mostly solid');
  const front=profiles.flatMap(p=>p.faces).find(f=>f.layout==='crous-front')!;

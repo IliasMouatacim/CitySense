@@ -59,7 +59,7 @@ for(const [id,edge] of [['BATIMENT0000000223563543',1],['BATIMENT000000022356353
 // Register existing mapped entrances along the documented southern frontage.
 building('BATIMENT0000000223563747','CROUS · restaurant universitaire · accueil','#d2d1c8',['crous-2012','plan'],[
  [4,'concrete',{layout:'crous-front'}],
-],'Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. Registration and dimensions are estimates. Doors remain closed; the interior and detached forecourt structure are not reconstructed.');
+],'Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. An additional user-supplied oblique street view guides the narrower glazed openings, broad concrete returns and darker upper panels. Bay widths and projections are estimated. Doors remain closed; the interior and detached forecourt structure are not reconstructed.');
 building('BATIMENT0000000223563498','CROUS · restaurant universitaire · aile est','#d2d1c8',['crous-2012','plan'],[
  [13,'concrete',{layout:'crous-corner'}],[12,'concrete',{layout:'crous-glass'}],[10,'concrete',{layout:'crous-east'}],
 ],'White upper fascia, red/blue ribbon accents, glazed corner and tall narrow east-wing windows observed in the 2012 photograph. Obscured walls and current alterations remain unverified.');

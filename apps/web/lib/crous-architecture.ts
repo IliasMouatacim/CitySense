@@ -7,12 +7,16 @@ type Pane=(at:number,width:number,bottom:number,top:number,depth?:number)=>void;
 export function drawCrousFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane,onFixedLight:()=>void=()=>{}){
  if(!face.layout?.startsWith('crous-'))return false;
  const {panel,box,lettering}=draw,white='#eeeae0',concrete='#d2d1c8',frame='#344b4c';
- function curtain(at:number,width:number,bottom:number,top:number){
+ function curtain(at:number,width:number,bottom:number,top:number,blueInfill=false){
   const columns=Math.max(2,Math.ceil(width/1.6)),rows=Math.max(2,Math.round((top-bottom)/1.15));
   const pitch=width/columns,rise=(top-bottom)/rows;
   panel(at,width,bottom,top,'#263b3c',.06);
   for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
    const x=at-width/2+(col+.5)*pitch,z0=bottom+row*rise+.035,z1=bottom+(row+1)*rise-.035;
+   if(blueInfill&&col===columns-1&&row===rows-1){
+    panel(x,pitch-.07,z0,z1,'#42658c',.11);
+    continue;
+   }
    if(draw.glazing)draw.glazing(x,pitch-.07,z0,z1,.10,'fixed');
    else panel(x,pitch-.07,z0,z1,'#49636a',.10);
    onFixedLight();
@@ -40,25 +44,75 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
  }
  if(face.layout==='crous-front'){
   const bays=Math.max(2,Math.round(length/8)),pitch=length/bays;
+  const entryBay=Math.floor(bays*.72);
+  const entryCenter=(entryBay+.5)*pitch;
   for(let i=0;i<bays;i++){
-   const at=(i+.5)*pitch,w=pitch-1.10;
-   // Broad structural bays contain multiple glass panels. Dividing the glazing
-   // also avoids stretching a single reflection texture across an entire bay.
-   curtain(at,w,.15,height*.76);
-   panel(at+w*.30,Math.min(.65,w*.25),height*.66,height*.755,'#42658c',.25);
-   box(at,pitch-.85,height*.78,height-.12,i%2?white:concrete,.20,.03);
-   if(i%2===1)wallLight(at,height*.89);
-   if(i%2===0)greenDoor(at+w*.28);
+   const at=(i+.5)*pitch,w=pitch*.44;
+   // In the oblique street photo the glass is set back between broad concrete
+   // cheeks. The nearer edge of each repeated bay reads as a projecting fin.
+   const cheek=(pitch-w)/2;
+   for(const side of [-1,1]){
+    const center=at+side*(w+cheek)/2;
+    const relief=side===1?.62:.34;
+    box(center,cheek,.035,height*.76,concrete,relief,.03);
+    box(center,cheek,height*.76,height-.12,side===1?'#8c938b':'#b3b6aa',relief,.03);
+   }
+   if(i===entryBay){
+    // Estimated closed entrance beneath the shelter. The doors occupy their own
+    // opening so curtain-wall transoms do not run across the handles.
+    const doorWidth=2.1,leaf=doorWidth/2,head=2.28,sideWidth=(w-doorWidth)/2;
+    for(const side of [-1,1]){
+     curtain(at+side*(doorWidth+sideWidth)/2,sideWidth,.15,height*.76,side===1);
+     const x=at+side*leaf/2;
+     panel(x,leaf,.06,head,frame,.09);
+     for(const [bottom,top] of [[.26,1.03],[1.10,head-.07]]){
+      if(draw.glazing)draw.glazing(x,leaf-.10,bottom,top,.12,'fixed');
+      else panel(x,leaf-.10,bottom,top,'#49636a',.12);
+      onFixedLight();
+     }
+     panel(x,leaf-.10,.08,.24,'#8b9992',.13);
+     const handle=at+side*.15;
+     for(const z of [.88,1.28])box(handle,.035,z,z+.035,'#879087',.22,.12);
+     box(handle,.035,.88,1.315,'#a8b3ac',.25,.21);
+    }
+    curtain(at,doorWidth,head,height*.76);
+    box(at,doorWidth+.10,.02,.06,'#879087',.28,.03);
+   }else if(i%2===0){
+    const door=at+w*.28,doorWidth=.74;
+    const left=at-w/2,right=at+w/2;
+    const leftJamb=door-doorWidth/2,rightJamb=door+doorWidth/2;
+    curtain((left+leftJamb)/2,leftJamb-left,.15,height*.76);
+    curtain((rightJamb+right)/2,right-rightJamb,.15,height*.76,true);
+    curtain(door,doorWidth,2.25,height*.76);
+    greenDoor(door);
+   }else curtain(at,w,.15,height*.76,true);
+   // The photograph shows a pale floor band crossing the dark vertical lights.
+   box(at,w+.04,height*.40,height*.46,concrete,.33,.04);
+   box(at,w+.12,height*.76,height*.78,concrete,.30,.05);
+   box(at,w,height*.78,height-.12,'#8c938b',.24,.03);
+   if(i%2===1)wallLight(at,height*.77);
   }
-  for(let i=0;i<=bays;i++)box(Math.max(.45,Math.min(length-.45,i*pitch)),.90,.03,height-.1,concrete,.46,.03);
+  for(let i=0;i<=bays;i++){
+   const x=Math.max(.45,Math.min(length-.45,i*pitch));
+   box(x,.90,.03,height-.10,concrete,.83,.03);
+   box(x,.92,height-.16,height-.10,'#a9a79a',.86,.04);
+  }
   // Photo-observed entrance shelter; closed glazing, no invented interior.
-  const at=length*.72,w=Math.min(5.5,length*.23);
-  box(at,w,2.65,2.96,white,.88,.03);
-  box(at,w+.06,2.96,3.02,'#637268',.91,.03);
-  for(const side of [-1,1])box(at+side*(w/2-.18),.28,.04,2.65,concrete,.86,.58);
-  lettering('RESTAURANT CAFETERIA CROUS',at,w*.94,2.69,2.91,false,.90);
+  const at=entryCenter,w=Math.min(5.5,pitch-.85),projection=.95;
+  box(at,w,2.68,3.12,white,projection,.03);
+  box(at,w+.06,3.12,3.18,'#637268',projection+.03,.03);
+  for(const side of [-1,1]){
+   const x=at+side*(w/2-.20);
+   box(x,.24,2.55,2.68,'#879087',projection-.05,.03);
+   box(x,.28,.04,2.55,concrete,projection-.10,projection-.38);
+  }
+  lettering('RESTAURANT CAFETERIA CROUS',at,w*.94,2.695,3.105,false,projection+.016,'#344b4c');
  }else if(face.layout==='crous-corner'){
-  panel(length/2,length,.05,height-.15,white,.045);
+  // The ribbon sits between two projecting courses of the white corner.
+  // Leave space for the small lower windows in the backing wall.
+  panel(length/2,length,.05,height*.66,white,.045);
+  box(length/2,length,height*.61,height*.66,white,.23,.04);
+  box(length/2,length,height*.82,height-.10,white,.23,.04);
   const bays=Math.max(2,Math.round(length/2.1)),pitch=(length-.4)/bays;
   for(let i=0;i<bays;i++){
    const at=.2+(i+.5)*pitch;
@@ -68,16 +122,28 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
   for(const at of [.25,.66])pane(length*at,.60,height*.18,height*.35,.10);
  }else if(face.layout==='crous-glass'){
   curtain(length/2,length-.12,.18,height*.79);
-  panel(length/2,length,height*.81,height-.15,white,.05);
+  // Continue the pale fascia around the glazed return. Its folded lip and
+  // sill give the ends of the curtain wall a visible depth at walking height.
+  box(length/2,length,height*.79+.04,height-.10,white,.23,.04);
+  box(length/2,length,height*.79+.04,height*.79+.09,'#879087',.26,.21);
+  box(length/2,length,.07,.145,concrete,.27,.03);
  }else{
   // The photographed east wing has tall narrow upper lights, not three
   // repeated classroom ribbons; its lower service wall stays mostly solid.
-  panel(length/2,length,height*.35,height-.15,white,.05);
   const bays=Math.max(2,Math.round(length/2.7)),pitch=length/bays;
+  const width=Math.min(.65,pitch*.30),bottom=height*.40,top=height*.84;
+  const opening=width+.16,cheek=(pitch-opening)/2;
+  box(length/2,length,height*.35,bottom-.12,white,.25,.04);
+  box(length/2,length,top+.11,height-.10,white,.25,.04);
   for(let i=0;i<bays;i++){
    const at=(i+.5)*pitch;
-   pane(at,Math.min(.65,pitch*.30),height*.40,height*.84,.10);
-   panel(at,.38,height*.53,height*.60,'#42658c',.25);
+   // Build the wall around each light so its jambs show in an oblique view.
+   for(const side of [-1,1]){
+    box(at+side*(opening+cheek)/2,cheek,bottom-.12,top+.11,white,.25,.04);
+   }
+   pane(at,width,bottom,top,.10);
+   box(at,width+.14,bottom-.12,bottom-.07,'#879087',.32,.08);
+   box(at,width-.06,height*.53,height*.60,'#42658c',.145,.10);
    if(i%2===0)pane(at,.48,.6,1.1,.10);
   }
  }

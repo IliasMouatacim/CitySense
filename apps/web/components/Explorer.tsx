@@ -39,7 +39,12 @@ export default function Explorer(){
   if(!container.current)return;
   try {
    const first=CITY_VIEWS.find(v=>v.id==='panoramax')!;
-   const m=new maplibregl.Map({container:container.current,style:'https://tiles.openfreemap.org/styles/liberty',center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,pixelRatio:Math.min(window.devicePixelRatio,1.5),canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
+   const m=new maplibregl.Map({container:container.current,center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,pixelRatio:Math.min(window.devicePixelRatio,1.5),canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
+   m.setStyle('https://tiles.openfreemap.org/styles/liberty',{
+    transformStyle:(_,style)=>({...style,layers:style.layers.map(layer=>layer.type==='fill-extrusion'
+     ? {...layer,layout:{...layer.layout,visibility:'none' as const}}
+     : layer)})
+   });
    m.addControl(new maplibregl.NavigationControl({visualizePitch:true}),matchMedia('(max-width:700px)').matches?'bottom-left':'bottom-right');
    m.on('load',async()=>{try{await installCityWorld(m);styleCity(m,'day');setMapReady(true);setMapError('');}catch{styleCity(m,'day');setMapReady(true);setMapError('Le relief IGN est indisponible. La carte standard reste disponible.');}});
    m.on('moveend',()=>{if(walkingRef.current)return;const pitch=Math.round(m.getPitch()),bearing=Math.round(m.getBearing()),fov=Number(m.getVerticalFieldOfView().toFixed(2));setCamera(previous=>previous.pitch===pitch&&previous.bearing===bearing&&previous.fov===fov?previous:{pitch,bearing,fov});setTilted(m.getPitch()>10);});

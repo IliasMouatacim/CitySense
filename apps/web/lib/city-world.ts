@@ -1,6 +1,7 @@
 import type {Map,GeoJSONSource} from 'maplibre-gl';
 import {facadeProfile} from './facade-references';
 import {insidePolygon} from './walk-geometry';
+import boundary from './montbeliard-boundary.json';
 import {campusProfile} from './campus-references';
 type Polygon={type:'Polygon';coordinates:number[][][]};
 type MultiPolygon={type:'MultiPolygon';coordinates:number[][][][]};
@@ -35,6 +36,11 @@ export function loadCityWorld(){
   if(campusTerrain.ok&&campusMap.ok){
    const patch=await campusTerrain.json() as CityWorld,campus=await campusMap.json() as CampusData;
    if(patch.size<2||patch.heights.length!==patch.size*patch.size)throw Error('Terrain du campus invalide.');
+   campus.areas=campus.areas.filter(area=>area.coordinates.every(inMontbeliard));
+   campus.buildings=campus.buildings.filter(building=>building.coordinates.every(inMontbeliard));
+   campus.roads=campus.roads.filter(road=>road.coordinates.every(inMontbeliard));
+   campus.objects=campus.objects.filter(object=>inMontbeliard(object.coordinates));
+   campus.pois=campus.pois.filter(poi=>inMontbeliard(poi.coordinates));
    data.terrainPatches=[patch];data.campus=campus;
    data.streets??={roads:[],objects:[]};data.streets.roads.push(...campus.roads);data.streets.objects.push(...campus.objects);
    for(const feature of patch.buildings.features){
@@ -56,6 +62,10 @@ export function loadCityWorld(){
    data.buildings.features.push(...patch.buildings.features);
   }
   if(data.size<2||data.heights.length!==data.size*data.size||!data.buildings.features.length)throw Error('Données IGN invalides.');
+  data.buildings.features=data.buildings.features.filter(feature=>{
+   const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
+   return polygons.every(polygon=>polygon[0].every(inMontbeliard));
+  });
   for(const feature of data.buildings.features){
    const rings=feature.geometry.type==='Polygon'?feature.geometry.coordinates:feature.geometry.coordinates.flat();
    const p=rings[0][0];const height=Number(feature.properties?.render_height)||8;
@@ -71,15 +81,8 @@ export async function installCityWorld(map:Map){
  const data=await loadCityWorld();
  if(map.getSource(CITY_BUILDINGS))return;
  map.addSource(CITY_BUILDINGS,{type:'geojson',data:data.buildings,attribution:'© IGN BD TOPO / RGE ALTI'});
- const [w,s,e,n]=data.bounds;
- const area:Polygon={type:'Polygon',coordinates:[[[w,s],[e,s],[e,n],[w,n],[w,s]]]};
- const native=map.getLayer('building-3d');
- // MVT groups can contain footprints both inside and outside the IGN area.
- // Split them per polygon, otherwise whole groups survive a `within` filter
- // and leave duplicate low buildings across the detailed streets.
- if(native){map.setFilter('building-3d',['==',['literal',true],false]);}
- const outside=()=>({type:'FeatureCollection' as const,features:cityBuildingFeatures(map).filter(f=>!f.properties?.sourceId)});
- map.addSource('citysense-outside-buildings',{type:'geojson',data:outside()});
+ const outside=()=>({type:'FeatureCollection' as const,features:municipalTileBuildings(map)});
+ map.addSource('citysense-outside-buildings',{type:'geojson',data:outside(),attribution:'Limites communales © IGN ADMIN EXPRESS COG 2018'});
  const layers=map.getStyle().layers,last=layers.findLastIndex(l=>l.type==='fill-extrusion');
  map.addLayer({id:'citysense-ign-solid',type:'fill-extrusion',source:CITY_BUILDINGS,paint:{'fill-extrusion-height':['get','render_height'],'fill-extrusion-base':['get','render_min_height'],'fill-extrusion-color':'#cfc1aa','fill-extrusion-opacity':1}},layers.slice(last+1).find(l=>l.type==='symbol')?.id);
  map.addLayer({id:'citysense-outside-solid',type:'fill-extrusion',source:'citysense-outside-buildings',paint:{'fill-extrusion-height':['get','render_height'],'fill-extrusion-base':['get','render_min_height'],'fill-extrusion-color':'#cfc1aa','fill-extrusion-opacity':1}},'citysense-ign-solid');
@@ -87,13 +90,33 @@ export async function installCityWorld(map:Map){
  const refresh=(event:{sourceId?:string;isSourceLoaded?:boolean})=>{if(event.sourceId!=='openmaptiles'||!event.isSourceLoaded||timer||disposed)return;timer=setTimeout(()=>{timer=undefined;if(!disposed)(map.getSource('citysense-outside-buildings') as GeoJSONSource)?.setData(outside());},300);};
  map.on('sourcedata',refresh);map.once('remove',()=>{disposed=true;if(timer)clearTimeout(timer);map.off('sourcedata',refresh);});
 }
-export function cityBuildingFeatures(map:Map){
+export function inMontbeliard(point:number[]){
+ return insidePolygon([point[0],point[1]],boundary.geometry.coordinates);
+}
+
+function municipalTileBuildings(map:Map){
  const data=world;
  const native=map.querySourceFeatures('openmaptiles',{sourceLayer:'building'});
- if(!data)return native;
- const outside=native.flatMap(f=>{
+ return native.flatMap(f=>{
   const g=f.geometry,polygons:number[][][][]=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
-  return polygons.filter(p=>p[0]?.every(point=>terrainHeight(point[0],point[1],data)===null)).map(p=>({type:'Feature' as const,id:f.id,properties:f.properties||{},geometry:{type:'Polygon' as const,coordinates:p}}));
+  return polygons.filter(p=>p[0]?.every(point=>terrainHeight(point[0],point[1],data)===null&&inMontbeliard(point))).map(p=>({type:'Feature' as const,id:f.id,properties:f.properties||{},geometry:{type:'Polygon' as const,coordinates:p}}));
  });
- return [...data.buildings.features,...outside];
+}
+
+export function cityBuildingFeatures(map:Map){
+ return [...(world?.buildings.features??[]),...municipalTileBuildings(map)];
+}
+
+const terrainMasks=new WeakMap<TerrainTile,boolean[]>();
+export function municipalTerrainVertices(tile:TerrainTile){
+ let mask=terrainMasks.get(tile);
+ if(!mask){
+  const [west,south,east,north]=tile.bounds;
+  mask=Array.from({length:tile.size*tile.size},(_,i)=>inMontbeliard([
+   west+(east-west)*(i%tile.size)/(tile.size-1),
+   south+(north-south)*Math.floor(i/tile.size)/(tile.size-1),
+  ]));
+  terrainMasks.set(tile,mask);
+ }
+ return mask;
 }

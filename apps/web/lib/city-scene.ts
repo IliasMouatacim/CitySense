@@ -47,7 +47,8 @@ export function styleCity(map:Map, mood:SceneMood, scale=1, dimensional=true) {
       map.setPaintProperty(layer.id,'text-halo-color',night?'#152b34':paint['text-halo-color' as keyof typeof paint]);
     }
     if (layer.type==='fill-extrusion') {
-      map.setLayoutProperty(layer.id,'visibility',dimensional?'visible':'none');
+      const local=layer.id==='citysense-ign-solid'||layer.id==='citysense-outside-solid';
+      map.setLayoutProperty(layer.id,'visibility',dimensional&&local?'visible':'none');
       map.setPaintProperty(layer.id,'fill-extrusion-opacity',1);
       map.setPaintProperty(layer.id,'fill-extrusion-vertical-gradient',true);
       map.setPaintProperty(layer.id,'fill-extrusion-height',['*',buildingHeight,scale]);
