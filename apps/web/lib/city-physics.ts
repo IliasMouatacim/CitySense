@@ -66,7 +66,9 @@ export async function createCityPhysics(){
    const ground=Math.max(terrainHeight(...from)??0,fromStep??-Infinity),target=Math.max(terrain,toStep??-Infinity);
    if((fromStep!==undefined||toStep!==undefined)&&Math.abs(target-ground)>.45)return from;
    const a=local(from),b=local(to);
-   body.setTranslation({x:a.x,y:ground+.9,z:a.z},true);world.step();
+   // Only the walker moves. The initial step indexed all fixed collision geometry.
+   body.setTranslation({x:a.x,y:ground+.9,z:a.z},true);
+   world.propagateModifiedBodyPositionsToColliders();
    character.computeColliderMovement(collider,{x:b.x-a.x,y:target-ground-.05,z:b.z-a.z});
    const d=character.computedMovement(),next:Position=[from[0]+d.x/(meters*cos),from[1]-d.z/meters];
    return metersBetween(from,next)<2?next:from;

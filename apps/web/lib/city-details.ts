@@ -46,7 +46,13 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   let options=initial,disposed=false,timer:ReturnType<typeof setTimeout>|undefined;
   let lastCenter:[number,number]|undefined,walkPosition:[number,number]|undefined,lastKey='',force=true;
   let walkEye:number|undefined;
-  function locate(event:{coordinates?:[number,number];eye?:number}){if(event.coordinates?.every(Number.isFinite))walkPosition=event.coordinates;if(Number.isFinite(event.eye))walkEye=event.eye;}
+  function locate(event:{coordinates?:[number,number];eye?:number}){
+    if(event.coordinates?.every(Number.isFinite)){
+      walkPosition=event.coordinates;
+      if(options.walking)scheduleMovement();
+    }
+    if(Number.isFinite(event.eye))walkEye=event.eye;
+  }
   let renderer:WebGLRenderer|undefined;
   let environment:WebGLRenderTarget|undefined,pendingHDR:Texture|undefined,skyHDR:Texture|undefined,sky:Mesh<SphereGeometry,MeshBasicMaterial>|undefined,campusLighting=false;
   let requestedCampusLighting=false;
@@ -871,6 +877,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     }
     onStatus({buildings:count,windows,signs:signCount,pois,street,photoRoofTriangles:photoRoofs.positions.length/9,photoGroundTriangles:photoTerrain.positions.length/9,campusGroundTriangles:campusGround.positions.length/9,routeSegments,modelMeshes:!campus&&cityModel?cityModel.group.children.length:0,referenceBuildings,facadePhotoFaces,facadePhotoFailed:failedFacadeImages.size>0,campusBuildings,campus,campusFacades,campusFinishedWalls,campusEstimatedFacades,campusReferenceBuildings,campusEnvironment:campus&&!!environment,campusFixtures:campus?CAMPUS_COURTYARD.fixtures.length:0,campusShadowResolution:campus&&sun.castShadow?sun.shadow.mapSize.width:0});map.triggerRepaint();
   }
+  function scheduleMovement(){
+    // Walking sends moveend on every camera update, including turns in place.
+    if(options.walking&&!force&&walkPosition&&lastCenter&&map.getZoom()>=15.5&&metersBetween(walkPosition,lastCenter)<30)return;
+    schedule();
+  }
   function schedule(){if(!timer&&!disposed)timer=setTimeout(rebuild,450);}
   const layer:CustomLayerInterface={
     id:ID,type:'custom',renderingMode:'3d',
@@ -914,7 +925,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       if(timer)clearTimeout(timer);if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}
       for(const image of facadeImages.values()){image.onload=null;image.onerror=null;image.src='';}
       facadeImages.clear();facadeTextures.forEach(t=>t.dispose());facadeTextures.clear();photoImage=undefined;roofImageTexture?.dispose();materials.forEach(t=>t.dispose());cityModel?.dispose();
-      map.off('moveend',schedule);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();
+      map.off('moveend',scheduleMovement);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();
     }
   };
   function source(event:{sourceId?:string;isSourceLoaded?:boolean}){
@@ -923,7 +934,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const layers=map.getStyle().layers;
   const lastBuilding=layers.findLastIndex(l=>l.type==='fill-extrusion');
   const firstSymbol=layers.slice(lastBuilding+1).find(l=>l.type==='symbol')?.id;
-  map.addLayer(layer,firstSymbol);map.on('moveend',schedule);map.on('sourcedata',source);map.on('citysense-walk-position',locate);
+  map.addLayer(layer,firstSymbol);map.on('moveend',scheduleMovement);map.on('sourcedata',source);map.on('citysense-walk-position',locate);
   return {
     update(next:DetailOptions){if(JSON.stringify(options)===JSON.stringify(next))return;options=next;force=true;schedule();map.triggerRepaint();},
     dispose(){if(disposed)return;if(map.getLayer(ID))map.removeLayer(ID);}
