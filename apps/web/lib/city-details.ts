@@ -48,11 +48,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   function locate(event:{coordinates?:[number,number];eye?:number}){if(event.coordinates?.every(Number.isFinite))walkPosition=event.coordinates;if(Number.isFinite(event.eye))walkEye=event.eye;}
   let renderer:WebGLRenderer|undefined;
   let environment:WebGLRenderTarget|undefined,pendingHDR:Texture|undefined,skyHDR:Texture|undefined,sky:Mesh<SphereGeometry,MeshBasicMaterial>|undefined,campusLighting=false;
+  let requestedCampusLighting=false;
   const sharedTarget=new WebGLRenderTarget(1,1);Object.assign(sharedTarget,{isXRRenderTarget:true});sharedTarget.texture.colorSpace=SRGBColorSpace;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
-  const color=new Color();
+  const colors=new Map<string,Color>();
   let zebraCache: ReturnType<typeof campusZebras> | undefined;
   const resources:{dispose:()=>void}[]=[];
   const materials=new Map<string,Texture>();
@@ -73,7 +74,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   }
   function materialTexture(name:string,data=false){
     const key=name+(data?':data':'');if(materials.has(key))return materials.get(key)!;
-    const texture=new TextureLoader().load(`/materials/${name}.jpg`,()=>{if(disposed){texture.dispose();return;}force=true;schedule();});
+    const texture=new TextureLoader().load(`/materials/${name}.jpg`,()=>{if(disposed){texture.dispose();return;}map.triggerRepaint();});
     texture.wrapS=texture.wrapT=RepeatWrapping;if(!data)texture.colorSpace=SRGBColorSpace;texture.anisotropy=renderer?Math.min(8,renderer.capabilities.getMaxAnisotropy()):1;materials.set(key,texture);return texture;
   }
   let photoImage:HTMLImageElement|undefined,photoBounds:ReturnType<typeof roofPhotoRequest>['bounds']|undefined,photoKey='',pendingImage:HTMLImageElement|undefined;
@@ -92,7 +93,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     image.src=request.url;
   }
   function clear(){scene.clear();resources.splice(0).forEach(r=>r.dispose());}
-  function tint(hex:string,shade=1){color.set(hex);color.multiplyScalar(shade*(options.mood==='night'?.46:options.mood==='golden'?.94:1));return [color.r,color.g,color.b];}
+  function tint(hex:string,shade=1){
+    let color=colors.get(hex);
+    if(!color){color=new Color(hex);colors.set(hex,color);}
+    const light=shade*(options.mood==='night'?.46:options.mood==='golden'?.94:1);
+    return [color.r*light,color.g*light,color.b*light];
+  }
   function triangle(target:Batch,a:number[],b:number[],c:number[],rgb:number[],uv?:number[][]){
     for(const [i,p] of [a,b,c].entries()){target.positions.push(p[0],p[1],p[2]*options.scale);target.colors.push(...rgb);if(uv)target.uvs.push(...uv[i]);}
   }
@@ -129,7 +135,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(!data.positions.length)return;
     const geometry=new BufferGeometry();geometry.setAttribute('position',new Float32BufferAttribute(data.positions,3));geometry.setAttribute('color',new Float32BufferAttribute(data.colors,3));
     if(texture)geometry.setAttribute('uv',new Float32BufferAttribute(data.uvs,2));
-    geometry.computeVertexNormals();
+    if(physical)geometry.computeVertexNormals();
     const material=physical?new MeshStandardMaterial({vertexColors:true,side:DoubleSide,map:texture||null,roughness:.88,metalness:0,envMapIntensity:.35}):new MeshBasicMaterial({vertexColors:true,side:DoubleSide,map:texture||null,transparent:cutout,depthWrite:!cutout,toneMapped:false});
     if(physical)orientPhysicalMaterial(material as MeshStandardMaterial);
     const object=new Mesh(geometry,material);object.castShadow=physical&&campusLighting;object.receiveShadow=physical&&campusLighting;object.frustumCulled=false;scene.add(object);resources.push(geometry,material);
@@ -201,10 +207,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const campusPois=(city?.campus?.pois||[]).map(p=>({id:'campus:'+p.id,geometry:{type:'Point',coordinates:p.coordinates},properties:{...p.tags,class:p.tags.amenity||p.tags.building||p.tags.office}}));
     const pois=readCityPois([...campusPois,...map.querySourceFeatures('openmaptiles',{sourceLayer:'poi'})],center).filter((p,i,all)=>!all.slice(0,i).some(q=>q.name===p.name&&metersBetween(q.coordinates,p.coordinates)<60));
     if(!options.dimensional||map.getZoom()<15.5){if(scene.children.length)clear();lastCenter=undefined;onStatus({buildings:0,windows:0,signs:0,pois,street:''});return;}
+    if(campus&&!requestedCampusLighting){
+      requestedCampusLighting=true;
+      new HDRLoader().loadAsync('/materials/kloofendal_48d_partly_cloudy_1k.hdr').then(texture=>{
+        if(disposed){texture.dispose();return;}
+        pendingHDR=texture;map.triggerRepaint();
+      }).catch(()=>{/* Daylight shading remains available if the optional lighting asset fails. */});
+    }
     const features=cityBuildingFeatures(map);
     const key=features.map(f=>f.id).join(',')+'|'+pois.map(p=>p.id).sort().join(',');
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
-    force=false;lastCenter=center;lastKey=key;clear();
+    force=false;lastCenter=center;lastKey=key;clear();colors.clear();
     const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),lawns=batch(),sand=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),shelterGlass=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
@@ -765,7 +778,6 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     onAdd(_map,gl){renderer=new WebGLRenderer({canvas:map.getCanvas(),context:gl as WebGL2RenderingContext});renderer.autoClear=false;renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFShadowMap;renderer.shadowMap.autoUpdate=false;
       const shadows=renderer.shadowMap,shadowPass=shadows.render.bind(shadows);
       shadows.render=(lights,s,c)=>{if(!shadows.enabled||(!shadows.autoUpdate&&!shadows.needsUpdate))return;withShadowDepthRange(gl as WebGL2RenderingContext,()=>shadowPass(lights,s,c));};
-      new HDRLoader().loadAsync('/materials/kloofendal_48d_partly_cloudy_1k.hdr').then(texture=>{if(disposed){texture.dispose();return;}pendingHDR=texture;map.triggerRepaint();}).catch(()=>{/* Daylight shading remains available if the optional lighting asset fails. */});
       schedule();loadCityModel().then(model=>{if(disposed){model?.dispose();return;}cityModel=model;force=true;schedule();}).catch(()=>{/* Keep the procedural street fallback when an asset fails. */});},
     render(_gl,args){
       if(!renderer||!options.dimensional||map.getZoom()<15.5)return;

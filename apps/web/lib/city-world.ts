@@ -24,11 +24,14 @@ export function terrainHeight(lon:number,lat:number,data=world):number|null{
 }
 export function loadCityWorld(){
  return pending??=(async()=>{
-  const response=await fetch('/city/montbeliard.json');if(!response.ok)throw Error('Données IGN indisponibles.');
+  const [response,streets,model,campusTerrain,campusMap]=await Promise.all([
+   fetch('/city/montbeliard.json'),fetch('/city/osm-streets.json'),fetch('/city/osm2world-manifest.json'),
+   fetch('/city/campus-portes-du-jura.json'),fetch('/city/campus-osm.json'),
+  ]);
+  if(!response.ok)throw Error('Données IGN indisponibles.');
   const data=await response.json() as CityWorld;
-  const streets=await fetch('/city/osm-streets.json');if(streets.ok)data.streets=await streets.json();
-  const model=await fetch('/city/osm2world-manifest.json');if(model.ok)data.model=await model.json();
-  const [campusTerrain,campusMap]=await Promise.all([fetch('/city/campus-portes-du-jura.json'),fetch('/city/campus-osm.json')]);
+  if(streets.ok)data.streets=await streets.json();
+  if(model.ok)data.model=await model.json();
   if(campusTerrain.ok&&campusMap.ok){
    const patch=await campusTerrain.json() as CityWorld,campus=await campusMap.json() as CampusData;
    if(patch.size<2||patch.heights.length!==patch.size*patch.size)throw Error('Terrain du campus invalide.');

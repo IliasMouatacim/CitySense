@@ -63,7 +63,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   handlers.forEach(h=>h.disable());map.stop();map.setCenterClampedToGround(false);map.setMaxPitch(135);map.setMaxZoom(24);map.setVerticalFieldOfView(72);
   map.setPixelRatio(Math.min(pixelRatio,1.25));
   for(const layer of symbolLayers)map.setLayoutProperty(layer.id,'visibility','none');
-  const resized=()=>{dirty=true;};map.on('resize',resized);
+  const resized=()=>{dirty=true;wake();};map.on('resize',resized);
   const originalTouchAction=canvas.style.touchAction,originalLabel=canvas.getAttribute('aria-label');canvas.setAttribute('aria-label','Scène de marche : ZQSD ou WASD pour marcher, flèches pour tourner, Échap pour quitter.');canvas.style.touchAction='none';canvas.focus({preventScroll:true});
   function applyCamera(){
     const radians=pitch*Math.PI/180,heading=bearing*Math.PI/180,horizontal=30*Math.sin(radians);
@@ -74,7 +74,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   }
   function focusPlace(event:{coordinates?:Position;pitch?:number}){
     const target=event.coordinates;if(!target||!target.every(Number.isFinite))return;
-    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=Number.isFinite(event.pitch)?Math.max(60,Math.min(135,event.pitch!)):87;dirty=true;
+    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=Number.isFinite(event.pitch)?Math.max(60,Math.min(135,event.pitch!)):87;dirty=true;wake();
   }
   map.on('citysense-look-at',focusPlace);
   function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,fov:map.getVerticalFieldOfView(),meters,blocked:collision,boundary,locked,ground:walkingGroundHeight(position),cameraTarget:map.getCameraTargetElevation(),eye,pixelRatio:map.getPixelRatio()});}
@@ -85,7 +85,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     if(typing(event.target)){clear();return;}
     if(event.code==='Escape'){event.preventDefault();onExit();return;}
     if(!keyCodes.includes(event.code))return;
-    event.preventDefault();if(!keys.size)last=performance.now();keys.add(event.code);
+    event.preventDefault();keys.add(event.code);wake();
   }
   function keyUp(event:KeyboardEvent){keys.delete(event.code);}
   function focusIn(event:FocusEvent){if(typing(event.target))clear();}
@@ -93,7 +93,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function pause(event:{paused?:boolean}){paused=Boolean(event.paused);clear();}
   map.on('citysense-walk-pause',pause);
   function hidden(){if(document.hidden)clear();}
-  function look(dx:number,dy:number){bearing+=dx*.13;pitch=Math.max(60,Math.min(135,pitch-dy*.12));dirty=true;}
+  function look(dx:number,dy:number){bearing+=dx*.13;pitch=Math.max(60,Math.min(135,pitch-dy*.12));dirty=true;wake();}
   let drag:{id:number;x:number;y:number}|null=null;
   function down(e:PointerEvent){if(e.button!==0||document.pointerLockElement===canvas)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});}
   function move(e:PointerEvent){if(document.pointerLockElement===canvas||!drag||drag.id!==e.pointerId)return;e.preventDefault();look(e.clientX-drag.x,e.clientY-drag.y);drag={id:e.pointerId,x:e.clientX,y:e.clientY};}
@@ -104,17 +104,24 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function idleGeometry(){if(performance.now()-geometryTime<750)return;geometryTime=performance.now();refreshGeometry();}
   function sourceData(event:{sourceId?:string}){if(event.sourceId!=='openmaptiles'||geometryQueued||performance.now()-geometryTime<750)return;geometryQueued=true;queueMicrotask(()=>{if(disposed)return;geometryQueued=false;geometryTime=performance.now();refreshGeometry();});}
   const held=(...codes:string[])=>codes.some(code=>keys.has(code));
+  function wake(){
+    if(disposed||frame)return;
+    last=performance.now();
+    frame=requestAnimationFrame(tick);
+  }
   function tick(now:number){
+    frame=0;
     const seconds=(now-last)/1000,timing=walkFrame(seconds);last=now;
-    // Bound GPU fill cost on high-DPI displays and struggling devices. Geometry
-    // and camera coordinates remain unchanged; restore the user's ratio on exit.
-    slowTime=seconds>1/28?slowTime+Math.min(seconds,1):Math.max(0,slowTime-seconds);
-    if(slowTime>2&&map.getPixelRatio()>.75){map.setPixelRatio(Math.max(.75,map.getPixelRatio()-.25));slowTime=0;dirty=true;}
-    const before=meters;
     const turn=Number(held('ArrowRight','touch:turnRight'))-Number(held('ArrowLeft','touch:turnLeft'));
-    if(turn&&!paused){bearing+=turn*85*timing.elapsed;dirty=true;}
     const forward=Number(held('KeyW','KeyZ','ArrowUp','touch:forward'))-Number(held('KeyS','ArrowDown','touch:back'));
     const strafe=Number(held('KeyD','touch:right'))-Number(held('KeyA','KeyQ','touch:left'));
+    const active=!paused&&Boolean(turn||forward||strafe);
+    // Bound GPU fill cost on high-DPI displays and struggling devices. Geometry
+    // and camera coordinates remain unchanged; restore the user's ratio on exit.
+    slowTime=active&&seconds>1/28?slowTime+Math.min(seconds,1):Math.max(0,slowTime-seconds);
+    if(slowTime>2&&map.getPixelRatio()>.75){map.setPixelRatio(Math.max(.75,map.getPixelRatio()-.25));slowTime=0;dirty=true;}
+    const before=meters;
+    if(turn&&!paused){bearing+=turn*85*timing.elapsed;dirty=true;}
     collision=false;boundary=false;
     if(!paused&&(forward||strafe)){
       const speed=sprintMode||held('ShiftLeft','ShiftRight')?RUN_SPEED:WALK_SPEED;
@@ -123,23 +130,27 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
         if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blocked(next,obstacles,bridges)){
           const resolved=physics?physics.move(position,next):next;
           collision=movementStopped(position,next,resolved);
-          meters+=distance(position,resolved);position=resolved;dirty=true;
+          if(resolved[0]!==position[0]||resolved[1]!==position[1]){
+            meters+=distance(position,resolved);position=resolved;dirty=true;
+          }
         }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);break;}
       }
     }
     const nextBob=!reducedMotion.matches&&meters>before?walkBob(meters):bob*Math.exp(-timing.elapsed*12);
-    if(Math.abs(nextBob-bob)>.0001){bob=nextBob;dirty=true;}
+    const settledBob=Math.abs(nextBob)<.0001?0:nextBob;
+    if(settledBob!==bob){bob=settledBob;dirty=true;}
     if(dirty){applyCamera();dirty=false;}
-    if(now-reported>150){status();reported=now;}
-    frame=requestAnimationFrame(tick);
+    const animating=active||bob!==0;
+    if(!animating||now-reported>150){status();reported=now;}
+    if(animating&&!frame&&!disposed)frame=requestAnimationFrame(tick);
   }
   window.addEventListener('focusin',focusIn);window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);document.addEventListener('mousemove',lockedMove);document.addEventListener('pointerlockchange',lockChange);
   canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);map.on('sourcedata',sourceData);map.on('idle',idleGeometry);
   const controller={
-    press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){if(!keys.size)last=performance.now();keys.add('touch:'+action);}else keys.delete('touch:'+action);},
+    press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){keys.add('touch:'+action);wake();}else keys.delete('touch:'+action);},
     look,
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
-    reset(){clear();sprintMode=false;bob=0;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;},
+    reset(){clear();sprintMode=false;bob=0;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
     dispose(){
       if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);map.off('idle',idleGeometry);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
       window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
@@ -148,6 +159,6 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
       try{for(const layer of symbolLayers)if(map.getLayer(layer.id))map.setLayoutProperty(layer.id,'visibility',layer.visibility);map.setCenterClampedToGround(centerClamped);map.setVerticalFieldOfView(verticalFov);map.setPixelRatio(pixelRatio);map.jumpTo(saved);map.setMaxPitch(maxPitch);map.setMaxZoom(maxZoom);handlers.forEach((h,i)=>{if(enabled[i])h.enable();});}catch{/* Map may already be removed during page teardown. */}
     }
   };
-  try{applyCamera();status();frame=requestAnimationFrame(tick);}catch(error){controller.dispose();throw error;}
+  try{applyCamera();dirty=false;status();}catch(error){controller.dispose();throw error;}
   return controller;
 }

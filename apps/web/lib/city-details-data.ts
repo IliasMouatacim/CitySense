@@ -40,18 +40,28 @@ export function mappedHeight(properties:Record<string,unknown>) {
 }
 export function nearbyFootprints(features:Feature[],center:[number,number],radius:number) {
   const seen=new Set<string>();
-  return features.filter(feature=>!feature.properties?.hide_3d).flatMap(feature=>{
+  const nearby:{feature:Feature;polygon:number[][][];distance:number;signature:string}[]=[];
+  for(const feature of features){
+    if(feature.properties?.hide_3d)continue;
     const g=feature.geometry;
     const polygons=(g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[]) as number[][][][];
-    return polygons.map(polygon=>{
+    for(const polygon of polygons){
       const ring=polygon[0];
-      const midpoint=ring?.length?ring.reduce((s,p)=>[s[0]+p[0]/ring.length,s[1]+p[1]/ring.length],[0,0]):[0,0];
-      return {feature,polygon,distance:metersBetween(center,midpoint),signature:JSON.stringify(polygon)};
-    });
-  }).filter(f=>{
-    if(f.distance>=radius||seen.has(f.signature))return false;
-    seen.add(f.signature);return true;
-  }).sort((a,b)=>a.distance-b.distance);
+      if(!ring?.length)continue;
+      const midpoint=[0,0];
+      for(const point of ring){
+        midpoint[0]+=point[0]/ring.length;
+        midpoint[1]+=point[1]/ring.length;
+      }
+      const distance=metersBetween(center,midpoint);
+      if(distance>=radius)continue;
+      const signature=JSON.stringify(polygon);
+      if(seen.has(signature))continue;
+      seen.add(signature);
+      nearby.push({feature,polygon,distance,signature});
+    }
+  }
+  return nearby.sort((a,b)=>a.distance-b.distance);
 }
 // Tile rings can have either winding. Keep lettering readable from the exterior.
 export function outwardUv(uv:number[][],dx:number,dy:number,normal:number[]) {
