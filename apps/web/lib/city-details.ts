@@ -6,7 +6,7 @@ import {HDRLoader} from 'three/addons/loaders/HDRLoader.js';
 import {readCityPois,mappedHeight,stableVariant,metersBetween,nearbyFootprints,outwardUv,outwardWallOrder,type CityPoi} from './city-details-data';
 import type {SceneMood} from './city-scene';
 import {roofPhotoRequest} from './photo-city';
-import {cityBuildingFeatures,getCityWorld,inMontbeliard,municipalTerrainVertices,terrainHeight} from './city-world';
+import {changedBaseTiles,cityBuildingFeatures,getCityWorld,inMontbeliard,municipalTerrainVertices,terrainHeight} from './city-world';
 import {loadCityModel} from './city-model';
 import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
 import {campusProfile,campusFace} from './campus-references';
@@ -57,6 +57,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   let environment:WebGLRenderTarget|undefined,pendingHDR:Texture|undefined,skyHDR:Texture|undefined,sky:Mesh<SphereGeometry,MeshBasicMaterial>|undefined,campusLighting=false;
   let requestedCampusLighting=false;
   const sharedTarget=new WebGLRenderTarget(1,1);Object.assign(sharedTarget,{isXRRenderTarget:true});sharedTarget.texture.colorSpace=SRGBColorSpace;
+  let requestedCityModel=false;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
@@ -249,6 +250,14 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const campusPois=(city?.campus?.pois||[]).map(p=>({id:'campus:'+p.id,geometry:{type:'Point',coordinates:p.coordinates},properties:{...p.tags,class:p.tags.amenity||p.tags.building||p.tags.office}}));
     const pois=readCityPois([...campusPois,...map.querySourceFeatures('openmaptiles',{sourceLayer:'poi'})],center).filter((p,i,all)=>!all.slice(0,i).some(q=>q.name===p.name&&metersBetween(q.coordinates,p.coordinates)<60));
     if(!modelVisible){if(scene.children.length)clear();lastCenter=undefined;onStatus({buildings:0,windows:0,signs:0,pois,street:''});return;}
+    if(!campus&&city?.model?.url&&!requestedCityModel){
+      requestedCityModel=true;
+      loadCityModel().then(model=>{
+        if(disposed){model?.dispose();return;}
+        cityModel=model;
+        if(model&&!campusLighting){force=true;schedule();}
+      }).catch(()=>{/* Keep procedural streets if the town-centre asset fails. */});
+    }
     if(campus&&!requestedCampusLighting){
       requestedCampusLighting=true;
       new HDRLoader().loadAsync('/materials/kloofendal_48d_partly_cloudy_1k.hdr').then(texture=>{
@@ -888,7 +897,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     onAdd(_map,gl){renderer=new WebGLRenderer({canvas:map.getCanvas(),context:gl as WebGL2RenderingContext});renderer.autoClear=false;renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFShadowMap;renderer.shadowMap.autoUpdate=false;
       const shadows=renderer.shadowMap,shadowPass=shadows.render.bind(shadows);
       shadows.render=(lights,s,c)=>{if(!shadows.enabled||(!shadows.autoUpdate&&!shadows.needsUpdate))return;withShadowDepthRange(gl as WebGL2RenderingContext,()=>shadowPass(lights,s,c));};
-      schedule();loadCityModel().then(model=>{if(disposed){model?.dispose();return;}cityModel=model;force=true;schedule();}).catch(()=>{/* Keep the procedural street fallback when an asset fails. */});},
+      schedule();},
     render(_gl,args){
       if(!renderer||!options.dimensional||map.getZoom()<15.5)return;
       const gl=_gl as WebGL2RenderingContext,framebuffer=gl.getParameter(gl.FRAMEBUFFER_BINDING) as WebGLFramebuffer|null,viewport=gl.getParameter(gl.VIEWPORT) as Int32Array;
@@ -928,8 +937,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       map.off('moveend',scheduleMovement);map.off('sourcedata',source);map.off('citysense-walk-position',locate);clear();renderer?.dispose();
     }
   };
-  function source(event:{sourceId?:string;isSourceLoaded?:boolean}){
-    if(event.sourceId==='openmaptiles'&&event.isSourceLoaded)schedule();
+  function source(event:Parameters<typeof changedBaseTiles>[0]){
+    if(changedBaseTiles(event))schedule();
   }
   const layers=map.getStyle().layers;
   const lastBuilding=layers.findLastIndex(l=>l.type==='fill-extrusion');

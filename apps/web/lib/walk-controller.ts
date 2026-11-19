@@ -1,6 +1,6 @@
 import {LngLat,type Map} from 'maplibre-gl';
 import {advance,blocked,distance,movementStopped,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
-import {cityBuildingFeatures,getCityWorld} from './city-world';
+import {changedBaseTiles,cityBuildingFeatures,getCityWorld} from './city-world';
 import type {createCityPhysics} from './city-physics';
 import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED,walkBob} from './walk-settings';
 import {walkingGroundHeight} from './walking-ground';
@@ -19,29 +19,44 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   let disposed=false;
   let paused=false;
   let obstacles:Obstacle[]=[],bridges:number[][][]=[],roads:{line:number[][];priority:number}[]=[];
-  function refreshGeometry(){
+  const obstacleCache=new WeakMap<number[][][],Obstacle>();
+  let neighborhood:Position|undefined,nearbyObstacles:Obstacle[]=[];
+  function blockedWhileWalking(point:Position){
+    if(!neighborhood||distance(point,neighborhood)>20){
+      neighborhood=point;
+      // The 25 m square includes the avatar probes throughout the 20 m reuse radius.
+      const southwest=offset(point,-25,-25),northeast=offset(point,25,25);
+      nearbyObstacles=obstacles.filter(({bounds:[w,s,e,n]})=>e>=southwest[0]&&w<=northeast[0]&&n>=southwest[1]&&s<=northeast[1]);
+    }
+    return blocked(point,nearbyObstacles,bridges);
+  }
+  function refreshGeometry(collectSpawnRoads=false){
     if(disposed)return;
-    obstacles=[];bridges=[];roads=[];
+    obstacles=[];bridges=[];neighborhood=undefined;
     for(const sourceLayer of ['building','water']){
       for(const feature of sourceLayer==='building'?cityBuildingFeatures(map):map.querySourceFeatures('openmaptiles',{sourceLayer})){
         if(sourceLayer==='building'&&feature.properties?.walkUnder===true)continue;
         const g=feature.geometry;
-        if(g.type==='Polygon')obstacles.push(makeObstacle(g.coordinates,sourceLayer==='building'?'building':'water'));
-        if(g.type==='MultiPolygon')for(const rings of g.coordinates)obstacles.push(makeObstacle(rings,sourceLayer==='building'?'building':'water'));
+        const polygons=g.type==='Polygon'?[g.coordinates]:g.type==='MultiPolygon'?g.coordinates:[];
+        for(const rings of polygons){
+          let obstacle=obstacleCache.get(rings);
+          if(!obstacle){obstacle=makeObstacle(rings,sourceLayer==='building'?'building':'water');obstacleCache.set(rings,obstacle);}
+          obstacles.push(obstacle);
+        }
       }
     }
     for(const feature of map.querySourceFeatures('openmaptiles',{sourceLayer:'transportation'})){
       const p=feature.properties||{};if(['motorway','trunk','rail','transit'].includes(p.class))continue;
       const g=feature.geometry,lines=g.type==='LineString'?[g.coordinates]:g.type==='MultiLineString'?g.coordinates:[];
-      for(const line of lines){if(line.length<2)continue;roads.push({line,priority:['path','pedestrian','footway'].includes(p.class)?0:8});if(p.brunnel==='bridge')bridges.push(line);}
+      for(const line of lines){if(line.length<2)continue;if(collectSpawnRoads)roads.push({line,priority:['path','pedestrian','footway'].includes(p.class)?0:8});if(p.brunnel==='bridge')bridges.push(line);}
     }
     const streets=getCityWorld()?.streets;
     if(streets){
-      roads=streets.roads.filter(r=>!['motorway','trunk','steps','construction','proposed'].includes(r.tags.highway)&&r.tags.access!=='private').map(r=>({line:r.coordinates,priority:['path','pedestrian','footway'].includes(r.tags.highway)?0:8}));
+      if(collectSpawnRoads)roads=streets.roads.filter(r=>!['motorway','trunk','steps','construction','proposed'].includes(r.tags.highway)&&r.tags.access!=='private').map(r=>({line:r.coordinates,priority:['path','pedestrian','footway'].includes(r.tags.highway)?0:8}));
       for(const road of streets.roads)if(road.tags.bridge==='yes')bridges.push(road.coordinates);
     }
   }
-  refreshGeometry();
+  refreshGeometry(true);
   const candidates=roads.map(road=>({point:nearestOnLine(origin,road.line),priority:road.priority,line:road.line})).filter(c=>withinPilot(c.point)&&(!physics||physics.height(c.point)!==null)&&distance(origin,c.point)<250&&!blocked(c.point,obstacles,bridges)).sort((a,b)=>distance(origin,a.point)+a.priority-distance(origin,b.point)-b.priority);
   if(!candidates.length)throw new Error('Les rues ne sont pas encore chargées. Attendez un instant puis réessayez.');
   const angleDifference=(a:number,b:number)=>Math.abs(((a-b+540)%360)-180);
@@ -59,7 +74,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   }
   if(!chosen)throw new Error('Aucun départ dégagé trouvé dans ces rues. Essayez le point de vue Centre historique.');
   const spawn=chosen.point,streetBearing=chosen.heading;
-  let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,geometryTime=0,frame=0,bob=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
+  let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,frame=0,bob=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
   const keys=new Set<string>();let sprintMode=false;
   handlers.forEach(h=>h.disable());map.stop();map.setCenterClampedToGround(false);map.setMaxPitch(135);map.setMaxZoom(24);map.setVerticalFieldOfView(72);
   map.setPixelRatio(Math.min(pixelRatio,1.25));
@@ -101,9 +116,11 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   function up(){drag=null;}
   function lockedMove(e:MouseEvent){if(document.pointerLockElement===canvas)look(e.movementX,e.movementY);}
   function lockChange(){locked=document.pointerLockElement===canvas;if(wasLocked&&!locked){onExit();return;}wasLocked=locked;status();}
-  let geometryQueued=false;
-  function idleGeometry(){if(performance.now()-geometryTime<750)return;geometryTime=performance.now();refreshGeometry();}
-  function sourceData(event:{sourceId?:string}){if(event.sourceId!=='openmaptiles'||geometryQueued||performance.now()-geometryTime<750)return;geometryQueued=true;queueMicrotask(()=>{if(disposed)return;geometryQueued=false;geometryTime=performance.now();refreshGeometry();});}
+  let geometryTimer:ReturnType<typeof setTimeout>|undefined;
+  function sourceData(event:Parameters<typeof changedBaseTiles>[0]){
+    if(!changedBaseTiles(event)||geometryTimer!==undefined)return;
+    geometryTimer=setTimeout(()=>{geometryTimer=undefined;refreshGeometry();},200);
+  }
   const held=(...codes:string[])=>codes.some(code=>keys.has(code));
   function wake(){
     if(disposed||frame)return;
@@ -128,7 +145,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
       const speed=sprintMode||held('ShiftLeft','ShiftRight')?RUN_SPEED:WALK_SPEED;
       for(let step=0;step<timing.steps;step++){
         const next=advance(position,bearing,forward,strafe,speed*timing.step);
-        if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blocked(next,obstacles,bridges)){
+        if(withinPilot(next)&&(!physics||physics.height(next)!==null)&&!blockedWhileWalking(next)){
           const resolved=physics?physics.move(position,next):next;
           collision=movementStopped(position,next,resolved);
           if(resolved[0]!==position[0]||resolved[1]!==position[1]){
@@ -146,14 +163,14 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     if(animating&&!frame&&!disposed)frame=requestAnimationFrame(tick);
   }
   window.addEventListener('focusin',focusIn);window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);document.addEventListener('mousemove',lockedMove);document.addEventListener('pointerlockchange',lockChange);
-  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);map.on('sourcedata',sourceData);map.on('idle',idleGeometry);
+  canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);map.on('sourcedata',sourceData);
   const controller={
     press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){keys.add('touch:'+action);wake();}else keys.delete('touch:'+action);},
     look,
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
     reset(){clear();sprintMode=false;bob=0;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
     dispose(){
-      if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);map.off('idle',idleGeometry);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
+      if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
       window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();

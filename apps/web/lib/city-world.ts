@@ -79,6 +79,10 @@ export function loadCityWorld(){
   world=data;return data;
  })().catch(error=>{pending=undefined;throw error;});
 }
+// MapLibre emits a tile payload on tile completion and "content" on source replacement.
+export function changedBaseTiles(event:{sourceId?:string;sourceDataType?:string;tile?:unknown}){
+ return event.sourceId==='openmaptiles'&&(Boolean(event.tile)||event.sourceDataType==='content');
+}
 export async function installCityWorld(map:Map){
  const data=await loadCityWorld();
  if(map.getSource(CITY_BUILDINGS))return;
@@ -89,7 +93,7 @@ export async function installCityWorld(map:Map){
  map.addLayer({id:'citysense-ign-solid',type:'fill-extrusion',source:CITY_BUILDINGS,paint:{'fill-extrusion-height':['get','render_height'],'fill-extrusion-base':['get','render_min_height'],'fill-extrusion-color':'#cfc1aa','fill-extrusion-opacity':1}},layers.slice(last+1).find(l=>l.type==='symbol')?.id);
  map.addLayer({id:'citysense-outside-solid',type:'fill-extrusion',source:'citysense-outside-buildings',paint:{'fill-extrusion-height':['get','render_height'],'fill-extrusion-base':['get','render_min_height'],'fill-extrusion-color':'#cfc1aa','fill-extrusion-opacity':1}},'citysense-ign-solid');
  let timer:ReturnType<typeof setTimeout>|undefined,disposed=false;
- const refresh=(event:{sourceId?:string;isSourceLoaded?:boolean})=>{if(event.sourceId!=='openmaptiles'||!event.isSourceLoaded||timer||disposed)return;timer=setTimeout(()=>{timer=undefined;if(!disposed)(map.getSource('citysense-outside-buildings') as GeoJSONSource)?.setData(outside());},300);};
+ const refresh=(event:Parameters<typeof changedBaseTiles>[0])=>{if(!changedBaseTiles(event)||timer||disposed)return;timer=setTimeout(()=>{timer=undefined;if(!disposed)(map.getSource('citysense-outside-buildings') as GeoJSONSource)?.setData(outside());},300);};
  map.on('sourcedata',refresh);map.once('remove',()=>{disposed=true;if(timer)clearTimeout(timer);map.off('sourcedata',refresh);});
 }
 export function inMontbeliard(point:number[]){
