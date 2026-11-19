@@ -35,8 +35,55 @@ function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:C
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
- if(face.layout==='garden-b'||face.layout==='garden-c'){
-  const isC=face.layout==='garden-c',wall='#eeeae0',frame='#344b4c';
+ if(face.layout==='garden-b'||face.layout==='garden-b-return'){
+  const garden=face.layout==='garden-b',wall='#eeeee8',frame='#344b4c';
+  const cornerWidth=garden?length*.39:Math.min(4.2,length*.32);
+  const corner=garden?length-cornerWidth/2:cornerWidth/2;
+  draw.panel(length/2,length,.035,height-.12,wall,.08);
+  // Both surveyed edges meet at the white corner. Align the large fixed
+  // lights and their high transom across it at the same elevations.
+  const sill=height*.39,head=height*.72,transom=head-(head-sill)*.23;
+  draw.panel(corner,cornerWidth,sill,head,frame,.15);
+  const panes=garden?1:2;
+  for(let i=0;i<panes;i++){
+   const x=corner-cornerWidth/2+(i+.5)*cornerWidth/panes,w=cornerWidth/panes-.08;
+   if(draw.glazing)draw.glazing(x,w,sill+.055,head-.065,.166,'fixed');
+   else draw.panel(x,w,sill+.055,head-.065,'#607778',.166);
+  }
+  draw.box(corner,cornerWidth,transom,transom+.09,frame,.24,.16);
+  draw.box(corner,cornerWidth,sill-.06,sill,frame,.23,.085);
+  const upper=height*.845;
+  pane(length/2,length-.22,upper,height*.94,.14);
+  if(garden){
+   for(const t of [.20,.65])draw.box(length*t,.16,upper-.03,height*.94,'#963f40',.30,.09);
+   const at=length*.36,span=length*.60,ceiling=height*.30;
+   draw.panel(at,span,.06,ceiling,frame,.14);
+   for(let i=0;i<3;i++)pane(at+span*((i+.5)/3-.5),span/3-.10,.14,ceiling-.15,.16);
+   draw.box(at,span+.22,ceiling,ceiling+.27,'#b3b6aa',.98,.04);
+   draw.box(at,span+.16,ceiling-.06,ceiling,'#743635',.975,.045);
+   for(const side of [-1,1]){
+    const x=at+side*(span/2-.29),depth=.74,radius=.17;
+    if(draw.column)draw.column(x,depth,radius,.03,ceiling-.06,frame);
+    else draw.box(x,radius*2,.03,ceiling-.06,frame,depth+radius,depth-radius);
+   }
+  }else{
+   // The near end in the garden photo is solid around the plaque and
+   // punched window. Continue the mapped classroom bands beyond that bay.
+   const z=height*.155;
+   const small=cornerWidth*.77;
+   draw.panel(small,.93,z-.50,z+.49,frame,.12);
+   if(draw.glazing)draw.glazing(small,.82,z-.445,z+.435,.14,'fixed');
+   else draw.panel(small,.82,z-.445,z+.435,'#4a6263',.14);
+   draw.box(small,.99,z-.55,z-.49,frame,.23,.10);
+   const rest=length-cornerWidth-.5,bays=Math.max(1,Math.round(rest/1.85));
+   for(const [lo,hi] of [[.055,.255],[.395,.585]])for(let i=0;i<bays;i++){
+    pane(cornerWidth+.30+(i+.5)*rest/bays,rest/bays-.09,height*lo,height*hi,.13);
+   }
+  }
+  return true;
+ }
+ if(face.layout==='garden-c'){
+  const wall='#eeeae0',frame='#344b4c';
   const front=height*.30,upper=height*.82;
   draw.panel(length/2,length,.035,height-.12,wall,.055);
   const bays=Math.max(3,Math.round(length/1.55)),pitch=(length-.20)/bays;
@@ -45,21 +92,21 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
    pane(.10+(i+.5)*pitch,pitch-.08,upper,height*.94,.13);
    if(i%3===0)draw.box(.16+i*pitch,.14,upper-.03,height*.94,'#963f40',.32,.06);
   }
-  const entrance=length*(isC?.70:.35),span=length*.48;
+  const entrance=length*.70,span=length*.48;
   draw.panel(entrance,span,.06,front,frame,.15);
   for(let i=0;i<4;i++)pane(entrance+span*((i+.5)/4-.5),span/4-.11,.15,front-.16,.21);
   draw.box(entrance,span+.22,front,front+.18,'#b5b3a9',.95,.035);
   draw.box(entrance,span+.16,front-.07,front,'#7a3738',.94,.04);
   for(const side of [-1,1])draw.box(entrance+side*(span/2-.19),.26,.03,front,frame,.91,.65);
-  const windowAt=length*(isC?.45:.76),width=length*(isC?.22:.40);
+  const windowAt=length*.45,width=length*.22;
   pane(windowAt,width,height*.40,height*.65,.13);
-  if(isC)draw.panel(windowAt+width*.36,width*.24,height*.42,height*.64,'#ab5149',.25);
-  const accent=length*(isC?.19:.14);
-  draw.panel(accent,.46,height*.43,height*.43+.50,isC?'#a88f38':'#345448',.14);
-  const sign=length*(isC?.39:.67);
+  draw.panel(windowAt+width*.36,width*.24,height*.42,height*.64,'#ab5149',.25);
+  const accent=length*.19;
+  draw.panel(accent,.46,height*.43,height*.43+.50,'#a88f38',.14);
+  const sign=length*.39;
   draw.panel(sign,1.05,1.52,2.52,wall,.26);
   draw.panel(sign,.96,1.77,2.27,'#434951',.28);
-  draw.lettering(isC?'BÂTIMENT C':'BÂTIMENT B',sign,.90,1.85,2.18,false,.29,'#ffffff');
+  draw.lettering('BÂTIMENT C',sign,.90,1.85,2.18,false,.29,'#ffffff');
   for(const [i,color] of ['#52a356','#287a90','#d04752','#81649b','#d59444'].entries()){
    draw.panel(sign-.38+i*.17,.14,2.30,2.46,color,.28);
   }

@@ -241,7 +241,8 @@ test('observed campus facade geometry stays finite and within its envelope at re
     assert.ok([at,width,bottom,top,front,back].every(Number.isFinite));assert.ok(width>0&&width<=length+.4);
     assert.ok(at-width/2>=-.3&&at+width/2<=length+.3);
     assert.ok(bottom>=0&&bottom<top&&top<=height+.15,`${profile.label}: ${bottom}..${top}`);
-    assert.match(color,/^#[0-9a-f]{6}$/i);assert.ok(front>=0&&front<(face.layout==='amphi-front'?7:1));
+    const maxProjection=face.layout==='amphi-front'?7:face.courtyardFeature==='stgi-entry'?1.52:1;
+    assert.match(color,/^#[0-9a-f]{6}$/i);assert.ok(front>=0&&front<maxProjection);
    }
    panes+=drawCampusFacade(face,length,height,{panel:check,box:(...args)=>{solidTrim++;check(...args);},lettering:(text,at,width,bottom,top)=>{assert.ok(text.length>0);check(at,width,bottom,top,'#ffffff');}});
   }
@@ -446,4 +447,29 @@ test('courtyard landmarks are registered once and stay on their measured walls',
   expected.delete(kind);
  }
  assert.equal(expected.size,0);
+});
+
+test('Bâtiment B corner windows align across the photographed garden elevations',()=>{
+ const faces=campusReferences.buildings.flatMap(building=>building.faces);
+ const garden=faces.find(face=>face.layout==='garden-b')!;
+ const end=faces.find(face=>face.layout==='garden-b-return')!;
+ assert.deepEqual(garden.b,end.a);
+ const height=10.8;
+ for(const face of [garden,end]){
+  const length=metersBetween(face.a,face.b),cornerLights:number[][]=[],columns:number[][]=[];
+  drawCampusFacade(face,length,height,{
+   panel:()=>{},box:()=>{},lettering:()=>{},
+   glazing:(x,w,bottom,top,_depth,kind)=>{if(kind==='fixed'&&top>height*.7)cornerLights.push([x,w,bottom,top]);},
+   column:(at,depth,radius,bottom,top)=>columns.push([at,depth,radius,bottom,top]),
+  });
+  assert.equal(cornerLights.length,face===garden?1:2);
+  for(const light of cornerLights){
+   assert.equal(light[2],height*.39+.055);
+   assert.equal(light[3],height*.72-.065);
+  }
+  const edge=face===garden?cornerLights.at(-1)!:cornerLights[0];
+  const cornerGap=face===garden?length-edge[0]-edge[1]/2:edge[0]-edge[1]/2;
+  assert.ok(cornerGap>=0&&cornerGap<.05);
+  assert.equal(columns.length,face===garden?2:0);
+ }
 });

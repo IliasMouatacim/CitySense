@@ -526,7 +526,7 @@
           ],
           "kind": "ribbon",
           "floors": 3,
-          "layout": "stgi-ribbon",
+          "layout": "garden-b-return",
           "glazingBands": [
             [
               0.055,

@@ -205,6 +205,31 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(!texture){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#e7e3d7';ctx.fillRect(0,0,512,96);ctx.fillStyle='#242633';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='600 33px sans-serif';ctx.fillText(text,256,48,490);texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);}
     const sign=batch();panel(sign,wall,at,width,wall.base+3.05,wall.base+3.55,'#ffffff',.5,[[0,0],[1,0],[1,1],[0,1]]);mesh(sign,texture);
   }
+  function gardenBuildingBPlaque(wall:Wall){
+    const key='garden-building-b-plaque';
+    let texture=materials.get(key);
+    if(!texture){
+      const canvas=document.createElement('canvas');canvas.width=256;canvas.height=288;
+      const ctx=canvas.getContext('2d')!;
+      ctx.fillStyle='#f3f2ed';ctx.fillRect(0,0,256,288);
+      const colors=['#498d88','#77a649','#e1a935','#cb5349','#af295b'];
+      const circle=(x:number,y:number,r:number,color:string)=>{
+        ctx.fillStyle=color;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      };
+      colors.forEach((color,i)=>circle(8+i*41,21+(i%2)*9,34,color));
+      circle(15,19,10,'#f3f2ed');circle(173,22,9,'#f3f2ed');
+      ctx.fillStyle='#41454b';ctx.fillRect(0,80,256,135);
+      ctx.fillStyle='#faf9f4';ctx.font='30px sans-serif';ctx.fillText('BÂTIMENT',13,157);
+      ctx.font='bold 42px sans-serif';ctx.fillText('B',198,158);
+      colors.forEach((color,i)=>circle(15+i*24,254,7,color));
+      ctx.fillStyle='#45494d';ctx.font='bold 32px sans-serif';ctx.fillText('STGI',147,265);
+      texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);
+    }
+    const sign=batch(),at=Math.min(4.2,wall.length*.32)*.22;
+    const z=wall.base+(wall.height-wall.base)*.155;
+    panel(sign,wall,at,.84,z-.48,z+.48,'#ffffff',.18,[[0,0],[1,0],[1,1],[0,1]]);
+    mesh(sign,texture);
+  }
   function gardenWindowArt(wall:Wall){
     // Approximate the overlapping coloured shapes printed on the C lobby glazing.
     const key='campus-garden-window-art';
@@ -622,6 +647,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                     wallBox(wooden?timber:concrete?campusConcrete:campusFrameTones.has(hex)?campusFrames:details,wall,at,w,base+bottom,base+top,wooden?'#c9b89c':hex,front,back,wooden||concrete,concrete?[4,2]:[3,.25]);
                   },
                   lettering:(...args)=>campusLettering(wall,...args),
+                  column:(at,depth,radius,bottom,top,color)=>{
+                    const x=a[0]+(b[0]-a[0])*at/length+normal[0]*depth;
+                    const y=a[1]+(b[1]-a[1])*at/length+normal[1]*depth;
+                    branch([x,y,base+bottom],[x,y,base+top],radius,color,metal,1);
+                  },
                   glazing:(at,w,bottom,top,depth,kind)=>{
                     const tile=campusGlassTile(at,bottom,wall.variant,kind),u=(tile%4)/4,v=Math.floor(tile/4)/4;
                     panel(campusGlazing,wall,at,w,base+bottom,base+top,'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
@@ -634,6 +664,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 if(face){
                   windows+=drawCampusFacade(face,length,height-base,drawing);
                   if(face.layout==='garden-c')gardenWindowArt(wall);
+                  if(face.layout==='garden-b-return')gardenBuildingBPlaque(wall);
                   if(observed)campusFacades++;else campusEstimatedFacades++;
                 }
               }

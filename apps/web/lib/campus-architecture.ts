@@ -7,6 +7,7 @@ export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
  box:(at:number,width:number,bottom:number,top:number,color:string,front:number,back?:number)=>void;
  lettering:(text:string,at:number,width:number,bottom:number,top:number,outline?:boolean,depth?:number,ink?:string)=>void;
+ column?:(at:number,depth:number,radius:number,bottom:number,top:number,color:string)=>void;
  glazing?:(at:number,width:number,bottom:number,top:number,depth:number,kind?:'fixed'|'classroom')=>void;
 };
 
@@ -290,22 +291,56 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    }
   }
   panel(at-width*.085,.34,bottom+rise*.60,bottom+rise*.60+.34,'#36594b',.85);
- }else if(face.courtyardFeature){
-  const stgi=face.courtyardFeature==='stgi-entry';
-  const width=Math.min(stgi?5.6:4.7,length*.40),at=length*(stgi?.25:.55);
-  const top=Math.min(stgi?4.6:6.2,height*.68),color=stgi?'#168348':'#a3323a';
-  box(at,width,.035,top,color,.90,.04);
-  const door=at+width*.12;
-  panel(door,width*.35,.06,2.14,stgi?'#7b8384':'#39474a',.915);
-  panel(door-width*.085,width*.13,.11,1.99,'#35464a',.925);
-  if(stgi){
-   panel(at,width*.96,top-.77,top-.40,glass,.92);
-   for(const side of [-1,1])box(at+side*width*.43,.15,top-.78,top-.39,'#953842',.95,.91);
-   panel(at-width*.37,.26,1.22,1.53,'#dda631',.925);
+ }else if(face.courtyardFeature==='stgi-entry'){
+  const width=Math.min(5.6,length*.40),at=length*.25,top=Math.min(4.6,height*.68);
+  const front=1.42,green='#158149',red='#9d343c';
+  // The lobby projects beyond the courtyard frame. The high window turns
+  // both corners under the green fascia and its thin dark coping.
+  box(at,width,.035,top-.83,green,front,.035);
+  box(at,width-.08,top-.83,top-.42,frame,front-.03,.04);
+  panel(at,width-.18,top-.78,top-.47,'#617879',front-.018);
+  box(at,width+.07,top-.42,top,green,front+.06,.03);
+  box(at,width+.12,top,top+.055,'#39423d',front+.09,.02);
+  for(const side of [-1,1])box(at+side*width*.34,.17,top-.82,top-.41,red,front+.05,front-.05);
+  const door=at+width*.10,portal=width*.40;
+  panel(door,portal,.04,2.20,'#798589',front+.018);
+  panel(door-portal*.19,portal*.40,.06,1.99,'#29363a',front+.03);
+  box(door-portal*.40,.075,.04,2.06,'#b4bdba',front+.09,front+.025);
+  box(door-portal*.20,portal*.46,2.00,2.08,'#b4bdba',front+.09,front+.025);
+  const hatch=at-width*.37;
+  panel(hatch,.32,1.10,1.45,'#daac37',front+.018);
+  panel(hatch,.22,1.16,1.40,'#6b602f',front+.025);
+  const signZ=top-.83-(top-.83-2.20)/2;
+  panel(at,width*.59,signZ-.25,signZ+.25,'#efeee7',front+.02);
+  lettering('UFR STGI',at+width*.065,width*.39,signZ-.16,signZ+.16,false,front+.035,frame);
+  panel(at-width*.211,width*.126,signZ+.005,signZ+.12,'#485456',front+.035);
+ }else if(face.courtyardFeature==='mp-entry'){
+  const width=Math.min(4.7,length*.40),at=length*.55,top=Math.min(6.2,height*.68);
+  const red='#a3323a',front=.96,wing=width*.53;
+  // The red tower has a narrow ground-floor light. The doors sit beside it,
+  // beyond the lower red return under the white classroom overhang.
+  box(at,width,.035,top,red,front,.04);
+  box(at-width/2-wing/2,wing,.035,top*.24,red,front-.14,.04);
+  box(at-width/2-wing*.34,wing*.68,top*.60,top*.69,red,front-.18,.04);
+  const entryWidth=width*.45,entry=at-width/2-wing-entryWidth/2;
+  panel(entry,entryWidth+.13,.04,2.49,frame,.37);
+  for(const side of [-1,1]){
+   const leaf=entry+side*entryWidth*.25;
+   if(draw.glazing)draw.glazing(leaf,entryWidth*.5-.075,.13,2.08,.39,'fixed');
+   else panel(leaf,entryWidth*.5-.075,.13,2.08,glass,.39);
+   windows++;
+   box(entry+side*.10,.028,.91,1.25,'#a8b3ac',.45,.39);
   }
-  const z=top*(stgi?.62:.57),signWidth=width*.76;
-  panel(at,signWidth,z-.29,z+.29,'#efeee7',.926);
-  lettering(stgi?'UFR STGI':'MESURES PHYSIQUES',at,signWidth*.91,z-.18,z+.18,false,.94,frame);
+  panel(entry,entryWidth-.05,2.17,2.42,glass,.39);
+  const slit=at-width*.16;
+  panel(slit,.24,.52,1.70,'#512e2e',front+.018);
+  panel(slit,.14,.58,1.46,'#b6a580',front+.029);
+  panel(at+width*.27,.57,1.18,1.61,'#eeeae1',front+.025);
+  panel(at+width*.27,.43,1.46,1.53,frame,front+.035);
+  const signZ=top*.60;
+  panel(at,width*.86,signZ-.48,signZ+.48,'#efeee7',front+.018);
+  lettering('MP',at+width*.28,width*.18,signZ-.20,signZ+.21,false,front+.035,'#874661');
+  lettering('MESURES PHYSIQUES',at-width*.11,width*.54,signZ-.14,signZ+.14,false,front+.035,frame);
  }
  return windows;
 }
