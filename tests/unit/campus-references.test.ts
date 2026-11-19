@@ -223,7 +223,7 @@ test('detailed benches remain inside existing walking collision envelopes',()=>{
 });
 
 test('institutional campus observations remain attached to actual IGN walls and credited reference URLs',()=>{
- assert.equal(campusReferences.buildings.length,12);assert.equal(campusReferences.sourceImagesRedistributed,false);
+ assert.equal(campusReferences.buildings.length,13);assert.equal(campusReferences.sourceImagesRedistributed,false);
  for(const profile of campusReferences.buildings){
   const building=data.buildings.features.find((f:any)=>f.properties.sourceId===profile.buildingId);assert.ok(building);
   for(const face of profile.faces)assert.ok(polygons(building).some(p=>p[0].slice(1).some((b,i)=>matchesFacadeEdge(face,p[0][i],b))),profile.buildingId);
@@ -241,7 +241,7 @@ test('observed campus facade geometry stays finite and within its envelope at re
     assert.ok([at,width,bottom,top,front,back].every(Number.isFinite));assert.ok(width>0&&width<=length+.4);
     assert.ok(at-width/2>=-.3&&at+width/2<=length+.3);
     assert.ok(bottom>=0&&bottom<top&&top<=height+.15,`${profile.label}: ${bottom}..${top}`);
-    assert.match(color,/^#[0-9a-f]{6}$/i);assert.ok(front>=0&&front<1);
+    assert.match(color,/^#[0-9a-f]{6}$/i);assert.ok(front>=0&&front<(face.layout==='amphi-front'?7:1));
    }
    panes+=drawCampusFacade(face,length,height,{panel:check,box:(...args)=>{solidTrim++;check(...args);},lettering:(text,at,width,bottom,top)=>{assert.ok(text.length>0);check(at,width,bottom,top,'#ffffff');}});
   }
@@ -428,12 +428,12 @@ test('north MULTIMEDIA openings have solid reveals and continuous plain glazing 
 });
 
 test('courtyard landmarks are registered once and stay on their measured walls',()=>{
- const expected=new Map([['stgi-entry','UFR STGI'],['mp-entry','MESURES PHYSIQUES'],['library-bay','BU']]);
+ const expected=new Map<string,string|null>([['stgi-entry','UFR STGI'],['mp-entry','MESURES PHYSIQUES'],['library-bay',null]]);
  const marked=campusReferences.buildings.flatMap(p=>p.faces).filter(f=>f.courtyardFeature);
  assert.equal(marked.length,expected.size);
  for(const face of marked){
   const kind=face.courtyardFeature!,label=expected.get(kind);
-  assert.ok(label);
+  assert.ok(expected.has(kind));
   const width=metersBetween(face.a,face.b),labels:string[]=[];
   drawCampusFacade(face,width,10,{
    panel:()=>{},box:()=>{},lettering:(text,at,w)=>{
@@ -441,7 +441,8 @@ test('courtyard landmarks are registered once and stay on their measured walls',
     labels.push(text);
    },
   });
-  assert.ok(labels.includes(label));
+  if(label)assert.ok(labels.includes(label));
+  else assert.ok(!labels.includes('BU'),'BU is on the ground-floor lobby');
   expected.delete(kind);
  }
  assert.equal(expected.size,0);

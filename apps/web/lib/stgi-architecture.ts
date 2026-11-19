@@ -35,6 +35,36 @@ function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:C
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
+ if(face.layout==='garden-b'||face.layout==='garden-c'){
+  const isC=face.layout==='garden-c',wall='#eeeae0',frame='#344b4c';
+  const front=height*.30,upper=height*.82;
+  draw.panel(length/2,length,.035,height-.12,wall,.055);
+  const bays=Math.max(3,Math.round(length/1.55)),pitch=(length-.20)/bays;
+  // Slim upper ribbon, punctuated by projecting red brackets.
+  for(let i=0;i<bays;i++){
+   pane(.10+(i+.5)*pitch,pitch-.08,upper,height*.94,.13);
+   if(i%3===0)draw.box(.16+i*pitch,.14,upper-.03,height*.94,'#963f40',.32,.06);
+  }
+  const entrance=length*(isC?.70:.35),span=length*.48;
+  draw.panel(entrance,span,.06,front,frame,.15);
+  for(let i=0;i<4;i++)pane(entrance+span*((i+.5)/4-.5),span/4-.11,.15,front-.16,.21);
+  draw.box(entrance,span+.22,front,front+.18,'#b5b3a9',.95,.035);
+  draw.box(entrance,span+.16,front-.07,front,'#7a3738',.94,.04);
+  for(const side of [-1,1])draw.box(entrance+side*(span/2-.19),.26,.03,front,frame,.91,.65);
+  const windowAt=length*(isC?.45:.76),width=length*(isC?.22:.40);
+  pane(windowAt,width,height*.40,height*.65,.13);
+  if(isC)draw.panel(windowAt+width*.36,width*.24,height*.42,height*.64,'#ab5149',.25);
+  const accent=length*(isC?.19:.14);
+  draw.panel(accent,.46,height*.43,height*.43+.50,isC?'#a88f38':'#345448',.14);
+  const sign=length*(isC?.39:.67);
+  draw.panel(sign,1.05,1.52,2.52,wall,.26);
+  draw.panel(sign,.96,1.77,2.27,'#434951',.28);
+  draw.lettering(isC?'BÂTIMENT C':'BÂTIMENT B',sign,.90,1.85,2.18,false,.29,'#ffffff');
+  for(const [i,color] of ['#52a356','#287a90','#d04752','#81649b','#d59444'].entries()){
+   draw.panel(sign-.38+i*.17,.14,2.30,2.46,color,.28);
+  }
+  return true;
+ }
  if(!['stgi-court','stgi-colour','stgi-ribbon','stgi-return','stgi-north-openings'].includes(face.layout||''))return false;
  const {panel,box}=draw,concrete='#d2d1c8',frame='#344b4c';
  const bands=face.glazingBands||[[.055,.255],[.395,.585],[.735,.885]];

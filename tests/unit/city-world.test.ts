@@ -55,6 +55,30 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
   assert.equal(terrainHeight(.25,.25,fixture),7.5);assert.equal(terrainHeight(.75,.75,fixture),27.5);
   const physics=await createCityPhysics();
   try{
+   const stairs=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563414'&&s.width===3.4);
+   assert.equal(stairs.length,19,'The flight and landing share the rendered dimensions');
+   const foot=stairs[0],atFoot=offset(foot.wallCenter,foot.normal[0]*(foot.front+.35),foot.normal[1]*(foot.front+.35));
+   let climber=atFoot;
+   for(let i=0;i<200&&distance(climber,atFoot)<6.0;i++)climber=physics.move(climber,offset(climber,-foot.normal[0]*.08,-foot.normal[1]*.08));
+   assert.ok(distance(climber,atFoot)>5.7,'Walking must ascend the flight from the courtyard');
+   assert.ok(walkingGroundHeight(climber)-walkingGroundHeight(atFoot)>2.5,'The camera rises with the treads');
+   for(let i=0;i<200&&distance(climber,atFoot)>.14;i++)climber=physics.move(climber,offset(climber,foot.normal[0]*.08,foot.normal[1]*.08));
+   assert.ok(distance(climber,atFoot)<.4,'The flight also permits descent');
+   // Cross from the courtyard through the photographed opening to the street side.
+   const start:[number,number]=[6.803735,47.495450];
+   let under=start;
+   for(let step=0;step<120;step++)under=physics.move(under,offset(under,-.025,.11));
+   assert.ok(distance(under,start)>12,'The library passage must be open across the full building depth');
+   const libraryPier=data.buildings.features.find(f=>String(f.properties.libraryPart).startsWith('pier-'))!;
+   assert.equal(libraryPier.geometry.type,'Polygon');
+   if(libraryPier.geometry.type==='Polygon'){
+    const corners=libraryPier.geometry.coordinates[0].slice(0,-1);
+    const middle:[number,number]=[0,0];
+    for(const p of corners){middle[0]+=p[0]/corners.length;middle[1]+=p[1]/corners.length;}
+    let approach=offset(middle,0,-2.5);
+    for(let step=0;step<45;step++)approach=physics.move(approach,offset(approach,0,.1));
+    assert.ok(approach[1]<middle[1]&&distance(approach,middle)<1.5,'A library pier stops the capsule');
+   }
    const piers=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563452'&&s.front===.85&&s.width<.5);
    assert.ok(piers.length>0);
    const pier=piers.sort((a,b)=>distance(a.wallCenter,[6.804617,47.495134])-distance(b.wallCenter,[6.804617,47.495134]))[0];

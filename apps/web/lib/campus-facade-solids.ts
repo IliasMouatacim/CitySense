@@ -28,7 +28,8 @@ export function campusFacadeSolids(data:CityWorld):FacadeSolid[]{
     drawCampusFacade(face,length,height,{
      panel:()=>{},lettering:()=>{},glazing:()=>{},
      box:(at,width,bottom,top,_colour,front,back=.03)=>{
-      if(front<.4||width<.25||top-bottom<.25||bottom>2.1||top<.3)return;
+      const stair=face.layout==='amphi-front'&&bottom===.015;
+      if(!stair&&(front<.4||width<.25||top-bottom<.25||bottom>2.1||top<.3))return;
       solids.push({sourceId:profile.buildingId,polygon:[point(at-width/2,back),point(at+width/2,back),point(at+width/2,front),point(at-width/2,front)],bottom:base+bottom,top:base+top,wallCenter:point(at,0),normal,front,width});
      },
     });

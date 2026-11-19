@@ -1,3 +1,4 @@
+import {drawAmphitheatreFront} from './amphitheatre';
 import type {CampusFace} from './campus-references';
 import {drawStgiFacade,drawStgiPaint} from './stgi-architecture';
 import {drawCrousFacade} from './crous-architecture';
@@ -23,6 +24,7 @@ export function drawLibraryMasonryJoints(length:number,bottom:number,top:number,
  * selected separately by campus-envelope and counted separately in the UI.
  */
 export function drawCampusFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing){
+ if(face.layout==='amphi-front')return drawAmphitheatreFront(length,height,draw);
  const {panel,box,lettering}=draw;let windows=0;
  const multimedia=face.layout==='stgi-return'||face.layout==='stgi-north-openings';
  const joint='#a5a69c',concrete='#d2d1c8',frame='#344b4c',glass='#49636a';
@@ -267,8 +269,8 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
  }
  // These landmarks occur once on their photographed courtyard elevations.
  if(face.courtyardFeature==='library-bay'){
-  const width=Math.min(12,length*.40),at=length*.26;
-  const bottom=height*.43,top=height*.81,rise=top-bottom;
+  const width=Math.min(15,length*.40),at=length*.26;
+  const bottom=height*.28,top=height*.82,rise=top-bottom;
   box(at,width,bottom,top,'#ecebe4',.82,.04);
   box(at,.38,.03,bottom,concrete,.78,.40);
   for(const [offset,span] of [[.22,.42],[-.29,.21]]){
@@ -288,9 +290,6 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
    }
   }
   panel(at-width*.085,.34,bottom+rise*.60,bottom+rise*.60+.34,'#36594b',.85);
-  const sign=at-width*.32;
-  panel(sign,1.4,1.55,2.38,frame,.36);
-  lettering('BU',sign,1.12,1.64,2.29,false,.38,'#f2f1eb');
  }else if(face.courtyardFeature){
   const stgi=face.courtyardFeature==='stgi-entry';
   const width=Math.min(stgi?5.6:4.7,length*.40),at=length*(stgi?.25:.55);

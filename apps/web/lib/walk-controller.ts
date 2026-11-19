@@ -24,6 +24,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     obstacles=[];bridges=[];roads=[];
     for(const sourceLayer of ['building','water']){
       for(const feature of sourceLayer==='building'?cityBuildingFeatures(map):map.querySourceFeatures('openmaptiles',{sourceLayer})){
+        if(sourceLayer==='building'&&feature.properties?.walkUnder===true)continue;
         const g=feature.geometry;
         if(g.type==='Polygon')obstacles.push(makeObstacle(g.coordinates,sourceLayer==='building'?'building':'water'));
         if(g.type==='MultiPolygon')for(const rings of g.coordinates)obstacles.push(makeObstacle(rings,sourceLayer==='building'?'building':'water'));

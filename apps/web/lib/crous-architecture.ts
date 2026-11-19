@@ -42,7 +42,20 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
   box(at-.22,.025,.95,1.23,'#b8c3bb',.32,.27);
   for(const z of [.48,1.05,1.85])box(at+.32,.035,z,z+.09,'#8b9992',.30,.25);
  }
- if(face.layout==='crous-front'){
+ if(face.layout==='crous-mosaic'){
+  box(length/2,length,.04,height-.06,'#a9a79a',.12,.03);
+  const colors=['#eeeae0','#bdb8ac','#eeeae0','#9d5148','#eeeae0','#465e79','#eeeae0','#cfa942'];
+  const tiles=Math.max(8,Math.round(length/.30)),pitch=length/tiles;
+  for(const level of [.29,.55,.88]){
+   const z=height*level;
+   panel(length/2,length,z-.02,z+.13,frame,.14);
+   for(let i=0;i<tiles;i++)panel((i+.5)*pitch,pitch-.015,z,z+.11,colors[i%colors.length],.15);
+  }
+  for(const at of [.34,.60])pane(at*length,1.0,height*.66,height*.82,.18);
+  pane(length*.34,length*.28,height*.40,height*.47,.18);
+  pane(length*.78,.64,height*.39,height*.54,.18);
+  panel(length*.74,.22,height*.14,height*.14+.30,'#75634b',.17);
+ }else if(face.layout==='crous-front'){
   const bays=Math.max(2,Math.round(length/8)),pitch=length/bays;
   const entryBay=Math.floor(bays*.60);
   const entryCenter=(entryBay+.5)*pitch;
@@ -117,7 +130,14 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
    pane(at,pitch-.08,height*.67,height*.81,.10);
    if(i%2===0){panel(at-pitch*.25,.42,height*.68,height*.80,'#42658c',.25);box(at-pitch*.48,.13,height*.66,height*.82,'#934e45',.35,.06);}
   }
-  for(const at of [.25,.66])pane(length*at,.60,height*.18,height*.35,.10);
+  // Low cafeteria glazing and the separate square light face the bus shelter.
+  pane(length*.85,.62,height*.22,height*.34,.10);
+  const cafe=length*.48,span=length*.33,sill=height*.105,head=height*.38;
+  curtain(cafe,span,sill,head);
+  box(cafe,span+.09,sill-.08,sill,'#39735b',.28,.06);
+  for(const side of [-1,1])box(cafe+side*span*.32,.12,sill-.08,head+.31,'#a9bab1',.31,.08);
+  lettering('Cafétéria',cafe,Math.min(1.25,span*.60),head-.40,head-.12,false,.24,'#eeeae0');
+  for(let mark=0;mark<12;mark++)panel(length*(.04+mark*.015),.04,height*.20,height*.24,'#9d5148',.10);
  }else if(face.layout==='crous-glass'){
   curtain(length/2,length-.12,.18,height*.79);
   // Continue the pale fascia around the glazed return. Its folded lip and

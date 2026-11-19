@@ -42,3 +42,13 @@ test('opposite platforms face the carriageway regardless of road digitisation di
  const tags={highway:'bus_stop',shelter:'yes',bin:'yes'};
  assert.equal(streetObjectSolids(tags,true).length,streetObjectSolids(tags).length+1);
 });
+
+test('the CROUS platform spans two benches and both boarding bays remain open',()=>{
+ const solids=streetObjectSolids({highway:'bus_stop',shelter:'yes',bench:'yes'},true,4876779236);
+ const boxes=solids.filter(s=>s.kind==='box');
+ assert.equal(boxes.filter(s=>s.width===2.60).length,2);
+ for(const x of [-1.75,1.75]){
+  assert.ok(!boxes.some(s=>Math.abs(s.x-x)<s.width/2+.3&&s.y<-.2));
+ }
+ assert.ok(boxes.some(s=>s.x===-3.50&&s.depth>1),'The photographed end panel blocks side entry');
+});

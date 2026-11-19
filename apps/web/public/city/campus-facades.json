@@ -403,22 +403,7 @@
             47.4953464
           ],
           "kind": "ribbon",
-          "floors": 3,
-          "layout": "stgi-ribbon",
-          "glazingBands": [
-            [
-              0.055,
-              0.255
-            ],
-            [
-              0.395,
-              0.585
-            ],
-            [
-              0.735,
-              0.885
-            ]
-          ]
+          "layout": "garden-c"
         },
         {
           "a": [
@@ -452,7 +437,7 @@
           ]
         }
       ],
-      "notes": "Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. The courtyard grid uses projecting continuous piers and cross beams. The colour reference supplies an upper turquoise projection, a small horizontal window and a yellow vertical slit above uninterrupted ground-floor glazing; the former inferred doorway is removed. Their registration to this approximate envelope is not a surveyed reconstruction."
+      "notes": "The garden side is registered to OSM building 32428347 (Bâtiment C) and the supplied garden photographs. Concrete grid towards the courtyard and ribbon windows with a turquoise accent bay, observed in the STGI complex. The courtyard grid uses projecting continuous piers and cross beams. The colour reference supplies an upper turquoise projection, a small horizontal window and a yellow vertical slit above uninterrupted ground-floor glazing; the former inferred doorway is removed. Their registration to this approximate envelope is not a surveyed reconstruction."
     },
     {
       "buildingId": "BATIMENT0000000223563705",
@@ -528,22 +513,7 @@
             47.4954418
           ],
           "kind": "ribbon",
-          "floors": 3,
-          "layout": "stgi-ribbon",
-          "glazingBands": [
-            [
-              0.055,
-              0.255
-            ],
-            [
-              0.395,
-              0.585
-            ],
-            [
-              0.735,
-              0.885
-            ]
-          ]
+          "layout": "garden-b"
         },
         {
           "a": [
@@ -573,7 +543,7 @@
           ]
         }
       ],
-      "notes": "The courtyard architectural language is reconstructed from institutional photographs. Precise departmental boundaries and obscured openings are unverified."
+      "notes": "The garden side is registered to OSM building 155113787 (Bâtiment B) and the supplied garden photographs. The courtyard architectural language is reconstructed from institutional photographs. Precise departmental boundaries and obscured openings are unverified."
     },
     {
       "buildingId": "BATIMENT0000000223563364",
@@ -642,47 +612,29 @@
           "courtyardFeature": "library-bay",
           "openings": [
             {
-              "at": 0.16,
-              "width": 0.2,
-              "bottom": 0.045,
-              "top": 0.205
-            },
-            {
-              "at": 0.49,
-              "width": 0.18,
-              "bottom": 0.045,
-              "top": 0.205
-            },
-            {
-              "at": 0.78,
-              "width": 0.14,
-              "bottom": 0.045,
-              "top": 0.205
-            },
-            {
               "at": 0.1,
               "width": 0.07,
-              "bottom": 0.3,
-              "top": 0.365,
+              "bottom": 0.12,
+              "top": 0.23,
               "accent": "#559380"
             },
             {
               "at": 0.31,
               "width": 0.16,
-              "bottom": 0.3,
-              "top": 0.365
+              "bottom": 0.12,
+              "top": 0.23
             },
             {
               "at": 0.56,
               "width": 0.24,
-              "bottom": 0.3,
-              "top": 0.365
+              "bottom": 0.12,
+              "top": 0.23
             },
             {
               "at": 0.83,
               "width": 0.07,
-              "bottom": 0.3,
-              "top": 0.365,
+              "bottom": 0.12,
+              "top": 0.23,
               "accent": "#b4a75a"
             },
             {
@@ -778,7 +730,7 @@
           ]
         }
       ],
-      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. The supplied courtyard photographs show a projecting white reading-room bay with red shades and BU lettering below. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope."
+      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. The supplied courtyard photographs show a projecting white reading-room bay with red shades and BU lettering below. The photographed undercroft is open between the enclosed ends. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; pier spacing and clearance are estimated."
     },
     {
       "buildingId": "BATIMENT0000000292211747",
@@ -986,9 +938,21 @@
           ],
           "kind": "concrete",
           "layout": "crous-front"
+        },
+        {
+          "a": [
+            6.803386,
+            47.4958654
+          ],
+          "b": [
+            6.8032539,
+            47.49584
+          ],
+          "kind": "concrete",
+          "layout": "crous-mosaic"
         }
       ],
-      "notes": "Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. User-supplied frontal views show broad uninterrupted glazing, narrow concrete fins and a pale fascia. Bay widths and projections are estimated. Doors remain closed; the interior and detached forecourt structure are not reconstructed."
+      "notes": "Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. User-supplied frontal views show broad uninterrupted glazing, narrow concrete fins, a pale fascia and three slim mosaic courses on the west end block. Bay widths and projections are estimated. Doors remain closed; the interior and detached forecourt structure are not reconstructed."
     },
     {
       "buildingId": "BATIMENT0000000223563498",
@@ -1037,6 +1001,30 @@
         }
       ],
       "notes": "White upper fascia, red/blue ribbon accents, glazed corner and tall narrow east-wing windows observed in the 2012 photograph. Obscured walls and current alterations remain unverified."
+    },
+    {
+      "buildingId": "BATIMENT0000000223563414",
+      "label": "Amphithéâtre François Vion-Delphin · galerie côté cour",
+      "wallColor": "#b3b6aa",
+      "sourceIds": [
+        "plan",
+        "stgi-court"
+      ],
+      "faces": [
+        {
+          "a": [
+            6.8039615,
+            47.4948886
+          ],
+          "b": [
+            6.8042432,
+            47.4949416
+          ],
+          "kind": "concrete",
+          "layout": "amphi-front"
+        }
+      ],
+      "notes": "The supplied courtyard photos show an upper glazed landing, external stair on the west end, square windows and a projecting parapet. Tread count and dimensions are approximate."
     }
   ]
 }

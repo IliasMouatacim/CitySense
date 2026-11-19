@@ -1,3 +1,4 @@
+import {amphitheatreStairHeight} from './amphitheatre';
 import RAPIER from '@dimforge/rapier3d-compat';
 import {terrainHeight,loadCityWorld,inMontbeliard,municipalTerrainVertices} from './city-world';
 import {metersBetween} from './city-details-data';
@@ -40,7 +41,7 @@ export async function createCityPhysics(){
   const ground=terrainHeight(...object.coordinates);if(ground===null)continue;const p=local(object.coordinates);
   const detailed=shelterNodes.has(object.id);
   const angle=detailed?shelterAngle(object.coordinates,data.campus!.roads):0;
-  for(const solid of streetObjectSolids(object.tags,detailed)){
+  for(const solid of streetObjectSolids(object.tags,detailed,object.id)){
    const shape=solid.kind==='box'?RAPIER.ColliderDesc.cuboid(solid.width/2,solid.height/2,solid.depth/2):RAPIER.ColliderDesc.cylinder(solid.height/2,solid.radius);
    const [east,north]=shelterOffset(angle,solid.x,solid.y);
    if(angle)shape.setRotation({x:0,y:Math.sin(angle/2),z:0,w:Math.cos(angle/2)});
@@ -58,8 +59,13 @@ export async function createCityPhysics(){
  return {
   height:(p:Position)=>inMontbeliard(p)?terrainHeight(...p):null,
   move(from:Position,to:Position):Position{
-   if(disposed||!inMontbeliard(to)||terrainHeight(...to)===null)return from;
-   const a=local(from),b=local(to),ground=terrainHeight(...from)??0,target=terrainHeight(...to)!;
+   if(disposed||!inMontbeliard(to))return from;
+   const terrain=terrainHeight(...to);
+   if(terrain===null)return from;
+   const fromStep=amphitheatreStairHeight(from,data),toStep=amphitheatreStairHeight(to,data);
+   const ground=Math.max(terrainHeight(...from)??0,fromStep??-Infinity),target=Math.max(terrain,toStep??-Infinity);
+   if((fromStep!==undefined||toStep!==undefined)&&Math.abs(target-ground)>.45)return from;
+   const a=local(from),b=local(to);
    body.setTranslation({x:a.x,y:ground+.9,z:a.z},true);world.step();
    character.computeColliderMovement(collider,{x:b.x-a.x,y:target-ground-.05,z:b.z-a.z});
    const d=character.computedMovement(),next:Position=[from[0]+d.x/(meters*cos),from[1]-d.z/meters];

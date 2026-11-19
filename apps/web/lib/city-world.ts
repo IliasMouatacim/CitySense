@@ -2,6 +2,7 @@ import type {Map,GeoJSONSource} from 'maplibre-gl';
 import {facadeProfile} from './facade-references';
 import {insidePolygon} from './walk-geometry';
 import boundary from './montbeliard-boundary.json';
+import {openLibraryPassage} from './library-passage';
 import {campusProfile} from './campus-references';
 type Polygon={type:'Polygon';coordinates:number[][][]};
 type MultiPolygon={type:'MultiPolygon';coordinates:number[][][][]};
@@ -74,6 +75,7 @@ export function loadCityWorld(){
    const university=campusProfile(feature.properties?.sourceId);
    feature.properties={...feature.properties,...(feature.properties.region==='campus'?{colour:university?.wallColor||'#c2c6c3'}:{}),...(profile?{colour:profile.wallColor}:{}),render_min_height:ground,render_height:ground+height};
   }
+  data.buildings.features=data.buildings.features.flatMap(openLibraryPassage);
   world=data;return data;
  })().catch(error=>{pending=undefined;throw error;});
 }

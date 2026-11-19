@@ -1,3 +1,4 @@
+import {amphitheatreStairHeight} from './amphitheatre';
 import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
 import {getCityWorld,terrainHeight,type CityWorld} from './city-world';
 import {insidePolygon,nearestOnLine,distance,offset,type Position} from './walk-geometry';
@@ -36,5 +37,5 @@ export function walkingGroundHeight(position:Position){
   const [w,south,e,n]=s.bounds;if(s.lift<=lift||position[0]<w||position[0]>e||position[1]<south||position[1]>n)continue;
   if(s.area?insidePolygon(position,[s.line]):distance(position,nearestOnLine(position,s.line))<=s.width)lift=s.lift;
  }
- return height+lift;
+ return Math.max(height+lift,amphitheatreStairHeight(position,world)??height);
 }
