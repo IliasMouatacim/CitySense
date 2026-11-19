@@ -72,6 +72,9 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   return true;
  }
  if(face.layout==='stgi-court'){
+  if(face.courtyardFeature==='stgi-entry')for(const [bottom,top] of [[.005,bands[0][0]],[bands[0][1],bands[1][0]],[bands[1][1],bands[2][0]],[bands[2][1],.98]]){
+   panel(length/2,length,height*bottom,height*top,'#eeeae0',.065);
+  }
   const pier=.38,bays=Math.max(1,Math.round((length-pier)/3.05)),pitch=(length-pier)/bays;
   for(const [row,band] of bands.entries()){
    const bottom=height*band[0],top=height*band[1];

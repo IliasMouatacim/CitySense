@@ -141,11 +141,21 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const object=new Mesh(geometry,material);object.castShadow=physical&&campusLighting;object.receiveShadow=physical&&campusLighting;object.frustumCulled=false;scene.add(object);resources.push(geometry,material);
     return object;
   }
-  function orientPhysicalMaterial(material:MeshStandardMaterial){
+  function orientPhysicalMaterial(material:MeshStandardMaterial,courtyard=false){
     // MapLibre's Mercator projection includes a handedness flip. Face the
     // physical normal towards the actual ENU eye rather than GL winding.
-    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\nif (dot(normal, vViewPosition) < 0.0) normal = -normal;');};
-    material.customProgramCacheKey=()=> 'citysense-enu-normal-v1';
+    material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\nif (dot(normal, vViewPosition) < 0.0) normal = -normal;');
+      if(courtyard){
+        // The plaza's dark stone courses cross the pink slabs parallel to the library.
+        // UVs are in units of 3.2 metres and shared across the draped terrain triangles.
+        shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+          float course = dot(vMapUv, vec2(-0.27, 0.963)) * 3.2 / 5.4;
+          float edge = abs(fract(course + 0.5) - 0.5);
+          float aa = max(fwidth(course), 0.0001);
+          diffuseColor.rgb *= mix(0.30, 1.0, smoothstep(0.022-aa, 0.022+aa, edge));`);
+      }
+    };
+    material.customProgramCacheKey=()=>courtyard?'citysense-courtyard-courses':'citysense-enu-normal-v1';
   }
   function concreteTexture(){
     return materialTexture('campus-concrete-color');
@@ -189,9 +199,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   }
   function campusLettering(wall:Wall,text:string,at:number,width:number,bottom:number,top:number,outline=false,depth=.4,ink?:string){
     const color=ink||(outline?'#e5e8dc':'#e2e6d8');
-    const key=`campus-lettering:${text}:${outline}:${color}`;let texture=materials.get(key);
+    const scale=width<=6?.5:1;
+    const key=`campus-lettering:${scale}:${text}:${outline}:${color}`;let texture=materials.get(key);
     if(!texture){
-      const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=512;const ctx=canvas.getContext('2d')!;
+      const canvas=document.createElement('canvas');canvas.width=2048*scale;canvas.height=512*scale;const ctx=canvas.getContext('2d')!;
+      ctx.scale(scale,scale);
       ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${outline?'200':'400'} 320px sans-serif`;
       if(outline){ctx.strokeStyle=color;ctx.lineWidth=5;ctx.strokeText(text,1024,260,1980);}else{ctx.fillStyle=color;ctx.fillText(text,1024,260,1980);}
       texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);
@@ -405,7 +417,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       const green=area.tags.landuse==='grass'||area.tags.landuse==='flowerbed'||area.tags.leisure==='garden',hex=green?'#849d70':area.tags.amenity==='parking'?'#858b8a':'#bcb9ab';
       for(const indices of ShapeUtils.triangulateShape(points.map(p=>new Vector2(p[0],p[1])),[])){
         const polygon=indices.map(i=>ring[i]);
-        if(area.tags.highway==='pedestrian'&&area.tags.surface!=='asphalt')groundSurface(campusPaving,polygon,'#b4b6aa',.12,3.2);
+        if(area.tags.highway==='pedestrian'&&area.tags.surface!=='asphalt')groundSurface(campusPaving,polygon,'#c9b4a6',.12,3.2);
         else if(green||area.tags.surface==='grass')groundSurface(lawns,polygon,'#d1d5b6',.035,2.5);
         else if(area.tags.surface==='sand')groundSurface(sand,polygon,'#e3d8bd',.035,1.6);
         else groundSurface(asphalt,polygon,hex,.035);
@@ -744,7 +756,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     }
     const foliageMesh=mesh(foliage,leafTexture(),true);
     if(foliageMesh){const mat=foliageMesh.material as MeshStandardMaterial;mat.alphaTest=.22;mat.alphaToCoverage=true;mat.roughness=.8;mat.needsUpdate=true;}
-    if(campusPaving.positions.length){const floor=mesh(campusPaving,campusSlabTexture(),true);if(floor){floor.castShadow=false;physicalSurface(floor,'campus-paving',.018);}}
+    if(campusPaving.positions.length){const floor=mesh(campusPaving,campusSlabTexture(),true);if(floor){floor.castShadow=false;physicalSurface(floor,'campus-paving',.018);orientPhysicalMaterial(floor.material as MeshStandardMaterial,true);}}
     mesh(referenceFacades);for(const [path,data]of photoFacades)mesh(data,facadeTextures.get(path));
     // The separate town-centre GLB disables frustum culling internally. Drawing
     // all of it 1.6 km away was still costing draw calls on every campus frame.

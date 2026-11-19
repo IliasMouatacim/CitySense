@@ -426,3 +426,23 @@ test('north MULTIMEDIA openings have solid reveals and continuous plain glazing 
   assert.ok(boxes.some(b=>b.color==='#2d4141'&&b.at===at&&b.width>=width+.015),'Transom meets jambs');
  }
 });
+
+test('courtyard landmarks are registered once and stay on their measured walls',()=>{
+ const expected=new Map([['stgi-entry','UFR STGI'],['mp-entry','MESURES PHYSIQUES'],['library-bay','BU']]);
+ const marked=campusReferences.buildings.flatMap(p=>p.faces).filter(f=>f.courtyardFeature);
+ assert.equal(marked.length,expected.size);
+ for(const face of marked){
+  const kind=face.courtyardFeature!,label=expected.get(kind);
+  assert.ok(label);
+  const width=metersBetween(face.a,face.b),labels:string[]=[];
+  drawCampusFacade(face,width,10,{
+   panel:()=>{},box:()=>{},lettering:(text,at,w)=>{
+    assert.ok(at-w/2>=0&&at+w/2<=width);
+    labels.push(text);
+   },
+  });
+  assert.ok(labels.includes(label));
+  expected.delete(kind);
+ }
+ assert.equal(expected.size,0);
+});

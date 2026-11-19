@@ -44,18 +44,17 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
  }
  if(face.layout==='crous-front'){
   const bays=Math.max(2,Math.round(length/8)),pitch=length/bays;
-  const entryBay=Math.floor(bays*.72);
+  const entryBay=Math.floor(bays*.60);
   const entryCenter=(entryBay+.5)*pitch;
   for(let i=0;i<bays;i++){
-   const at=(i+.5)*pitch,w=pitch*.44;
-   // In the oblique street photo the glass is set back between broad concrete
-   // cheeks. The nearer edge of each repeated bay reads as a projecting fin.
+   const at=(i+.5)*pitch,w=pitch*.82;
+   // The frontal view resolves the glass width between the projecting fins.
    const cheek=(pitch-w)/2;
    for(const side of [-1,1]){
     const center=at+side*(w+cheek)/2;
     const relief=side===1?.62:.34;
     box(center,cheek,.035,height*.76,concrete,relief,.03);
-    box(center,cheek,height*.76,height-.12,side===1?'#8c938b':'#b3b6aa',relief,.03);
+    box(center,cheek,height*.76,height-.12,white,relief,.03);
    }
    if(i===entryBay){
     // Estimated closed entrance beneath the shelter. The doors occupy their own
@@ -77,7 +76,7 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
     }
     curtain(at,doorWidth,head,height*.76);
     box(at,doorWidth+.10,.02,.06,'#879087',.28,.03);
-   }else if(i%2===0){
+   }else{
     const door=at+w*.28,doorWidth=.74;
     const left=at-w/2,right=at+w/2;
     const leftJamb=door-doorWidth/2,rightJamb=door+doorWidth/2;
@@ -85,11 +84,9 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
     curtain((rightJamb+right)/2,right-rightJamb,.15,height*.76,true);
     curtain(door,doorWidth,2.25,height*.76);
     greenDoor(door);
-   }else curtain(at,w,.15,height*.76,true);
-   // The photograph shows a pale floor band crossing the dark vertical lights.
-   box(at,w+.04,height*.40,height*.46,concrete,.33,.04);
+   }
    box(at,w+.12,height*.76,height*.78,concrete,.30,.05);
-   box(at,w,height*.78,height-.12,'#8c938b',.24,.03);
+   box(at,w,height*.78,height-.12,white,.24,.03);
    if(i%2===1)wallLight(at,height*.77);
   }
   for(let i=0;i<=bays;i++){
@@ -106,7 +103,8 @@ export function drawCrousFacade(face:CampusFace,length:number,height:number,draw
    box(x,.24,2.55,2.68,'#879087',projection-.05,.03);
    box(x,.28,.04,2.55,concrete,projection-.10,projection-.38);
   }
-  lettering('RESTAURANT CAFETERIA CROUS',at,w*.94,2.695,3.105,false,projection+.016,'#344b4c');
+  lettering('ESPACES SPORTIFS',at+w*.26,w*.43,2.79,3.00,false,projection+.016,frame);
+  lettering('RESTAURANT ET CAFETERIA',at-w*.23,w*.52,2.79,3.00,false,projection+.016,'#963f46');
  }else if(face.layout==='crous-corner'){
   // The ribbon sits between two projecting courses of the white corner.
   // Leave space for the small lower windows in the backing wall.

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedAt": "2026-11-14",
+  "reviewedAt": "2026-11-19",
   "method": "Manual architectural observations registered approximately to IGN envelopes; not photogrammetry.",
   "sourceImagesRedistributed": false,
   "sources": [
@@ -281,23 +281,10 @@
             6.8040611,
             47.4954856
           ],
-          "kind": "ribbon",
+          "kind": "frame",
           "floors": 3,
-          "layout": "stgi-ribbon",
-          "glazingBands": [
-            [
-              0.055,
-              0.255
-            ],
-            [
-              0.395,
-              0.585
-            ],
-            [
-              0.735,
-              0.885
-            ]
-          ]
+          "layout": "stgi-court",
+          "courtyardFeature": "stgi-entry"
         },
         {
           "a": [
@@ -354,7 +341,7 @@
           ]
         }
       ],
-      "notes": "Ribbon windows and red/green/yellow trim follow the institutional views. Small IGN jogs and hidden faces are simplified."
+      "notes": "Ribbon windows and red/green/yellow trim follow the institutional views. The green entrance and concrete grid facing the main court follow the supplied campus photographs. Small IGN jogs and hidden faces are simplified."
     },
     {
       "buildingId": "BATIMENT0000000223563452",
@@ -652,6 +639,7 @@
             47.4954078
           ],
           "kind": "libraryStone",
+          "courtyardFeature": "library-bay",
           "openings": [
             {
               "at": 0.16,
@@ -790,7 +778,7 @@
           ]
         }
       ],
-      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope."
+      "notes": "Observed grey concrete/brick courses, glazed west end and stair bay. The long courtyard elevation uses uneven window groups and coloured reveals observed in stgi-court; their fractions along the IGN wall are estimates, not surveyed dimensions. The supplied courtyard photographs show a projecting white reading-room bay with red shades and BU lettering below. Interior space and the undercroft are not accessible. The north elevation visible receding from the glazed west end in the library photograph adds long narrow glazing and smaller punched openings. Positions remain approximate; the undercroft remains a closed envelope."
     },
     {
       "buildingId": "BATIMENT0000000292211747",
@@ -881,6 +869,7 @@
           "kind": "ribbon",
           "floors": 3,
           "painted": true,
+          "courtyardFeature": "mp-entry",
           "glazingBands": [
             [
               0.045,
@@ -897,7 +886,7 @@
           ]
         }
       ],
-      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. The supplied courtyard views show a red entrance block with a white department plaque. Openings and registration remain approximate; other sides are not reconstructed."
     },
     {
       "buildingId": "BATIMENT0000000223563537",
@@ -936,7 +925,7 @@
           ]
         }
       ],
-      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. The supplied courtyard views show a red entrance block with a white department plaque. Openings and registration remain approximate; other sides are not reconstructed."
     },
     {
       "buildingId": "BATIMENT0000000223563536",
@@ -975,7 +964,7 @@
           ]
         }
       ],
-      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. Openings and registration remain approximate; other sides are not reconstructed."
+      "notes": "Eastern courtyard elevation seen at the left of the STGI courtyard reference. The 2026 institutional plan identifies this strip as IUT Mesures physiques. The supplied courtyard views show a red entrance block with a white department plaque. Openings and registration remain approximate; other sides are not reconstructed."
     },
     {
       "buildingId": "BATIMENT0000000223563747",
@@ -999,7 +988,7 @@
           "layout": "crous-front"
         }
       ],
-      "notes": "Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. An additional user-supplied oblique street view guides the narrower glazed openings, broad concrete returns and darker upper panels. Bay widths and projections are estimated. Doors remain closed; the interior and detached forecourt structure are not reconstructed."
+      "notes": "Tall glazed entrance bays, blue upper infill, concrete pilasters and restaurant canopy observed in the 2012 photograph. User-supplied frontal views show broad uninterrupted glazing, narrow concrete fins and a pale fascia. Bay widths and projections are estimated. Doors remain closed; the interior and detached forecourt structure are not reconstructed."
     },
     {
       "buildingId": "BATIMENT0000000223563498",

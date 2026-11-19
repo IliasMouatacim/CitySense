@@ -265,5 +265,48 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   for(let x=1;x<length;x+=3)panel(x,.018,.3,height-.2,'#acafa2',.075);
   pane(length*.27,Math.min(1.1,length*.1),.55,1.55,.1);
  }
+ // These landmarks occur once on their photographed courtyard elevations.
+ if(face.courtyardFeature==='library-bay'){
+  const width=Math.min(12,length*.40),at=length*.26;
+  const bottom=height*.43,top=height*.81,rise=top-bottom;
+  box(at,width,bottom,top,'#ecebe4',.82,.04);
+  box(at,.38,.03,bottom,concrete,.78,.40);
+  for(const [offset,span] of [[.22,.42],[-.29,.21]]){
+   const x=at+offset*width,w=span*width;
+   const sill=bottom+rise*.24,head=top-rise*.20;
+   panel(x,w,sill,head,frame,.84);
+   const count=Math.max(2,Math.round(w/1.3)),pitch=w/count;
+   for(let i=0;i<count;i++){
+    const center=x-w/2+(i+.5)*pitch;
+    if(draw.glazing)draw.glazing(center,pitch-.06,sill+.05,head-.05,.86,'fixed');
+    else panel(center,pitch-.06,sill+.05,head-.05,glass,.86);
+    windows++;
+   }
+   for(const level of [1/3,2/3]){
+    const z=sill+(head-sill)*level;
+    box(x,w+.05,z,z+.065,'#843e40',.96,.84);
+   }
+  }
+  panel(at-width*.085,.34,bottom+rise*.60,bottom+rise*.60+.34,'#36594b',.85);
+  const sign=at-width*.32;
+  panel(sign,1.4,1.55,2.38,frame,.36);
+  lettering('BU',sign,1.12,1.64,2.29,false,.38,'#f2f1eb');
+ }else if(face.courtyardFeature){
+  const stgi=face.courtyardFeature==='stgi-entry';
+  const width=Math.min(stgi?5.6:4.7,length*.40),at=length*(stgi?.25:.55);
+  const top=Math.min(stgi?4.6:6.2,height*.68),color=stgi?'#168348':'#a3323a';
+  box(at,width,.035,top,color,.90,.04);
+  const door=at+width*.12;
+  panel(door,width*.35,.06,2.14,stgi?'#7b8384':'#39474a',.915);
+  panel(door-width*.085,width*.13,.11,1.99,'#35464a',.925);
+  if(stgi){
+   panel(at,width*.96,top-.77,top-.40,glass,.92);
+   for(const side of [-1,1])box(at+side*width*.43,.15,top-.78,top-.39,'#953842',.95,.91);
+   panel(at-width*.37,.26,1.22,1.53,'#dda631',.925);
+  }
+  const z=top*(stgi?.62:.57),signWidth=width*.76;
+  panel(at,signWidth,z-.29,z+.29,'#efeee7',.926);
+  lettering(stgi?'UFR STGI':'MESURES PHYSIQUES',at,signWidth*.91,z-.18,z+.18,false,.94,frame);
+ }
  return windows;
 }

@@ -4,6 +4,8 @@ export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position
  {id:'campus-bus',name:'Arrêt de bus · Campus',center:[6.80405,47.49577],start:[6.80406076,47.49577669],lookAt:[6.8041185,47.4957244],pitch:90},
  {id:'crous-east',name:'CROUS · aile est et verrière',center:[6.80400,47.49610],start:[6.80414611,47.49595398],lookAt:[6.8039975,47.49613385],pitch:90},
  {id:'stgi',name:'UFR STGI · façade ouest',center:[6.80435,47.49523],start:[6.804015,47.495225],lookAt:[6.80430,47.49515],pitch:90},
+ {id:'stgi-entry',name:'UFR STGI · entrée de la cour',center:[6.80410,47.49539],start:[6.80387,47.49532],lookAt:[6.804103,47.495386],pitch:90},
+ {id:'library-court',name:'Bibliothèque · côté cour',center:[6.803866,47.495489],start:[6.80389,47.49528],lookAt:[6.803866,47.495490],pitch:90},
  {id:'stgi-court',name:'UFR STGI · galerie de la cour',center:[6.80445,47.49525],start:[6.80436406,47.49527313],lookAt:[6.80461,47.49515],pitch:90},
  {id:'stgi-colour',name:'UFR STGI · façade turquoise',center:[6.80486,47.49525],start:[6.80500018,47.49528259],lookAt:[6.804838,47.495239],pitch:90},
  // Start on the mapped courtyard footway, facing the observed ribbon facade.
