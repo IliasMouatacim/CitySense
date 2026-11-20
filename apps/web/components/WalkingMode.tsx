@@ -18,7 +18,7 @@ export default function WalkingMode({map,start,lookAt,lookPitch=108,useExactStar
     let cancelled=false,physics:Awaited<ReturnType<typeof createCityPhysics>>|undefined;
     import('../lib/city-physics').then(module=>module.createCityPhysics()).then(value=>{
       if(cancelled){value.dispose();return;}physics=value;
-      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value,useExactStart);if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:initialPitch.current});setError('');}
+      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value,useExactStart,initialLook.current);if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:initialPitch.current});setError('');}
       catch(e){setError(e instanceof Error?e.message:'Le mode piéton est indisponible.');}
     }).catch(()=>{if(!cancelled)setError('Les données du terrain n’ont pas pu être chargées. Réessayez.');});
     return()=>{cancelled=true;controller.current?.dispose();controller.current=null;physics?.dispose();};
@@ -31,7 +31,7 @@ export default function WalkingMode({map,start,lookAt,lookPitch=108,useExactStar
     return <button aria-label={label} disabled={!status||!!error} onPointerDown={event=>{event.preventDefault();event.currentTarget.setPointerCapture(event.pointerId);controller.current?.press(action,true);}} onPointerUp={()=>controller.current?.press(action,false)} onPointerCancel={()=>controller.current?.press(action,false)} onLostPointerCapture={()=>controller.current?.press(action,false)} onKeyDown={event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();controller.current?.press(action,true);}}} onKeyUp={event=>{if(event.code==='Space'||event.code==='Enter'){event.preventDefault();controller.current?.press(action,false);}}} onBlur={()=>controller.current?.press(action,false)}><Icon size={21} aria-hidden="true"/></button>;
   }
   return <section className="walk-hud" aria-label="Exploration à pied" data-lon={status?.position[0]} data-lat={status?.position[1]} data-heading={status?.bearing} data-meters={status?.meters} data-eye-height={WALK_EYE_HEIGHT} data-eye-elevation={status?.eye} data-pixel-ratio={status?.pixelRatio} data-look-pitch={status?.pitch} data-fov={status?.fov} data-ground-elevation={status?.ground} data-camera-target={status?.cameraTarget}>
-    <div className="walk-top"><div className="walk-title"><Footprints size={20}/><div><strong>{locationName||'Dans les rues de Montbéliard'}</strong><span>Exploration virtuelle · à hauteur de piéton</span></div></div><button onClick={onExit} className="walk-exit"><LogOut size={17}/> Quitter la marche</button></div>
+    <div className="walk-top"><div className="walk-title"><Footprints size={20}/><div><strong>{locationName||'Dans les rues de Montbéliard'}</strong><span>Le directeur du campus vous accompagne</span></div></div><button onClick={onExit} className="walk-exit"><LogOut size={17}/> Quitter la marche</button></div>
     <div className="walk-crosshair" aria-hidden="true"><i/><i/></div>
     <button className="walk-photo-open" disabled={!status} onClick={()=>{if(status)setPhotoPosition([...status.position]);}}>Photos des rues</button>
     {photoPosition&&<StreetPhotos map={map} position={photoPosition} onClose={()=>setPhotoPosition(null)}/>}

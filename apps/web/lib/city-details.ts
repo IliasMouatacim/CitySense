@@ -1,3 +1,4 @@
+import {campusDirector} from './campus-director';
 import {GARDEN_C_MURAL} from './stgi-architecture';
 import {auditoriumId} from './amphitheatre';
 import {thinQuadSpans} from './thin-quads';
@@ -60,6 +61,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const sharedTarget=new WebGLRenderTarget(1,1);Object.assign(sharedTarget,{isXRRenderTarget:true});sharedTarget.texture.colorSpace=SRGBColorSpace;
   let requestedCityModel=false;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
+  let director:ReturnType<typeof campusDirector>|undefined;
+  function locateDirector(event:{coordinates:[number,number];ground:number;player:[number,number]}){
+    director??=campusDirector();
+    const [x,y]=local(event.coordinates),[px,py]=local(event.player);
+    director.place(x,y,event.ground,Math.atan2(x-px,py-y));
+  }
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
   const colors=new Map<string,Color>();
@@ -988,6 +995,10 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         const distance=.5*map.getCanvas().clientHeight/Math.tan(map.getVerticalFieldOfView()*Math.PI/360)*40075016.6856*Math.cos(c.lat*Math.PI/180)/(512*2**map.getZoom());
         eye=new Vector3(p[0]-Math.sin(bearing)*distance*Math.sin(pitch),p[1]-Math.cos(bearing)*distance*Math.sin(pitch),map.getCameraTargetElevation()+distance*Math.cos(pitch));
       }
+      if(director){
+        if(options.walking&&director.root.parent!==scene)scene.add(director.root);
+        director.root.visible=options.walking;
+      }
       camera.position.copy(eye);camera.updateMatrixWorld(true);sky?.position.copy(eye);
       // Preserve clip coordinates while supplying physical shaders a real eye:
       // (MapLibre VP * world * cameraWorld) * cameraView.
@@ -1000,6 +1011,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       renderer.render(scene,camera);renderer.resetState();gl.bindFramebuffer(gl.FRAMEBUFFER,framebuffer);gl.viewport(viewport[0],viewport[1],viewport[2],viewport[3]);
     },
     onRemove(){
+      map.off('citysense-director',locateDirector);director?.dispose();
       disposed=true;environment?.dispose();pendingHDR?.dispose();skyHDR?.dispose();sky?.geometry.dispose();sky?.material.dispose();
       if(renderer)(renderer as SharedFramebufferRenderer).setRenderTargetFramebuffer(sharedTarget,null);sharedTarget.dispose();
       if(timer)clearTimeout(timer);if(pendingImage){pendingImage.onload=null;pendingImage.onerror=null;pendingImage.src='';}
@@ -1015,6 +1027,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const lastBuilding=layers.findLastIndex(l=>l.type==='fill-extrusion');
   const firstSymbol=layers.slice(lastBuilding+1).find(l=>l.type==='symbol')?.id;
   map.addLayer(layer,firstSymbol);map.on('moveend',scheduleMovement);map.on('sourcedata',source);map.on('citysense-walk-position',locate);
+  map.on('citysense-director',locateDirector);map.fire('citysense-request-director');
   return {
     update(next:DetailOptions){if(JSON.stringify(options)===JSON.stringify(next))return;options=next;force=true;schedule();map.triggerRepaint();},
     dispose(){if(disposed)return;if(map.getLayer(ID))map.removeLayer(ID);}

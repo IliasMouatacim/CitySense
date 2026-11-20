@@ -1,3 +1,4 @@
+import {directorTrail} from './director-trail';
 import {LngLat,type Map} from 'maplibre-gl';
 import {advance,blocked,distance,movementStopped,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
 import {changedBaseTiles,cityBuildingFeatures,getCityWorld} from './city-world';
@@ -6,7 +7,7 @@ import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED,walkBob} from './walk-settings';
 import {walkingGroundHeight} from './walking-ground';
 export type WalkAction='forward'|'back'|'left'|'right'|'turnLeft'|'turnRight'|'sprint';
 export type WalkStatus={position:Position;bearing:number;pitch:number;fov:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number;eye:number;pixelRatio:number};
-export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>,useExactStart=false) {
+export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>,useExactStart=false,lookAt?:Position) {
   const canvas=map.getCanvas(),saved={center:map.getCenter(),zoom:map.getZoom(),bearing:map.getBearing(),pitch:map.getPitch(),padding:map.getPadding(),elevation:map.getCameraTargetElevation()},maxPitch=map.getMaxPitch(),maxZoom=map.getMaxZoom();
   const handlers=[map.dragPan,map.dragRotate,map.scrollZoom,map.boxZoom,map.doubleClickZoom,map.keyboard,map.touchZoomRotate,map.touchPitch];
   if(!withinPilot(origin))throw new Error('Le mode marche couvre le centre de Montbéliard. Quittez puis choisissez Centre historique.');
@@ -89,6 +90,15 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   if(!chosen)throw new Error('Aucun départ dégagé trouvé dans ces rues. Essayez le point de vue Centre historique.');
   const spawn=chosen.point,streetBearing=chosen.heading;
   let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,frame=0,bob=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
+  const facing=lookAt?Math.atan2((lookAt[0]-spawn[0])*Math.cos(spawn[1]*Math.PI/180),lookAt[1]-spawn[1])*180/Math.PI:streetBearing;
+  const directorBearing=[facing+18,facing-18,facing].find(angle=>hasClearStart(spawn,angle))??streetBearing;
+  const directorStart=advance(spawn,directorBearing,1,0,2);
+  let follow=directorTrail(directorStart,spawn);
+  function reportDirector(){
+    const point=follow(position);
+    map.fire('citysense-director',{coordinates:point,ground:walkingGroundHeight(point),player:position});
+  }
+  map.on('citysense-request-director',reportDirector);
   const keys=new Set<string>();let sprintMode=false;
   handlers.forEach(h=>h.disable());map.stop();map.setCenterClampedToGround(false);map.setMaxPitch(135);map.setMaxZoom(24);map.setVerticalFieldOfView(72);
   map.setPixelRatio(Math.min(pixelRatio,1.25));
@@ -101,6 +111,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     eye=walkingGroundHeight(position)+WALK_EYE_HEIGHT+bob;
     map.jumpTo(map.calculateCameraOptionsFromTo(new LngLat(...position),eye,new LngLat(...target),eye-30*Math.cos(radians)));
     map.fire('citysense-walk-position',{coordinates:[...position],eye});
+    reportDirector();
   }
   function focusPlace(event:{coordinates?:Position;pitch?:number}){
     const target=event.coordinates;if(!target||!target.every(Number.isFinite))return;
@@ -163,7 +174,7 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
           const resolved=physics?physics.move(position,next):next;
           collision=movementStopped(position,next,resolved);
           if(resolved[0]!==position[0]||resolved[1]!==position[1]){
-            meters+=distance(position,resolved);position=resolved;dirty=true;
+            meters+=distance(position,resolved);position=resolved;follow(position);dirty=true;
           }
         }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);break;}
       }
@@ -182,9 +193,9 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){keys.add('touch:'+action);wake();}else keys.delete('touch:'+action);},
     look,
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
-    reset(){clear();sprintMode=false;bob=0;position=[...spawn];bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
+    reset(){clear();sprintMode=false;bob=0;position=[...spawn];follow=directorTrail(directorStart,spawn);bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
     dispose(){
-      if(disposed)return;disposed=true;cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
+      if(disposed)return;disposed=true;map.off('citysense-request-director',reportDirector);cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
       window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();

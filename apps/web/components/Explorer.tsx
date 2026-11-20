@@ -14,11 +14,12 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import '../app/photo-city.css';
 import {ArrowUpRight,Search,MapPin,Layers,Navigation,Accessibility,ArrowRight,TrainFront,Trees,Landmark,Compass,X,Sun,Sunset,Moon,Play,Pause,RotateCcw,Maximize2,Minimize2,Footprints} from 'lucide-react';
 type Route={engine:string;attribution?:string;distanceMeters:number;durationSeconds:number;geometry:{type:'LineString';coordinates:number[][]};instructions:{text:string;distanceMeters:number}[]};
+const initialSector=CAMPUS_VISITS.find(sector=>sector.id==='stgi-entry')!;
 export default function Explorer(){
  const savedPlaces=useSavedPlaces();
  const [immersive,setImmersive]=useState(false),[walking,setWalking]=useState(false);
- const [campusVisit,setCampusVisit]=useState('stgi');
- const walkingRef=useRef(false),walkStart=useRef<Position>([6.7982,47.5102]),walkLookAt=useRef<Position|undefined>(undefined),beforeWalk=useRef({immersive:false,tilted:true,scale:1});walkingRef.current=walking;
+ const [campusVisit,setCampusVisit]=useState(initialSector.id);
+ const walkingRef=useRef(false),walkStart=useRef<Position>(initialSector.start),walkLookAt=useRef<Position|undefined>(initialSector.lookAt),beforeWalk=useRef({immersive:false,tilted:true,scale:1});walkingRef.current=walking;
  function leaveWalk(){setWalking(false);setImmersive(beforeWalk.current.immersive);setTilted(beforeWalk.current.tilted);setHeightScale(beforeWalk.current.scale);}
  function enterWalk(){
   const m=map.current;if(!m||!mapReady)return;m.stop();beforeWalk.current={immersive,tilted,scale:heightScale};
@@ -28,7 +29,7 @@ export default function Explorer(){
   walkLookAt.current=reference?[6.79812,47.51174]:campus?sector.lookAt:undefined;
   setSelected(null);setTour(false);setHeightScale(1);setTilted(true);setImmersive(true);setWalking(true);
  }
- const [mood,setMood]=useState<SceneMood>('day'),[heightScale,setHeightScale]=useState(1),[mapReady,setMapReady]=useState(false),[tour,setTour]=useState(false),[reducedMotion,setReducedMotion]=useState(false),[camera,setCamera]=useState({pitch:62,bearing:20,fov:36.87}),[viewId,setViewId]=useState('panoramax');
+ const [mood,setMood]=useState<SceneMood>('day'),[heightScale,setHeightScale]=useState(1),[mapReady,setMapReady]=useState(false),[tour,setTour]=useState(false),[reducedMotion,setReducedMotion]=useState(false),[camera,setCamera]=useState({pitch:62,bearing:20,fov:36.87}),[viewId,setViewId]=useState('campus');
  useEffect(()=>{const query=matchMedia('(prefers-reduced-motion: reduce)');const sync=()=>{setReducedMotion(query.matches);if(query.matches)setTour(false);};sync();query.addEventListener('change',sync);return()=>query.removeEventListener('change',sync);},[]);
  const [originId,setOriginId]=useState(''),[mode,setMode]=useState('pedestrian'),[route,setRoute]=useState<Route|null>(null),[routeStatus,setRouteStatus]=useState('');
  const container=useRef<HTMLDivElement>(null),map=useRef<maplibregl.Map|null>(null),marker=useRef<maplibregl.Marker|null>(null);
@@ -38,7 +39,7 @@ export default function Explorer(){
  useEffect(()=>{
   if(!container.current)return;
   try {
-   const first=CITY_VIEWS.find(v=>v.id==='panoramax')!;
+   const first=CITY_VIEWS.find(v=>v.id==='campus')!;
    const m=new maplibregl.Map({container:container.current,center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,pixelRatio:Math.min(window.devicePixelRatio,1.5),canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
    m.setStyle('https://tiles.openfreemap.org/styles/liberty',{
     transformStyle:(_,style)=>({...style,layers:style.layers.map(layer=>layer.type==='fill-extrusion'
@@ -46,7 +47,7 @@ export default function Explorer(){
      : layer)})
    });
    m.addControl(new maplibregl.NavigationControl({visualizePitch:true}),matchMedia('(max-width:700px)').matches?'bottom-left':'bottom-right');
-   m.on('load',async()=>{try{await installCityWorld(m);styleCity(m,'day');setMapReady(true);setMapError('');}catch{styleCity(m,'day');setMapReady(true);setMapError('Le relief IGN est indisponible. La carte standard reste disponible.');}});
+   m.on('load',async()=>{try{await installCityWorld(m);if(map.current!==m)return;styleCity(m,'day');setImmersive(true);setWalking(true);setMapReady(true);setMapError('');}catch{if(map.current!==m)return;styleCity(m,'day');setMapReady(true);setMapError('Le relief IGN est indisponible. La carte standard reste disponible.');}});
    m.on('moveend',()=>{if(walkingRef.current)return;const pitch=Math.round(m.getPitch()),bearing=Math.round(m.getBearing()),fov=Number(m.getVerticalFieldOfView().toFixed(2));setCamera(previous=>previous.pitch===pitch&&previous.bearing===bearing&&previous.fov===fov?previous:{pitch,bearing,fov});setTilted(m.getPitch()>10);});
    m.on('dragstart',()=>{setTour(false);setViewId('');});
    m.on('zoomstart',event=>{if(event.originalEvent)setTour(false);});

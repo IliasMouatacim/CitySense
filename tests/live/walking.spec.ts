@@ -1,11 +1,12 @@
 import {test,expect} from '@playwright/test';
-test('street-level walking uses keyboard and touch controls, then restores the aerial view',async({page})=>{
+test('the university walk starts automatically, accepts keyboard and touch, and exits to the aerial view',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
- const pitchBefore=await page.locator('.map').getAttribute('data-pitch');
- await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
  const hud=page.getByRole('region',{name:'Exploration à pied',exact:true});
  await expect(hud).toBeVisible();await expect(hud).toHaveAttribute('data-lon',/\d/);
+ await expect(hud).toContainText('Le directeur du campus vous accompagne');
+ expect(Number(await hud.getAttribute('data-lat'))).toBeCloseTo(47.4953,3);
+ expect(Number(await hud.getAttribute('data-lon'))).toBeCloseTo(6.8039,3);
  await expect(page.locator('.walk-error')).toHaveCount(0);
  await expect(page.locator('.panel')).toBeHidden();
  await expect.poll(()=>page.locator('.map').evaluate(e=>e.clientHeight===innerHeight&&e.clientWidth===innerWidth)).toBe(true);
@@ -36,12 +37,13 @@ test('street-level walking uses keyboard and touch controls, then restores the a
  await page.screenshot({path:`test-results/walking-street-${test.info().project.name}.png`,fullPage:true});
  await page.getByRole('button',{name:'Quitter la marche'}).click();
  await expect(hud).toHaveCount(0);await expect(page.locator('.panel')).toBeVisible();
- await expect(page.locator('.map')).toHaveAttribute('data-pitch',pitchBefore!);
+ await expect(page.locator('.map')).toHaveAttribute('data-pitch','60');
  expect(errors).toEqual([]);
 });
 test('Escape exits walking and reduced-motion users can walk without an automatic tour',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/');
  await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ await page.getByRole('button',{name:'Quitter la marche'}).click();
  await page.getByRole('button',{name:'Vue 3D',exact:true}).click();
  await expect(page.locator('.map')).toHaveAttribute('data-pitch','0');
  await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
@@ -54,7 +56,6 @@ test('Escape exits walking and reduced-motion users can walk without an automati
 
 test('drag-to-look rotates at street level and pointer lock can be released safely',async({page})=>{
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
- await page.getByRole('button',{name:'Marcher dans la ville',exact:true}).click();
  const hud=page.getByRole('region',{name:'Exploration à pied',exact:true});await expect(hud).toHaveAttribute('data-heading',/\d/);
  const heading=Number(await hud.getAttribute('data-heading'));
  const canvas=await page.locator('.maplibregl-canvas').boundingBox();
