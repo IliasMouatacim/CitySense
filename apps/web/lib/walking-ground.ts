@@ -1,4 +1,5 @@
 import {amphitheatreStairHeight} from './amphitheatre';
+import {CAMPUS_COURTYARD,STGI_GARDEN_LAWN_LIFT} from './campus-courtyard';
 import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
 import {getCityWorld,terrainHeight,type CityWorld} from './city-world';
 import {insidePolygon,nearestOnLine,distance,offset,type Position} from './walk-geometry';
@@ -14,6 +15,7 @@ export function walkingGroundHeight(position:Position){
    const margin=width/75400;
    surfaces!.push({line,area,lift,width,bounds:[Math.min(...line.map(p=>p[0]))-margin,Math.min(...line.map(p=>p[1]))-margin,Math.max(...line.map(p=>p[0]))+margin,Math.max(...line.map(p=>p[1]))+margin]});
   };
+  add(CAMPUS_COURTYARD.gardenLawn.map(p=>[...p]),true,STGI_GARDEN_LAWN_LIFT);
   add(CAMPUS_NORTH_LAWN.polygon,true,CAMPUS_NORTH_LAWN.lift);
   for(const a of world.campus.areas)add(a.coordinates,true,a.tags.highway==='pedestrian'&&a.tags.surface!=='asphalt'?.12:.035);
   for(const road of world.campus.roads){

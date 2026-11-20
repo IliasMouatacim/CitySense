@@ -3,7 +3,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {terrainHeight,loadCityWorld,inMontbeliard,municipalTerrainVertices} from './city-world';
 import {metersBetween} from './city-details-data';
 import type {Position} from './walk-geometry';
-import {CAMPUS_COURTYARD} from './campus-courtyard';
+import {CAMPUS_COURTYARD,STGI_GARDEN_LAWN_LIFT} from './campus-courtyard';
 import {campusFacadeSolids} from './campus-facade-solids';
 import {shelterAngle,shelterOffset} from './campus-shelter';
 import {streetObjectSolids} from './street-object-solids';
@@ -51,7 +51,10 @@ export async function createCityPhysics(){
  for(const fixture of CAMPUS_COURTYARD.fixtures){
   const coordinates:Position=[...fixture.coordinates],ground=terrainHeight(...coordinates);if(ground===null)continue;const p=local(coordinates);
   if(fixture.kind==='tree'||fixture.kind==='lamp')world.createCollider(RAPIER.ColliderDesc.cylinder(fixture.height/2,fixture.kind==='tree'?.14:.07).setTranslation(p.x,ground+fixture.height/2,p.z));
-  else world.createCollider(RAPIER.ColliderDesc.cuboid(fixture.width/2,fixture.height/2,fixture.depth/2).setTranslation(p.x,ground+fixture.height/2,p.z));
+  else {
+   const lift=fixture.kind==='garden-bed'?STGI_GARDEN_LAWN_LIFT:0;
+   world.createCollider(RAPIER.ColliderDesc.cuboid(fixture.width/2,(fixture.height+lift)/2,fixture.depth/2).setTranslation(p.x,ground+(fixture.height+lift)/2,p.z));
+  }
  }
  const body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased()),collider=world.createCollider(RAPIER.ColliderDesc.capsule(.55,.3),body);
  const character=world.createCharacterController(.025);character.enableAutostep(.3,.2,true);character.enableSnapToGround(.5);character.setMaxSlopeClimbAngle(Math.PI/4);character.setMinSlopeSlideAngle(Math.PI/3);

@@ -2,6 +2,8 @@ import type {CampusDrawing} from './campus-architecture';
 import type {CampusFace} from './campus-references';
 type Pane=(at:number,width:number,bottom:number,top:number,depth?:number)=>void;
 
+export const GARDEN_C_MURAL={center:.405,span:.23,bottom:.30,top:.215,depth:.194};
+
 /** Painted infill below the exposed concrete parapet, visible in both the
  * institutional colour view and Noscium's 2016 photograph. */
 export function drawStgiPaint(length:number,height:number,draw:CampusDrawing){
@@ -83,33 +85,52 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   return true;
  }
  if(face.layout==='garden-c'){
-  const wall='#eeeae0',frame='#344b4c';
-  const front=height*.30,upper=height*.82;
-  draw.panel(length/2,length,.035,height-.12,wall,.055);
-  const bays=Math.max(3,Math.round(length/1.55)),pitch=(length-.20)/bays;
-  // Slim upper ribbon, punctuated by projecting red brackets.
+  const wall='#eeeee8',frame='#344b4c',soffit=height*.298,upper=height*.844;
+  draw.panel(length/2,length,.035,height-.12,wall,.065);
+  draw.box(length/2,length,height-.19,height+.04,'#aeb3a8',.18,.04);
+  const bays=Math.max(3,Math.round(length/2.1)),pitch=(length-.20)/bays;
   for(let i=0;i<bays;i++){
-   pane(.10+(i+.5)*pitch,pitch-.08,upper,height*.94,.13);
-   if(i%3===0)draw.box(.16+i*pitch,.14,upper-.03,height*.94,'#963f40',.32,.06);
+   pane(.10+(i+.5)*pitch,pitch-.06,upper,height*.942,.13);
+   if(i%2===1)draw.box(.10+i*pitch,.18,upper-.025,height*.94,'#963f40',.31,.06);
   }
-  const entrance=length*.70,span=length*.48;
-  draw.panel(entrance,span,.06,front,frame,.15);
-  for(let i=0;i<4;i++)pane(entrance+span*((i+.5)/4-.5),span/4-.11,.15,front-.16,.21);
-  draw.box(entrance,span+.22,front,front+.18,'#b5b3a9',.95,.035);
-  draw.box(entrance,span+.16,front-.07,front,'#7a3738',.94,.04);
-  for(const side of [-1,1])draw.box(entrance+side*(span/2-.19),.26,.03,front,frame,.91,.65);
-  const windowAt=length*.45,width=length*.22;
-  pane(windowAt,width,height*.40,height*.65,.13);
-  draw.panel(windowAt+width*.36,width*.24,height*.42,height*.64,'#ab5149',.25);
-  const accent=length*.19;
-  draw.panel(accent,.46,height*.43,height*.43+.50,'#a88f38',.14);
-  const sign=length*.39;
-  draw.panel(sign,1.05,1.52,2.52,wall,.26);
-  draw.panel(sign,.96,1.77,2.27,'#434951',.28);
-  draw.lettering('BÂTIMENT C',sign,.90,1.85,2.18,false,.29,'#ffffff');
-  for(const [i,color] of ['#52a356','#287a90','#d04752','#81649b','#d59444'].entries()){
-   draw.panel(sign-.38+i*.17,.14,2.30,2.46,color,.28);
+
+  const canopyLeft=length*.23,canopyRight=length*.99;
+  const canopyWidth=canopyRight-canopyLeft,canopyCenter=(canopyLeft+canopyRight)/2;
+  draw.box(canopyCenter,canopyWidth,soffit,soffit+.20,'#b3b6aa',.98,.035);
+  draw.box(canopyCenter,canopyWidth,soffit-.085,soffit,'#7a3738',.975,.04);
+  draw.box(canopyCenter,canopyWidth,soffit+.20,soffit+.246,'#394447',.99,.035);
+  for(const fraction of [.252,.731]){
+   const at=length*fraction,depth=.78,radius=.15;
+   if(draw.column)draw.column(at,depth,radius,.03,soffit-.085,'#6c797b');
+   else draw.box(at,radius*2,.03,soffit-.085,'#6c797b',depth+radius,depth-radius);
   }
+
+  const glass=(at:number,width:number,bottom:number,top:number)=>{
+   draw.panel(at,width,bottom,top,frame,.135);
+   if(draw.glazing)draw.glazing(at,width-.065,bottom+.045,top-.045,.175,'fixed');
+   else draw.panel(at,width-.065,bottom+.045,top-.045,'#587077',.175);
+  };
+  const art=GARDEN_C_MURAL;
+  for(const offset of [-.25,.25])glass(length*(art.center+offset*art.span),length*art.span/2,.12,soffit-.19);
+  const door=length*.577,doorWidth=length*.095;
+  for(const side of [-1,1]){
+   const leaf=door+side*doorWidth/4;
+   glass(leaf,doorWidth/2,.06,2.18);
+   draw.box(leaf,doorWidth*.5-.075,.07,.21,'#526469',.235,.17);
+   draw.box(door+side*.09,.034,.88,1.20,'#a8b3ac',.25,.18);
+  }
+  glass(door,doorWidth,2.22,soffit-.19);
+  const sideDoor=length*.848,sideWidth=length*.097;
+  glass(sideDoor,sideWidth,.095,soffit-.19);
+  draw.box(sideDoor+sideWidth*.40,sideWidth*.17,.10,2.18,'#28527f',.22,.10);
+  draw.panel(sideDoor-sideWidth*.10,sideWidth*.44,.16,.43,'#abb0a0',.189);
+  for(const [at,width] of [[.47,.15],[.835,.22]]){
+   glass(length*at,length*width,height*.333,height*.606);
+   draw.box(length*at,length*width,height*.437,height*.447,'#718681',.228,.168);
+   draw.panel(length*(at+width*.30),length*width*.34,height*.449,height*.601,'#a74944',.198);
+  }
+  draw.panel(length*.27,.37,height*.429,height*.429+.48,'#b99842',.15);
+  draw.box(length*.27,.40,height*.415,height*.429,'#75805c',.25,.09);
   return true;
  }
  if(!['stgi-court','stgi-colour','stgi-ribbon','stgi-return','stgi-north-openings'].includes(face.layout||''))return false;
