@@ -108,14 +108,21 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     const light=shade*(options.mood==='night'?.46:options.mood==='golden'?.94:1);
     return [color.r*light,color.g*light,color.b*light];
   }
-  function triangle(target:Batch,a:number[],b:number[],c:number[],rgb:number[],uv?:number[][]){
-    for(const [i,p] of [a,b,c].entries()){target.positions.push(p[0],p[1],p[2]*options.scale);target.colors.push(...rgb);if(uv)target.uvs.push(...uv[i]);}
+  function writeVertex(target:Batch,p:number[],rgb:number[],uv?:number[]){
+    target.positions.push(p[0],p[1],p[2]*options.scale);
+    target.colors.push(rgb[0],rgb[1],rgb[2]);
+    if(uv)target.uvs.push(uv[0],uv[1]);
   }
+  function triangle(target:Batch,a:number[],b:number[],c:number[],rgb:number[],uv?:number[][]){
+    writeVertex(target,a,rgb,uv?.[0]);
+    writeVertex(target,b,rgb,uv?.[1]);
+    writeVertex(target,c,rgb,uv?.[2]);
+  }
+  const quadIndices=[0,1,2,0,2,3];
   function quad(target:Batch,a:number[],b:number[],c:number[],d:number[],hex:string,shade=1,uv?:number[][]){
     const rgb=tint(hex,shade);
     for(const face of thinQuadSpans([a,b,c,d],uv)){
-      const [p,q,r,s]=face.points,t=face.uv;
-      triangle(target,p,q,r,rgb,t?.slice(0,3));triangle(target,p,r,s,rgb,t&&[t[0],t[2],t[3]]);
+      for(const i of quadIndices)writeVertex(target,face.points[i],rgb,face.uv?.[i]);
     }
   }
   function panel(target:Batch,wall:Wall,along:number,width:number,bottom:number,top:number,hex:string,depth=.085,uv?:number[][]){

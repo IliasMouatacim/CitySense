@@ -3,14 +3,30 @@
  * The cap bounds geometry growth for exceptionally narrow decorative lines.
  */
 export function thinQuadSpans(points:number[][],uv?:number[][]):{points:number[][];uv?:number[][]}[]{
- const distance=(a:number[],b:number[])=>Math.hypot(...a.map((v,i)=>v-b[i]));
- const [a,b,c,d]=points,u=Math.max(distance(a,b),distance(d,c)),v=Math.max(distance(a,d),distance(b,c));
+ const squaredDistance=(a:number[],b:number[])=>{
+  const dx=a[0]-b[0],dy=a[1]-b[1],dz=a[2]-b[2];
+  return dx*dx+dy*dy+dz*dz;
+ };
+ const [a,b,c,d]=points;
+ const u=Math.max(squaredDistance(a,b),squaredDistance(d,c));
+ const v=Math.max(squaredDistance(a,d),squaredDistance(b,c));
  const short=Math.min(u,v),long=Math.max(u,v);
- if(short===0||long<=short*20)return [{points,uv}];
- const count=Math.min(64,Math.ceil(long/(short*20))),alongU=u>=v;
+ if(short===0||long<=short*400)return [{points,uv}];
+ const count=Math.min(64,Math.ceil(Math.sqrt(long/short)/20)),alongU=u>=v;
  const mix=(a:number[],b:number[],t:number)=>a.map((value,i)=>value+(b[i]-value)*t);
- const slice=(q:number[][],t0:number,t1:number)=>alongU
-  ?[mix(q[0],q[1],t0),mix(q[0],q[1],t1),mix(q[3],q[2],t1),mix(q[3],q[2],t0)]
-  :[mix(q[0],q[3],t0),mix(q[1],q[2],t0),mix(q[1],q[2],t1),mix(q[0],q[3],t1)];
- return Array.from({length:count},(_,i)=>({points:slice(points,i/count,(i+1)/count),...(uv?{uv:slice(uv,i/count,(i+1)/count)}:{})}));
+ // Adjacent spans reuse their shared edge, including its texture coordinates.
+ const spans=(q:number[][])=>{
+  const endA=alongU?q[1]:q[3],startB=alongU?q[3]:q[1];
+  let a=q[0],b=startB;
+  return Array.from({length:count},(_,i)=>{
+   const t=(i+1)/count;
+   const nextA=i+1===count?endA:mix(q[0],endA,t);
+   const nextB=i+1===count?q[2]:mix(startB,q[2],t);
+   const face=alongU?[a,nextA,nextB,b]:[a,b,nextB,nextA];
+   a=nextA;b=nextB;
+   return face;
+  });
+ };
+ const texture=uv&&spans(uv);
+ return spans(points).map((points,i)=>({points,uv:texture?.[i]}));
 }
