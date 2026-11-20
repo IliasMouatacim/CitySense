@@ -10,7 +10,7 @@ import {roofPhotoRequest} from './photo-city';
 import {changedBaseTiles,cityBuildingFeatures,getCityWorld,inMontbeliard,municipalTerrainVertices,terrainHeight} from './city-world';
 import {loadCityModel} from './city-model';
 import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
-import {campusProfile,campusFace} from './campus-references';
+import {campusProfile,campusFace,gardenConnectorFace} from './campus-references';
 import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
@@ -665,7 +665,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 return !campusOccluders.some(other=>other.feature!==feature&&Number(other.feature.properties?.render_height)>=height-.3&&insidePolygon(point,other.rings));
               });
               const estimated=!observed&&academic&&exposed?estimatedCampusFace(completion,p.campusUse,length,height-base):undefined;
-              const face=observed||estimated;
+              const face=observed??gardenConnectorFace(p.sourceId,ga,gb)??estimated;
               if(face||academic&&exposed){
                 const drawing:CampusDrawing={
                   panel:(at,w,bottom,top,hex,depth)=>panel(campusConcreteTones.has(hex)?campusConcrete:details,wall,at,w,base+bottom,base+top,hex,depth,campusConcreteTones.has(hex)?[[0,0],[w/4,0],[w/4,(top-bottom)/2],[0,(top-bottom)/2]]:undefined),
@@ -691,7 +691,8 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 }
                 if(face){
                   windows+=drawCampusFacade(face,length,height-base,drawing);
-                  if(face.layout==='garden-c'){gardenWindowArt(wall);gardenBuildingPlaque(wall,'C');}
+                  if(face.layout==='garden-c'||face.layout==='garden-c-connector')gardenWindowArt(wall);
+                  if(face.layout==='garden-c')gardenBuildingPlaque(wall,'C');
                   if(face.layout==='garden-b-return')gardenBuildingPlaque(wall,'B');
                   if(observed)campusFacades++;else campusEstimatedFacades++;
                 }

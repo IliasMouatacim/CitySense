@@ -255,7 +255,7 @@ test('campus visit starts sit inside the measured terrain and outside building i
  for(const visit of CAMPUS_VISITS){
   const p=visit.start;assert.ok(p[0]>w&&p[0]<e&&p[1]>s&&p[1]<n);
   assert.ok(!data.buildings.features.some((f:any)=>polygons(f).some(poly=>insidePolygon(p,poly))),visit.id);
-  assert.ok(visit.pitch>=90&&visit.pitch<120);
+  assert.ok(visit.pitch>=85&&visit.pitch<120);
  }
  const utbm=CAMPUS_VISITS.find(v=>v.id==='utbm')!;
  const streets=JSON.parse(readFileSync('apps/web/public/city/campus-osm.json','utf8'));

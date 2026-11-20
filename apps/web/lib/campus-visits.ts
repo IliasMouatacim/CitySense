@@ -1,5 +1,5 @@
 import type {Position} from './walk-geometry';
-export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position;lookAt:Position;pitch:number}[]=[
+export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position;lookAt:Position;pitch:number;useExactStart?:boolean}[]=[
  {id:'crous',name:'CROUS · restaurant universitaire',center:[6.80367,47.49605],start:[6.80368147,47.49570043],lookAt:[6.8035465,47.4959318],pitch:90},
  {id:'crous-platform',name:'CROUS · abri et parvis',center:[6.80393,47.49585],start:[6.8040111,47.4957667],lookAt:[6.803899,47.495852],pitch:90},
  {id:'campus-bus',name:'Arrêt de bus · Campus',center:[6.80405,47.49577],start:[6.80406076,47.49577669],lookAt:[6.8041185,47.4957244],pitch:90},
@@ -7,6 +7,7 @@ export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position
  {id:'stgi',name:'UFR STGI · façade ouest',center:[6.80435,47.49523],start:[6.804015,47.495225],lookAt:[6.80430,47.49515],pitch:90},
  {id:'stgi-entry',name:'UFR STGI · entrée de la cour',center:[6.80410,47.49539],start:[6.80387,47.49532],lookAt:[6.804103,47.495386],pitch:90},
  {id:'library-court',name:'Bibliothèque · côté cour',center:[6.803866,47.495489],start:[6.80389,47.49528],lookAt:[6.803866,47.495490],pitch:90},
+ {id:'stgi-garden-west',name:'UFR STGI · jardin, côté ouest',center:[6.80453,47.49535],start:[6.804487,47.4952862],lookAt:[6.804590,47.4954500],pitch:86.6,useExactStart:true},
  {id:'stgi-garden-c',name:'UFR STGI · bâtiment C, côté jardin',center:[6.80465,47.49532],start:[6.804911,47.495400],lookAt:[6.80470,47.495328],pitch:90},
  {id:'stgi-garden-b',name:'UFR STGI · bâtiment B, côté jardin',center:[6.80471,47.49543],start:[6.804892,47.495422],lookAt:[6.80470,47.495428],pitch:90},
  {id:'stgi-court',name:'UFR STGI · galerie de la cour',center:[6.80445,47.49525],start:[6.80436406,47.49527313],lookAt:[6.80461,47.49515],pitch:90},

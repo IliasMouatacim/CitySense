@@ -6,7 +6,7 @@ import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED,walkBob} from './walk-settings';
 import {walkingGroundHeight} from './walking-ground';
 export type WalkAction='forward'|'back'|'left'|'right'|'turnLeft'|'turnRight'|'sprint';
 export type WalkStatus={position:Position;bearing:number;pitch:number;fov:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number;eye:number;pixelRatio:number};
-export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>) {
+export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>,useExactStart=false) {
   const canvas=map.getCanvas(),saved={center:map.getCenter(),zoom:map.getZoom(),bearing:map.getBearing(),pitch:map.getPitch(),padding:map.getPadding(),elevation:map.getCameraTargetElevation()},maxPitch=map.getMaxPitch(),maxZoom=map.getMaxZoom();
   const handlers=[map.dragPan,map.dragRotate,map.scrollZoom,map.boxZoom,map.doubleClickZoom,map.keyboard,map.touchZoomRotate,map.touchPitch];
   if(!withinPilot(origin))throw new Error('Le mode marche couvre le centre de Montbéliard. Quittez puis choisissez Centre historique.');
@@ -58,19 +58,33 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   }
   refreshGeometry(true);
   const candidates=roads.map(road=>({point:nearestOnLine(origin,road.line),priority:road.priority,line:road.line})).filter(c=>withinPilot(c.point)&&(!physics||physics.height(c.point)!==null)&&distance(origin,c.point)<250&&!blocked(c.point,obstacles,bridges)).sort((a,b)=>distance(origin,a.point)+a.priority-distance(origin,b.point)-b.priority);
-  if(!candidates.length)throw new Error('Les rues ne sont pas encore chargées. Attendez un instant puis réessayez.');
   const angleDifference=(a:number,b:number)=>Math.abs(((a-b+540)%360)-180);
+  function hasClearStart(start:Position,direction:number){
+    let point=start,travelled=0;
+    for(let step=0;step<6;step++){
+      const next=advance(point,direction,1,0,.5);
+      if(blocked(next,obstacles,bridges)||physics&&physics.height(next)===null)return false;
+      const resolved=physics?physics.move(point,next):next;
+      travelled+=distance(point,resolved);point=resolved;
+    }
+    return travelled>2.7;
+  }
   let chosen:{point:Position;heading:number}|undefined;
+  if(useExactStart&&!blocked(origin,obstacles,bridges)){
+    // The saved camera can be beside a mapped footway, as long as the spawn
+    // has terrain and enough clearance to begin walking.
+    const heading=[map.getBearing(),map.getBearing()+90,map.getBearing()+180,map.getBearing()+270]
+      .find(direction=>hasClearStart(origin,direction));
+    if(heading!==undefined)chosen={point:origin,heading};
+  }
+  if(!chosen&&!candidates.length)throw new Error('Les rues ne sont pas encore chargées. Attendez un instant puis réessayez.');
   for(const candidate of candidates){
+    if(chosen)break;
     let heading=map.getBearing(),nearest=Infinity;
     for(let i=1;i<candidate.line.length;i++){const a=candidate.line[i-1],b=candidate.line[i],d=distance(candidate.point,nearestOnLine(candidate.point,[a,b]));if(d<nearest){nearest=d;heading=Math.atan2((b[0]-a[0])*Math.cos(candidate.point[1]*Math.PI/180),b[1]-a[1])*180/Math.PI;}}
     const headings=[heading,heading+180].sort((a,b)=>angleDifference(a,map.getBearing())-angleDifference(b,map.getBearing()));
-    for(const direction of headings){
-      let point=candidate.point,travelled=0,safe=true;
-      for(let step=0;step<6;step++){const next=advance(point,direction,1,0,.5);if(blocked(next,obstacles,bridges)||physics&&physics.height(next)===null){safe=false;break;}const resolved=physics?physics.move(point,next):next;travelled+=distance(point,resolved);point=resolved;}
-      if(safe&&travelled>2.7){chosen={point:candidate.point,heading:direction};break;}
-    }
-    if(chosen)break;
+    const direction=headings.find(value=>hasClearStart(candidate.point,value));
+    if(direction!==undefined)chosen={point:candidate.point,heading:direction};
   }
   if(!chosen)throw new Error('Aucun départ dégagé trouvé dans ces rues. Essayez le point de vue Centre historique.');
   const spawn=chosen.point,streetBearing=chosen.heading;

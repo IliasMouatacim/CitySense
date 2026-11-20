@@ -84,22 +84,27 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   }
   return true;
  }
- if(face.layout==='garden-c'){
+ if(face.layout==='garden-c'||face.layout==='garden-c-connector'){
+  const connector=face.layout==='garden-c-connector';
   const wall='#eeeee8',frame='#344b4c',soffit=height*.298,upper=height*.844;
   draw.panel(length/2,length,.035,height-.12,wall,.065);
-  draw.box(length/2,length,height-.19,height+.04,'#aeb3a8',.18,.04);
+  draw.box(length/2,length,connector?height*.937:height-.19,height+.04,'#aeb3a8',.18,.04);
   const bays=Math.max(3,Math.round(length/2.1)),pitch=(length-.20)/bays;
   for(let i=0;i<bays;i++){
    pane(.10+(i+.5)*pitch,pitch-.06,upper,height*.942,.13);
    if(i%2===1)draw.box(.10+i*pitch,.18,upper-.025,height*.94,'#963f40',.31,.06);
   }
 
-  const canopyLeft=length*.23,canopyRight=length*.99;
+  if(connector){
+   // Pair of shallow channels under the top band visible in the photo.
+   for(const z of [height*.750,height*.766])draw.panel(length/2,length,z,z+.014,'#bbbdb3',.074);
+  }
+  const canopyLeft=length*(connector?.055:.23),canopyRight=length*.99;
   const canopyWidth=canopyRight-canopyLeft,canopyCenter=(canopyLeft+canopyRight)/2;
   draw.box(canopyCenter,canopyWidth,soffit,soffit+.20,'#b3b6aa',.98,.035);
   draw.box(canopyCenter,canopyWidth,soffit-.085,soffit,'#7a3738',.975,.04);
   draw.box(canopyCenter,canopyWidth,soffit+.20,soffit+.246,'#394447',.99,.035);
-  for(const fraction of [.252,.731]){
+  for(const fraction of connector?[.085,.735]:[.252,.731]){
    const at=length*fraction,depth=.78,radius=.15;
    if(draw.column)draw.column(at,depth,radius,.03,soffit-.085,'#6c797b');
    else draw.box(at,radius*2,.03,soffit-.085,'#6c797b',depth+radius,depth-radius);
@@ -112,7 +117,7 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   };
   const art=GARDEN_C_MURAL;
   for(const offset of [-.25,.25])glass(length*(art.center+offset*art.span),length*art.span/2,.12,soffit-.19);
-  const door=length*.577,doorWidth=length*.095;
+  const door=length*.577,doorWidth=Math.max(1.45,length*.095);
   for(const side of [-1,1]){
    const leaf=door+side*doorWidth/4;
    glass(leaf,doorWidth/2,.06,2.18);
@@ -124,10 +129,10 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   glass(sideDoor,sideWidth,.095,soffit-.19);
   draw.box(sideDoor+sideWidth*.40,sideWidth*.17,.10,2.18,'#28527f',.22,.10);
   draw.panel(sideDoor-sideWidth*.10,sideWidth*.44,.16,.43,'#abb0a0',.189);
-  for(const [at,width] of [[.47,.15],[.835,.22]]){
+  for(const [at,width] of connector?[[.475,.17]]:[[.47,.15],[.835,.22]]){
    glass(length*at,length*width,height*.333,height*.606);
    draw.box(length*at,length*width,height*.437,height*.447,'#718681',.228,.168);
-   draw.panel(length*(at+width*.30),length*width*.34,height*.449,height*.601,'#a74944',.198);
+   draw.panel(length*(at+width*(connector?-.30:.30)),length*width*.34,height*.449,height*.601,'#a74944',.198);
   }
   draw.panel(length*.27,.37,height*.429,height*.429+.48,'#b99842',.15);
   draw.box(length*.27,.40,height*.415,height*.429,'#75805c',.25,.09);

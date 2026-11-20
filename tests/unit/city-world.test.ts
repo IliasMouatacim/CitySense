@@ -86,6 +86,9 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    for(let step=0;step<70;step++)besidePier=physics.move(besidePier,offset(besidePier,-pier.normal[0]*.05,-pier.normal[1]*.05));
    assert.ok(distance(besidePier,pier.wallCenter)>pier.front+.25,'Camera capsule must stop outside the rendered concrete pier');
    assert.ok(distance(besidePier,pier.wallCenter)<pier.front+.5,'The collision must follow the visible pier rather than an oversized barrier');
+   const gardenColumns=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563707');
+   assert.equal(gardenColumns.length,2,'The two round canopy supports have matching walking obstacles');
+   assert.ok(gardenColumns.every(s=>s.width===.30&&s.front===.93));
    const restaurantPiers=campusFacadeSolids(data).filter(s=>s.sourceId==='BATIMENT0000000223563747'&&s.width===.9);
    assert.ok(restaurantPiers.length>3);
    const restaurantPier=restaurantPiers[Math.floor(restaurantPiers.length/2)];

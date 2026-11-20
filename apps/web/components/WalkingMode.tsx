@@ -8,7 +8,7 @@ import type {createCityPhysics} from '../lib/city-physics';
 import StreetPhotos from './StreetPhotos';
 import {WALK_EYE_HEIGHT} from '../lib/walk-settings';
 
-export default function WalkingMode({map,start,lookAt,lookPitch=108,locationName,onExit}:{map:Map;start:Position;lookAt?:Position;lookPitch?:number;locationName?:string;onExit:()=>void}) {
+export default function WalkingMode({map,start,lookAt,lookPitch=108,useExactStart=false,locationName,onExit}:{map:Map;start:Position;lookAt?:Position;lookPitch?:number;useExactStart?:boolean;locationName?:string;onExit:()=>void}) {
   const controller=useRef<ReturnType<typeof createWalkController>|null>(null),exit=useRef(onExit),origin=useRef(start),initialLook=useRef(lookAt);
   const initialPitch=useRef(lookPitch);
   exit.current=onExit;
@@ -18,11 +18,11 @@ export default function WalkingMode({map,start,lookAt,lookPitch=108,locationName
     let cancelled=false,physics:Awaited<ReturnType<typeof createCityPhysics>>|undefined;
     import('../lib/city-physics').then(module=>module.createCityPhysics()).then(value=>{
       if(cancelled){value.dispose();return;}physics=value;
-      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value);if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:initialPitch.current});setError('');}
+      try{controller.current=createWalkController(map,origin.current,setStatus,()=>exit.current(),value,useExactStart);if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:initialPitch.current});setError('');}
       catch(e){setError(e instanceof Error?e.message:'Le mode piéton est indisponible.');}
     }).catch(()=>{if(!cancelled)setError('Les données du terrain n’ont pas pu être chargées. Réessayez.');});
     return()=>{cancelled=true;controller.current?.dispose();controller.current=null;physics?.dispose();};
-  },[map,attempt]);
+  },[map,attempt,useExactStart]);
   function reset(){
     setSprint(false);controller.current?.reset();
     if(initialLook.current)map.fire('citysense-look-at',{coordinates:initialLook.current,pitch:initialPitch.current});
