@@ -46,8 +46,10 @@ export function nearestOnLine(point:Position,line:number[][]):Position {
 }
 export function blocked(point:Position,obstacles:Obstacle[],bridges:number[][][]=[]) {
   const probes=[point,offset(point,.35,0),offset(point,-.35,0),offset(point,0,.35),offset(point,0,-.35)];
+  const westProbe=probes[2][0],eastProbe=probes[1][0],southProbe=probes[4][1],northProbe=probes[3][1];
   for(const obstacle of obstacles){
     const [west,south,east,north]=obstacle.bounds;
+    if(eastProbe<west||westProbe>east||northProbe<south||southProbe>north)continue;
     if(!probes.some(p=>p[0]>=west&&p[0]<=east&&p[1]>=south&&p[1]<=north&&insidePolygon(p,obstacle.rings)))continue;
     if(obstacle.kind==='water'&&bridges.some(line=>distance(point,nearestOnLine(point,line))<1.5))continue;
     return true;

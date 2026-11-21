@@ -40,7 +40,7 @@ export default function Explorer(){
   if(!container.current)return;
   try {
    const first=CITY_VIEWS.find(v=>v.id==='campus')!;
-   const m=new maplibregl.Map({container:container.current,center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,pixelRatio:Math.min(window.devicePixelRatio,1.5),canvasContextAttributes:{antialias:true},attributionControl:{compact:true}});map.current=m;
+   const m=new maplibregl.Map({container:container.current,center:first.center,zoom:first.zoom,pitch:first.pitch,bearing:first.bearing,maxPitch:75,pixelRatio:Math.min(window.devicePixelRatio,1.5),canvasContextAttributes:{antialias:false},attributionControl:{compact:true}});map.current=m;
    m.setStyle('https://tiles.openfreemap.org/styles/liberty',{
     transformStyle:(_,style)=>({...style,layers:style.layers.map(layer=>layer.type==='fill-extrusion'
      ? {...layer,layout:{...layer.layout,visibility:'none' as const}}

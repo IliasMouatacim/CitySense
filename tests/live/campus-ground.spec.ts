@@ -5,6 +5,7 @@ test('library paths have stable materials and walking stays grounded and respons
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
  page.on('console',m=>{if(m.type()==='error'&&/THREE|GL_INVALID|shader error|framebuffer|feedback loop/i.test(m.text()))errors.push(m.text());});
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ await page.getByRole('button',{name:'Quitter la marche',exact:true}).click();
  const originalSize=await page.locator('.maplibregl-canvas').evaluate((c:HTMLCanvasElement)=>c.width/c.clientWidth);
  await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
  await page.getByRole('combobox',{name:'Secteur du campus'}).selectOption('library');

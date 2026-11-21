@@ -58,9 +58,16 @@ export async function createCityPhysics(){
  }
  const body=world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased()),collider=world.createCollider(RAPIER.ColliderDesc.capsule(.55,.3),body);
  const character=world.createCharacterController(.025);character.enableAutostep(.3,.2,true);character.enableSnapToGround(.5);character.setMaxSlopeClimbAngle(Math.PI/4);character.setMinSlopeSlideAngle(Math.PI/3);
+ const cameraProbe=new RAPIER.Ball(.16);
  world.step();let disposed=false;
  return {
   height:(p:Position)=>inMontbeliard(p)?terrainHeight(...p):null,
+  cameraClearance(position:Position,height:number,east:number,north:number,up:number,length:number){
+   const start=local(position);
+   const hit=world.castShape({x:start.x,y:height,z:start.z},{x:0,y:0,z:0,w:1},
+    {x:east,y:up,z:-north},cameraProbe,.03,length,true,undefined,undefined,collider);
+   return hit?Math.max(0,hit.time_of_impact-.025):length;
+  },
   move(from:Position,to:Position):Position{
    if(disposed||!inMontbeliard(to))return from;
    const terrain=terrainHeight(...to);

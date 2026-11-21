@@ -3,10 +3,11 @@ import {LngLat,type Map} from 'maplibre-gl';
 import {advance,blocked,distance,movementStopped,makeObstacle,nearestOnLine,offset,withinPilot,walkFrame,type Obstacle,type Position} from './walk-geometry';
 import {changedBaseTiles,cityBuildingFeatures,getCityWorld} from './city-world';
 import type {createCityPhysics} from './city-physics';
-import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED,walkBob} from './walk-settings';
+import {WALK_EYE_HEIGHT,WALK_SPEED,RUN_SPEED} from './walk-settings';
+import {followCamera,type PlayerPose} from './follow-camera';
 import {walkingGroundHeight} from './walking-ground';
 export type WalkAction='forward'|'back'|'left'|'right'|'turnLeft'|'turnRight'|'sprint';
-export type WalkStatus={position:Position;bearing:number;pitch:number;fov:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number;eye:number;pixelRatio:number};
+export type WalkStatus={position:Position;bearing:number;pitch:number;fov:number;meters:number;blocked:boolean;boundary:boolean;locked:boolean;ground:number;cameraTarget:number;cameraElevation:number;cameraDistance:number;facing:number;eye:number;pixelRatio:number};
 export function createWalkController(map:Map,origin:Position,onStatus:(status:WalkStatus)=>void,onExit:()=>void,physics?:Awaited<ReturnType<typeof createCityPhysics>>,useExactStart=false,lookAt?:Position) {
   const canvas=map.getCanvas(),saved={center:map.getCenter(),zoom:map.getZoom(),bearing:map.getBearing(),pitch:map.getPitch(),padding:map.getPadding(),elevation:map.getCameraTargetElevation()},maxPitch=map.getMaxPitch(),maxZoom=map.getMaxZoom();
   const handlers=[map.dragPan,map.dragRotate,map.scrollZoom,map.boxZoom,map.doubleClickZoom,map.keyboard,map.touchZoomRotate,map.touchPitch];
@@ -89,9 +90,9 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   }
   if(!chosen)throw new Error('Aucun départ dégagé trouvé dans ces rues. Essayez le point de vue Centre historique.');
   const spawn=chosen.point,streetBearing=chosen.heading;
-  let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,frame=0,bob=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
-  const facing=lookAt?Math.atan2((lookAt[0]-spawn[0])*Math.cos(spawn[1]*Math.PI/180),lookAt[1]-spawn[1])*180/Math.PI:streetBearing;
-  const directorBearing=[facing+18,facing-18,facing].find(angle=>hasClearStart(spawn,angle))??streetBearing;
+  let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,frame=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
+  const initialFacing=lookAt?Math.atan2((lookAt[0]-spawn[0])*Math.cos(spawn[1]*Math.PI/180),lookAt[1]-spawn[1])*180/Math.PI:streetBearing;
+  const directorBearing=[initialFacing+18,initialFacing-18,initialFacing].find(angle=>hasClearStart(spawn,angle))??streetBearing;
   const directorStart=advance(spawn,directorBearing,1,0,2);
   let follow=directorTrail(directorStart,spawn);
   function reportDirector(){
@@ -105,20 +106,24 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   for(const layer of symbolLayers)map.setLayoutProperty(layer.id,'visibility','none');
   const resized=()=>{dirty=true;wake();};map.on('resize',resized);
   const originalTouchAction=canvas.style.touchAction,originalLabel=canvas.getAttribute('aria-label');canvas.setAttribute('aria-label','Scène de marche : ZQSD ou WASD pour marcher, flèches pour tourner, Échap pour quitter.');canvas.style.touchAction='none';canvas.focus({preventScroll:true});
-  function applyCamera(){
-    const radians=pitch*Math.PI/180,heading=bearing*Math.PI/180,horizontal=30*Math.sin(radians);
-    const target=offset(position,Math.sin(heading)*horizontal,Math.cos(heading)*horizontal);
-    eye=walkingGroundHeight(position)+WALK_EYE_HEIGHT+bob;
-    map.jumpTo(map.calculateCameraOptionsFromTo(new LngLat(...position),eye,new LngLat(...target),eye-30*Math.cos(radians)));
-    map.fire('citysense-walk-position',{coordinates:[...position],eye});
+  let facing=bearing,desiredFacing=bearing,stride=0,arm=3.65,settling=false,cameraElevation=eye;
+  function applyCamera(seconds=.016){
+    const ground=walkingGroundHeight(position);
+    eye=ground+WALK_EYE_HEIGHT;
+    const follow=followCamera(position,ground,bearing,pitch,arm,seconds,physics?.cameraClearance);
+    arm=follow.arm;settling=follow.settling;cameraElevation=follow.eye;
+    map.jumpTo(map.calculateCameraOptionsFromTo(new LngLat(...follow.camera),follow.eye,new LngLat(...follow.target),follow.targetElevation));
+    const pose:PlayerPose={coordinates:[...position],ground,facing,meters,stride,camera:follow.camera,eye:follow.eye,arm};
+    map.fire('citysense-walk-position',pose);
     reportDirector();
   }
+  const requestPose=()=>{dirty=true;wake();};map.on('citysense-request-pose',requestPose);
   function focusPlace(event:{coordinates?:Position;pitch?:number}){
     const target=event.coordinates;if(!target||!target.every(Number.isFinite))return;
-    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;pitch=Number.isFinite(event.pitch)?Math.max(60,Math.min(135,event.pitch!)):87;dirty=true;wake();
+    bearing=Math.atan2((target[0]-position[0])*Math.cos(position[1]*Math.PI/180),target[1]-position[1])*180/Math.PI;desiredFacing=facing=bearing;pitch=Number.isFinite(event.pitch)?Math.max(60,Math.min(135,event.pitch!)):87;dirty=true;wake();
   }
   map.on('citysense-look-at',focusPlace);
-  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,fov:map.getVerticalFieldOfView(),meters,blocked:collision,boundary,locked,ground:walkingGroundHeight(position),cameraTarget:map.getCameraTargetElevation(),eye,pixelRatio:map.getPixelRatio()});}
+  function status(){onStatus({position:[...position],bearing:((bearing%360)+360)%360,pitch,fov:map.getVerticalFieldOfView(),meters,blocked:collision,boundary,locked,ground:walkingGroundHeight(position),cameraTarget:map.getCameraTargetElevation(),cameraElevation,cameraDistance:arm,facing,eye,pixelRatio:map.getPixelRatio()});}
   const keyCodes=['KeyW','KeyZ','KeyS','KeyA','KeyQ','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight'];
   const typing=(target:EventTarget|null)=>target instanceof HTMLElement&&Boolean(target.closest('input,textarea,select,[contenteditable=true]'));
   function keyDown(event:KeyboardEvent){
@@ -162,7 +167,8 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     // Bound GPU fill cost on high-DPI displays and struggling devices. Geometry
     // and camera coordinates remain unchanged; restore the user's ratio on exit.
     slowTime=active&&seconds>1/28?slowTime+Math.min(seconds,1):Math.max(0,slowTime-seconds);
-    if(slowTime>2&&map.getPixelRatio()>.75){map.setPixelRatio(Math.max(.75,map.getPixelRatio()-.25));slowTime=0;dirty=true;}
+    const minRatio=Math.min(pixelRatio,.6);
+    if(slowTime>2&&map.getPixelRatio()>minRatio){map.setPixelRatio(Math.max(minRatio,map.getPixelRatio()-.2));slowTime=0;dirty=true;}
     const before=meters;
     if(turn&&!paused){bearing+=turn*85*timing.elapsed;dirty=true;}
     collision=false;boundary=false;
@@ -179,11 +185,16 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
         }else{collision=true;boundary=!withinPilot(next)||Boolean(physics&&physics.height(next)===null);break;}
       }
     }
-    const nextBob=!reducedMotion.matches&&meters>before?walkBob(meters):bob*Math.exp(-timing.elapsed*12);
-    const settledBob=Math.abs(nextBob)<.0001?0:nextBob;
-    if(settledBob!==bob){bob=settledBob;dirty=true;}
-    if(dirty){applyCamera();dirty=false;}
-    const animating=active||bob!==0;
+    const travelled=meters-before;
+    if(travelled>.0001)desiredFacing=bearing+Math.atan2(strafe,forward)*180/Math.PI;
+    const angle=((desiredFacing-facing)%360+540)%360-180;
+    if(Math.abs(angle)>.1){facing+=angle*(1-Math.exp(-12*timing.elapsed));dirty=true;}
+    const speed=timing.elapsed>0?travelled/timing.elapsed:0;
+    const strength=Math.min(1.45,speed/WALK_SPEED)*(reducedMotion.matches?.6:1);
+    const nextStride=strength+(stride-strength)*Math.exp(-14*timing.elapsed);
+    if(Math.abs(stride-strength)>.004){stride=nextStride;dirty=true;}
+    if(dirty||settling){applyCamera(timing.elapsed);dirty=false;}
+    const animating=active||settling||Math.abs(angle)>.1||Math.abs(stride-strength)>.004;
     if(!animating||now-reported>150){status();reported=now;}
     if(animating&&!frame&&!disposed)frame=requestAnimationFrame(tick);
   }
@@ -193,9 +204,9 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){keys.add('touch:'+action);wake();}else keys.delete('touch:'+action);},
     look,
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
-    reset(){clear();sprintMode=false;bob=0;position=[...spawn];follow=directorTrail(directorStart,spawn);bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
+    reset(){clear();sprintMode=false;stride=0;desiredFacing=facing=streetBearing;arm=3.65;position=[...spawn];follow=directorTrail(directorStart,spawn);bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
     dispose(){
-      if(disposed)return;disposed=true;map.off('citysense-request-director',reportDirector);cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
+      if(disposed)return;disposed=true;map.off('citysense-request-director',reportDirector);cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-request-pose',requestPose);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
       window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();

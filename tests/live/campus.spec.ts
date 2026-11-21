@@ -6,6 +6,7 @@ test('campus terrain, named departments and grounded walking work outside the hi
  await page.emulateMedia({reducedMotion:'reduce'});
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto('/');await expect(page.locator('.map')).toHaveAttribute('data-ready','true');
+ await page.getByRole('button',{name:'Quitter la marche',exact:true}).click();
  await page.getByRole('button',{name:'Campus universitaire',exact:true}).click();
  const details=page.locator('.architecture-panel');
  await expect(details).toHaveAttribute('data-campus','true',{timeout:45000});
@@ -25,8 +26,8 @@ test('campus terrain, named departments and grounded walking work outside the hi
  const lat=Number(await hud.getAttribute('data-lat'));expect(lat).toBeGreaterThan(47.493);expect(lat).toBeLessThan(47.498);
  await expect(details).toHaveAttribute('data-campus','true');
  await expect(hud).toContainText('Sur le campus Portes du Jura');
- const ground=Number(await hud.getAttribute('data-ground-elevation')),pitch=Number(await hud.getAttribute('data-look-pitch')),target=Number(await hud.getAttribute('data-camera-target'));
- expect(Math.abs(target-(ground+Number(await hud.getAttribute('data-eye-height'))-30*Math.cos(pitch*Math.PI/180)))).toBeLessThan(.1);
+ expect(Number(await hud.getAttribute('data-camera-distance'))).toBeGreaterThan(.2);
+ expect(Number(await hud.getAttribute('data-camera-elevation'))).toBeGreaterThan(Number(await hud.getAttribute('data-ground-elevation')));
  await expect(page.locator('.walk-error')).toHaveCount(0);
  if(test.info().project.name==='desktop'){
   await page.keyboard.down('KeyW');

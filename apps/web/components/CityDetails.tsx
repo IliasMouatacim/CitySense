@@ -32,7 +32,10 @@ export default function CityDetails({map,mood,scale,dimensional,walking,routeCoo
     map.on('sourcedata',received);map.on('error',failed);
     return()=>{if(timer)clearTimeout(timer);map.off('sourcedata',received);map.off('error',failed);};
   },[map]);
-  useEffect(()=>{setPhotoGround(map,photo,mood==='night');},[map,photo,mood]);
+  // The campus walking mesh already covers the ground. Keep the roof photos
+  // and avoid requesting another layer of aerial tiles underneath the path.
+  const aerialGround=photo&&!(walking&&status.campusGroundTriangles);
+  useEffect(()=>{setPhotoGround(map,aerialGround,mood==='night');},[map,aerialGround,mood]);
   useEffect(()=>{
     let cancelled=false;
     // Keep the 3D renderer out of the first page load and free its GPU resources on teardown.
