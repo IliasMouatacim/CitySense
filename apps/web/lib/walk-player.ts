@@ -1,13 +1,14 @@
-import {CanvasTexture,DoubleSide,Group,Mesh,MeshBasicMaterial,PlaneGeometry,SkinnedMesh,type Bone} from 'three';
+import {CanvasTexture,DoubleSide,Group,Mesh,MeshBasicMaterial,PlaneGeometry,SkinnedMesh,SRGBColorSpace,TextureLoader,type Bone} from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {offset} from './walk-geometry';
 import {walkingGroundHeight} from './walking-ground';
 import type {PlayerPose} from './follow-camera';
 
 /** Local, single-material skinned character. Only joint transforms change during a walk. */
-export async function loadWalkPlayer(){
+export async function loadWalkPlayer(outfit?:'director'){
  const {scene}=await new GLTFLoader().loadAsync('/city/player.glb');
  const body=scene.getObjectByName('Player') as SkinnedMesh;
+ const material=body.material as MeshBasicMaterial;
  const bones=new Map(body.skeleton.bones.map(bone=>[bone.name,bone]));
  const bone=(name:string)=>bones.get(name) as Bone;
  const hips=bone('hips'),spine=bone('spine'),head=bone('head'),restHeight=hips.position.y;
@@ -28,9 +29,9 @@ export async function loadWalkPlayer(){
  scene.rotation.x=Math.PI/2;root.add(scene,shadow);
  // The actor is always the orbit target. Its bind-pose bounds need no per-frame skin scan.
  body.frustumCulled=false;
- const material=body.material as MeshBasicMaterial;material.toneMapped=false;
- return {root,
-  pose(pose:PlayerPose,x:number,y:number,night:boolean){
+ material.toneMapped=false;
+ const model={root,
+  pose(pose:Pick<PlayerPose,'coordinates'|'ground'|'facing'|'meters'|'stride'|'arm'>,x:number,y:number,night:boolean){
    root.visible=pose.arm>.42;
    root.position.set(x,y,pose.ground+.012);
    root.rotation.z=-pose.facing*Math.PI/180;
@@ -63,4 +64,15 @@ export async function loadWalkPlayer(){
    body.skeleton.dispose();material.map?.dispose();material.dispose();
   }
  };
+ if(outfit==='director'){
+  try{
+   const atlas=await new TextureLoader().loadAsync('/city/director.jpg');
+   atlas.flipY=false;atlas.colorSpace=SRGBColorSpace;
+   material.map?.dispose();material.map=atlas;
+  }catch(error){
+   model.dispose();
+   throw error;
+  }
+ }
+ return model;
 }

@@ -72,12 +72,23 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   const sharedTarget=new WebGLRenderTarget(1,1);Object.assign(sharedTarget,{isXRRenderTarget:true});sharedTarget.texture.colorSpace=SRGBColorSpace;
   let requestedCityModel=false;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
-  let director:ReturnType<typeof campusDirector>|undefined;
-  function locateDirector(event:{coordinates:[number,number];ground:number;player:[number,number];speaking:boolean}){
-    director??=campusDirector();
+  type DirectorPose={coordinates:[number,number];ground:number;player:[number,number];speaking:boolean};
+  let director:Awaited<ReturnType<typeof campusDirector>>|undefined;
+  let directorPose:DirectorPose|undefined,requestedDirector=false;
+  function locateDirector(event:DirectorPose){
+    directorPose=event;
+    if(!requestedDirector){
+      requestedDirector=true;
+      campusDirector().then(model=>{
+        if(disposed){model.dispose();return;}
+        director=model;
+        if(directorPose)locateDirector(directorPose);
+      }).catch(error=>{if(!disposed)console.warn('Campus director could not load',error);});
+    }
+    if(!director)return;
     const [x,y]=local(event.coordinates),[px,py]=local(event.player);
     const [cx,cy]=pose?local(pose.camera):[px,py];
-    director.place(x,y,event.ground,Math.atan2(x-px,py-y),event.speaking,Math.atan2(cx-x,y-cy));
+    director.place(event.coordinates,x,y,event.ground,Math.atan2(x-px,py-y),event.speaking,Math.atan2(cx-x,y-cy),options.mood==='night');
     map.triggerRepaint();
   }
   const scene=new Scene(),camera=new Camera();
