@@ -13,7 +13,7 @@ import {changedBaseTiles,cityBuildingFeatures,getCityWorld,inMontbeliard,municip
 import {loadCityModel} from './city-model';
 import {facadeProfile,facadeReferences,matchesFacadeEdge,facadePhotoUv} from './facade-references';
 import {campusProfile,campusFace,gardenConnectorFace} from './campus-references';
-import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
+import {drawCampusFacade,type CampusDrawing,type StgiPhotoMaterial} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
 import {CAMPUS_COURTYARD,STGI_GARDEN_WAY_ID,STGI_GARDEN_WAY_IDS,STGI_GARDEN_LAWN_LIFT,STGI_EXHIBITION_LIFT} from './campus-courtyard';
@@ -420,6 +420,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(!force&&lastCenter&&metersBetween(center,lastCenter)<30&&key===lastKey)return;
     force=false;lastCenter=center;lastKey=key;clear();colors.clear();
     const walls:Wall[]=[],details=batch(),timber=batch(),metal=batch(),foliage=batch(),autumnFoliage=batch(),lawns=batch(),sand=batch(),facades=batch(),referenceFacades=batch(),campusConcrete=batch(),campusGlazing=batch(),campusFrames=batch(),shelterGlass=batch(),campusRoofs=batch(),campusGround=batch(),photoFacades=new Map<string,Batch>(),asphalt=batch(),paving=batch(),gardenPaving=batch(),campusPaving=batch(),roofs=batch(),photoRoofs=batch(),photoTerrain=batch(),terrain=batch(),signs=batch();let count=0,windows=0,referenceBuildings=0,facadePhotoFaces=0,campusBuildings=0,campusFacades=0,campusFinishedWalls=0,campusEstimatedFacades=0,campusReferenceBuildings=0;
+    const stgiFacadePhotos=new Map<StgiPhotoMaterial,Batch>();
     function groundSurface(target:Batch,polygon:number[][],hex:string,lift:number,repeat=2,project?:(x:number,y:number)=>Point){
       for(const tile of city?[city,...city.terrainPatches||[]]:[])for(const face of drapeSurface(polygon,tile,city!.datum,lift)){
         const points=face.map(p=>[...local(p),p[2]]);
@@ -803,9 +804,9 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         const base=ground+.09;
         for(let b=0;b<9;b++){
           const angle=b*Math.PI*2/9,r=.55+(b%2)*.15;
-          leaves([p[0]+Math.cos(angle)*r,p[1]+Math.sin(angle)*r,base+.78+(b%3)*.18],.58,b,true);
+          leaves([p[0]+Math.cos(angle)*r,p[1]+Math.sin(angle)*r,base+.46+(b%3)*.18],.58,b,true);
         }
-        leaves([p[0],p[1],base+1.15],.72,12,true);
+        leaves([p[0],p[1],base+.99],.72,12,true);
       }else if((fixture as any).kind==='sign-lamp'){
         // Silver-grey cylindrical streetlight with flat disc top and two white directional sign blades
         const base=ground+STGI_GARDEN_LAWN_LIFT;
@@ -1070,13 +1071,18 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                     const y=a[1]+(b[1]-a[1])*at/length+normal[1]*depth;
                     branch([x,y,base+bottom],[x,y,base+top],radius,color,metal,1);
                   },
+                  photoPanel:(material,at,w,bottom,top,depth,repeat=1)=>{
+                    let target=stgiFacadePhotos.get(material);
+                    if(!target){target=batch();stgiFacadePhotos.set(material,target);}
+                    panel(target,wall,at,w,base+bottom,base+top,'#ffffff',depth,[[0,0],[repeat,0],[repeat,1],[0,1]]);
+                  },
                   glazing:(at,w,bottom,top,depth,kind)=>{
                     const tile=campusGlassTile(at,bottom,wall.variant,kind),u=(tile%4)/4,v=Math.floor(tile/4)/4;
                     panel(campusGlazing,wall,at,w,base+bottom,base+top,face?.kind==='libraryGlass'?'#d3dddb':'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
                   },
                 };
                 if(academic&&exposed){
-                  if(!['stgi-north-openings','stgi-return'].includes(face?.layout||''))drawCampusEnvelope(length,height-base,drawing,!distant&&distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
+                  if(!['stgi-north-openings','stgi-return','stgi-east-wing','stgi-bridge','stgi-white-tower'].includes(face?.layout||'')&&!face?.layout?.startsWith('stgi-stair-'))drawCampusEnvelope(length,height-base,drawing,!distant&&distance<100,!!university?.faces.some(f=>f.kind==='libraryStone'),!face||!['ribbon','frame','libraryStone','timber'].includes(face.kind),!observed);
                   campusFinishedWalls++;
                 }
                 if(face){
@@ -1293,6 +1299,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       panel(details,wall,at,width,base+2.38,base+2.52,'#e9dbc0',.31);
       signCount++;
     }
+    for(const [material,geometry] of stgiFacadePhotos)mesh(geometry,materialTexture(material));
     mesh(terrain);mesh(facades,materialTexture('plaster'),true);
     for(const floor of [mesh(campusGround,materialTexture('asphalt'),true),mesh(asphalt,materialTexture('asphalt'),true),mesh(paving,materialTexture('paving'),true),lawns.positions.length&&mesh(lawns,materialTexture('campus-grass'),true),sand.positions.length&&mesh(sand,materialTexture('campus-sand'),true)])if(floor)floor.castShadow=false;
     mesh(details,undefined,campus);mesh(roofs,roofTexture());

@@ -77,6 +77,17 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    let under=start;
    for(let step=0;step<120;step++)under=physics.move(under,offset(under,-.025,.11));
    assert.ok(distance(under,start)>12,'The library passage must be open across the full building depth');
+   const bridgeApproach:[number,number]=[6.80439,47.4952785];
+   const bridgeExit:[number,number]=[6.80410,47.4952186];
+   let underStgi=bridgeApproach;
+   for(let step=1;step<=250;step++){
+    const fraction=step/250;
+    underStgi=physics.move(underStgi,[
+     bridgeApproach[0]+(bridgeExit[0]-bridgeApproach[0])*fraction,
+     bridgeApproach[1]+(bridgeExit[1]-bridgeApproach[1])*fraction,
+    ]);
+   }
+   assert.ok(distance(underStgi,bridgeExit)<.4,'The Bâtiment A garden breezeway stays open beneath the glazed bridge');
    const libraryPier=data.buildings.features.find(f=>String(f.properties.libraryPart).startsWith('pier-'))!;
    assert.equal(libraryPier.geometry.type,'Polygon');
    if(libraryPier.geometry.type==='Polygon'){

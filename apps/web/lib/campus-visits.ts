@@ -8,6 +8,7 @@ export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position
  {id:'stgi',name:'UFR STGI · façade ouest',center:[6.80435,47.49523],start:[6.804015,47.495225],lookAt:[6.80430,47.49515],pitch:90},
  {id:'stgi-entry',name:'UFR STGI · entrée de la cour',center:[6.80410,47.49539],start:[6.80387,47.49532],lookAt:[6.804103,47.495386],pitch:90},
  {id:'library-court',name:'Bibliothèque · côté cour',center:[6.803866,47.495489],start:[6.80389,47.49528],lookAt:[6.803866,47.495490],pitch:90},
+ {id:'stgi-a',name:'UFR STGI · bâtiment A, côté jardin',center:[6.80438,47.49528],start:[6.804521,47.4953045],lookAt:[6.804310,47.495264],pitch:90,useExactStart:true},
  {id:'stgi-garden-west',name:'UFR STGI · jardin, côté ouest',center:[6.80453,47.49535],start:[6.804487,47.4952862],lookAt:[6.804590,47.4954500],pitch:86.6,useExactStart:true},
  {id:'stgi-garden-c',name:'UFR STGI · bâtiment C, côté jardin',center:[6.80465,47.49532],start:[6.804911,47.495400],lookAt:[6.80470,47.495328],pitch:90},
  {id:'stgi-exhibition',name:'UFR STGI · entrée de l’exposition (C)',center:[6.80459,47.49539],start:[6.804559,47.495345],lookAt:[6.804590,47.495394],pitch:90,useExactStart:true},

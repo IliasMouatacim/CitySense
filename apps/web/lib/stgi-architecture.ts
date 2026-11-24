@@ -42,6 +42,16 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // two broad dark-framed lower glazing bands with projecting red horizontal rails,
   // a white 1st-floor spandrel band, a tall white 2nd-floor panel with narrow green
   // and blue clerestory ribbons + corbel blocks, and a dark grey concrete parapet.
+  if(draw.photoPanel){
+   draw.photoPanel('stgi-a-classrooms',length/2,length,.035,height,.176,Math.min(1,length/9));
+   // Keep thin projecting shades and the roof edge visible at oblique angles.
+   for(const fraction of [.192,.492]){
+    const z=height*fraction;
+    draw.box(length/2,length-.04,z-.019,z+.019,'#693b36',.24,.175);
+   }
+   draw.box(length/2,length,height-.026,height+.013,'#555c5a',.21,.03);
+   return true;
+  }
   const wall='#eceae2',darkFrame='#20292b',redRail='#a13b35',parapet='#7e8079';
   const g0=.08,g1=height*.248,s1=height*.318,f1=height*.546,wTop=height*.845;
   // Ground & 1st floor dark window bands
@@ -109,32 +119,35 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // Rooftop safety handrail visible above the bridge in the photographs
   for(const z of [height+.28,height+.58])draw.box(length/2,length-.3,z,z+.03,'#8d9496',.12,.06);
   for(const frac of [.12,.38,.62,.88])draw.box(length*frac,.035,height,height+.60,'#8d9496',.12,.06);
-  const bays=3,pitch=(length-.28)/bays;
-  for(const [bottom,top] of [[f1Bot,f1Top],[f2Bot,f2Top]] as const){
-   draw.panel(length/2,length-.20,bottom,top,frame,.07);
-   for(let b=0;b<bays;b++){
-    const at=.14+(b+.5)*pitch,w=pitch-.07;
-    if(draw.glazing)draw.glazing(at,w,bottom+.04,top-.04,.10,'fixed');
-    else draw.panel(at,w,bottom+.04,top-.04,'#687d82',.10);
-   }
-   for(let b=0;b<=bays;b++)draw.box(.14+b*pitch,.055,bottom,top,frame,.16,.06);
-   for(const frac of [.38,.74]){
-    const z=bottom+(top-bottom)*frac;
-    draw.box(length/2,length-.20,z-.022,z+.022,frame,.165,.06);
-   }
-   // Three horizontal metallic guardrail tubes across the lower glass
-   for(const r of [.13,.24,.35]){
-    const z=bottom+(top-bottom)*r;
-    draw.box(length/2,length-.22,z-.016,z+.016,'#869093',.185,.12);
+  if(east&&draw.photoPanel)draw.photoPanel('stgi-a-bridge',length/2,length,0,height,.173);
+  if(!east||!draw.photoPanel){
+   const bays=3,pitch=(length-.28)/bays;
+   for(const [bottom,top] of [[f1Bot,f1Top],[f2Bot,f2Top]] as const){
+    draw.panel(length/2,length-.20,bottom,top,frame,.07);
+    for(let b=0;b<bays;b++){
+     const at=.14+(b+.5)*pitch,w=pitch-.07;
+     if(draw.glazing)draw.glazing(at,w,bottom+.04,top-.04,.10,'fixed');
+     else draw.panel(at,w,bottom+.04,top-.04,'#687d82',.10);
+    }
+    for(let b=0;b<=bays;b++)draw.box(.14+b*pitch,.055,bottom,top,frame,.16,.06);
+    for(const frac of [.38,.74]){
+     const z=bottom+(top-bottom)*frac;
+     draw.box(length/2,length-.20,z-.022,z+.022,frame,.165,.06);
+    }
+    // Three horizontal metallic guardrail tubes across the lower glass
+    for(const r of [.13,.24,.35]){
+     const z=bottom+(top-bottom)*r;
+     draw.box(length/2,length-.22,z-.016,z+.016,'#869093',.185,.12);
+    }
    }
   }
   if(east){
    // Projecting mint-turquoise balcony box and red square panel with white centre
    const cx=length*.50;
-   draw.box(cx,.94,f1Top-.18,f2Bot+.72,'#3a9a78',.34,.08);
-   draw.box(cx,.94,f1Top-.22,f1Top-.18,'#255d49',.34,.08);
-   draw.box(cx,.72,f2Bot+.74,f2Bot+1.46,'#b83836',.22,.08);
-   draw.panel(cx,.24,f2Bot+.98,f2Bot+1.22,'#f2f0e8',.235);
+   draw.box(cx,.94,f2Bot+.15,f2Bot+1.22,'#409b87',.49,.16);
+   draw.box(cx,.94,f2Bot+.11,f2Bot+.15,'#255d49',.49,.16);
+   draw.box(cx,.72,f2Bot+1.22,f2Bot+1.80,'#983c36',.24,.16);
+   draw.panel(cx,.24,f2Bot+1.39,f2Bot+1.62,'#f2f0e8',.25);
    // Full-height vertical concrete rainwater column at the left junction
    draw.box(.15,.24,-2.95,height,'#88867d',.23,.03);
   }
@@ -144,6 +157,7 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // Projecting rectangular white shaft rising above the north-wing parapet.
   const top=height+1.15;
   draw.box(length/2,length,.03,top,'#eceae2',.14,.025);
+  draw.photoPanel?.('stgi-a-shaft',length/2,length,.035,top-.025,.144);
   for(const z of [height*.32,height*.64,height*.92])draw.panel(length/2,length,z,z+.018,'#cfcdc4',.148);
   if(length>2.5)draw.panel(length*.24,.22,height-.15,height+.18,'#3a3d3a',.155);
   draw.box(length/2,length,top-.06,top+.04,'#606663',.18,.03);
@@ -153,9 +167,10 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // Flat side of the curved board-marked concrete stair towers (wings A-south and A-north).
   const top=height+.85,concrete='#c2bfb4',seam='#8c8a80',dark='#21292b';
   draw.box(length/2,length,.03,top,concrete,.12,.025);
-  draw.panel(length/2,length,.03,.38,'#858379',.126);
+  if(draw.photoPanel)draw.photoPanel('stgi-a-concrete',length/2,length,.031,top-.025,.124,length/3);
+  else draw.panel(length/2,length,.03,.38,'#858379',.126);
   for(const z of [height*.315,height*.635,height*.91])draw.panel(length/2,length,z,z+.024,seam,.128);
-  for(let x=.45;x<length-.3;x+=.55)draw.panel(x,.014,.38,top-.08,'#b2afa4',.125);
+  if(!draw.photoPanel)for(let x=.45;x<length-.3;x+=.55)draw.panel(x,.014,.38,top-.08,'#b2afa4',.125);
   // Tall vertical dark window/channel near the inner corner turning horizontally at the top
   const slotAt=length-.38;
   draw.panel(slotAt,.26,height*.29,height*.89,dark,.135);
@@ -187,9 +202,10 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   // Curved eastern nose of the board-marked concrete stair towers.
   const top=height+.85,concrete='#c2bfb4',seam='#8c8a80';
   draw.box(length/2,length,.03,top,concrete,.12,.025);
-  draw.panel(length/2,length,.03,.42,'#7d7b72',.126);
+  if(draw.photoPanel)draw.photoPanel('stgi-a-concrete',length/2,length,.031,top-.025,.124,length/3);
+  else draw.panel(length/2,length,.03,.42,'#7d7b72',.126);
   for(const z of [height*.315,height*.635,height*.91])draw.panel(length/2,length,z,z+.024,seam,.128);
-  for(let x=.22;x<length-.15;x+=.36)draw.panel(x,.014,.42,top-.08,'#b2afa4',.125);
+  if(!draw.photoPanel)for(let x=.22;x<length-.15;x+=.36)draw.panel(x,.014,.42,top-.08,'#b2afa4',.125);
   if(face.layout==='stgi-stair-slit'){
    // Full-height vertical stair window slit with green jambs and 5 bright yellow horizontal bars
    const at=length/2,w=Math.min(.54,length*.56),bot=1.40,slitTop=height*.91;

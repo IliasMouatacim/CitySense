@@ -3,11 +3,13 @@ import type {CampusFace} from './campus-references';
 import {drawStgiFacade,drawStgiPaint} from './stgi-architecture';
 import {drawCrousFacade} from './crous-architecture';
 
+export type StgiPhotoMaterial='stgi-a-classrooms'|'stgi-a-bridge'|'stgi-a-concrete'|'stgi-a-shaft';
 export type CampusDrawing={
  panel:(at:number,width:number,bottom:number,top:number,color:string,depth?:number)=>void;
  box:(at:number,width:number,bottom:number,top:number,color:string,front:number,back?:number)=>void;
  lettering:(text:string,at:number,width:number,bottom:number,top:number,outline?:boolean,depth?:number,ink?:string)=>void;
  column?:(at:number,depth:number,radius:number,bottom:number,top:number,color:string)=>void;
+ photoPanel?:(material:StgiPhotoMaterial,at:number,width:number,bottom:number,top:number,depth:number,repeat?:number)=>void;
  glazing?:(at:number,width:number,bottom:number,top:number,depth:number,kind?:'fixed'|'classroom')=>void;
 };
 
