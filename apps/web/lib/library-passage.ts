@@ -20,9 +20,9 @@ export function openLibraryPassage(feature:Building):Building[]{
    properties:{...feature.properties,sourceId:libraryId+'-'+name,libraryPart:name,campusName:null,campusUse:null,
     render_min_height:ground,render_height:soffit}});
  }
- part('west',[front(0),front(.12),rear(.12),rear(0)]);
- part('lobby',[front(.78),front(1),...ring.slice(3,11).reverse(),rear(1),rear(.78)]);
  const corner=(t:number,d:number)=>mix(front(t),rear(t),d);
+ part('west',[corner(.027,.06),corner(.12,.06),corner(.12,.88),corner(.027,.88)]);
+ part('lobby',[front(.78),front(1),...ring.slice(3,11).reverse(),rear(1),rear(.78)]);
  // Continue the projecting bay's central support down past the soffit.
  part('bay-support',[corner(.736,-.092),corner(.744,-.092),corner(.744,-.048),corner(.736,-.048)]);
  for(const at of [.36,.66]){

@@ -1,3 +1,4 @@
+import {cycleLockers,directoryPosition,forecourtLamps,forecourtPoint,libraryAxis} from './library-forecourt';
 import {amphitheatreStairHeight} from './amphitheatre';
 import RAPIER from '@dimforge/rapier3d-compat';
 import {terrainHeight,loadCityWorld,inMontbeliard,municipalTerrainVertices} from './city-world';
@@ -48,6 +49,19 @@ export async function createCityPhysics(){
    world.createCollider(shape.setTranslation(p.x+east,ground+solid.z+solid.height/2,p.z-north));
   }
  }
+ function forecourtCollider(u:number,v:number,width:number,depth:number,height:number,yaw=0){
+  const coords=forecourtPoint(u,v),ground=terrainHeight(...coords);
+  if(ground===null)return;
+  const p=local(coords),angle=Math.atan2(libraryAxis[1],libraryAxis[0])+yaw;
+  world.createCollider(RAPIER.ColliderDesc.cuboid(width/2,height/2,depth/2)
+   .setRotation({x:0,y:Math.sin(angle/2),z:0,w:Math.cos(angle/2)})
+   .setTranslation(p.x,ground+height/2,p.z));
+ }
+ const sign=directoryPosition;
+ forecourtCollider(sign.along+sign.alongSpan/2,sign.out+sign.outSpan/2,Math.hypot(sign.alongSpan,sign.outSpan),.19,2.88,Math.atan2(sign.outSpan,sign.alongSpan));
+ const bank=cycleLockers;
+ for(let i=0;i<bank.count;i++)forecourtCollider(bank.along+bank.pitch*(i+.5),bank.out+bank.depth/2,1.22,bank.depth,1.52);
+ for(const [u,v] of forecourtLamps)forecourtCollider(u,v,.16,.16,7.35);
  for(const fixture of CAMPUS_COURTYARD.fixtures){
   const coordinates:Position=[...fixture.coordinates],ground=terrainHeight(...coordinates);if(ground===null)continue;const p=local(coordinates);
   if(fixture.kind==='tree'||fixture.kind==='lamp')world.createCollider(RAPIER.ColliderDesc.cylinder(fixture.height/2,fixture.kind==='tree'?.14:.07).setTranslation(p.x,ground+fixture.height/2,p.z));

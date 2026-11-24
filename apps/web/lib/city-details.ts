@@ -1,3 +1,4 @@
+import {cycleLockers,directoryPosition,forecourtLamps,forecourtPoint,libraryCorner} from './library-forecourt';
 import {campusDirector} from './campus-director';
 import {GARDEN_C_MURAL} from './stgi-architecture';
 import {auditoriumId} from './amphitheatre';
@@ -66,6 +67,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   }
   let renderer:WebGLRenderer|undefined;
   let environment:WebGLRenderTarget|undefined,pendingHDR:Texture|undefined,skyHDR:Texture|undefined,sky:Mesh<SphereGeometry,MeshBasicMaterial>|undefined,campusLighting=false;
+  const skyOvercast={value:0};
   let requestedCampusLighting=false;
   const sharedTarget=new WebGLRenderTarget(1,1);Object.assign(sharedTarget,{isXRRenderTarget:true});sharedTarget.texture.colorSpace=SRGBColorSpace;
   let requestedCityModel=false;
@@ -382,6 +384,74 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       Object.assign(sun.shadow.camera,{left:-radius,right:radius,top:radius,bottom:-radius,near:1,far:600});sun.shadow.camera.up.set(0,0,1);sun.shadow.camera.updateProjectionMatrix();sun.shadow.normalBias=.035;sun.shadow.bias=-.0006;resources.push(sun.shadow);
     }else sun.position.set(-100,-100,300);
     scene.add(sun,sun.target);
+    if(campus&&metersBetween(center,libraryCorner)<160){
+      const point=(u:number,v:number,z=0)=>{
+        const coord=forecourtPoint(u,v);
+        return [...local(coord),(terrainHeight(...coord)??0)+z];
+      };
+      const rect=(u:number,v:number,w:number,d:number)=>[
+        forecourtPoint(u,v),forecourtPoint(u+w,v),forecourtPoint(u+w,v+d),forecourtPoint(u,v+d)];
+      const setts=batch(),hedge=batch();
+      groundSurface(setts,rect(-18,0,57,17),'#ffffff',.15,2.6);
+      mesh(setts,materialTexture('library-setts'));
+      for(let u=-16;u<36;u+=5.6)groundSurface(paving,rect(u,0,.22,17),'#ead3b7',.165,1);
+      for(const v of [3.4,9.3,14.9])groundSurface(paving,rect(-17,v,53,.22),'#ead3b7',.167,1);
+      groundSurface(details,rect(-9.2,12.7,.53,.34),'#9c9585',.17);
+      for(let bar=0;bar<9;bar++)groundSurface(details,rect(-9.17+bar*.056,12.735,.033,.27),'#373b38',.175);
+      // The directory faces the approach, perpendicular to the library.
+      const makeWall=(u:number,v:number,u1:number,v1:number):Wall=>{
+        const a=point(u,v),b=point(u1,v1),dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+        return {a:[a[0],a[1]],b:[b[0],b[1]],length,normal:[-dy/length,dx/length],base:a[2],height:3,variant:0};
+      };
+      const {along,out,alongSpan,outSpan}=directoryPosition;
+      const board=makeWall(along,out,along+alongSpan,out+outSpan),z=board.base;
+      wallBox(details,board,.725,1.45,z+.16,z+2.88,'#354051',.095,-.09);
+      const print=batch();
+      panel(print,board,.725,1.40,z+.19,z+2.85,'#ffffff',.10,[[0,0],[1,0],[1,1],[0,1]]);
+      mesh(print,materialTexture('library-campus-plan'));
+      for(const at of [.064,board.length-.064])for(const h of [.26,1.51,2.79]){
+        wallBox(metal,board,at,.016,z+h,z+h+.016,'#b9b9b4',.111,.10);
+      }
+      for(const [u,v] of forecourtLamps){
+        const mast=point(u,v,.15),top=[mast[0],mast[1],mast[2]+7.2];
+        branch(mast,top,.079,'#e4e3db',metal,.60);
+        const light=[mast[0]-.50,mast[1]+1.52,mast[2]+6.25];
+        branch([mast[0],mast[1],light[2]-.12],light,.046,'#d3d1c8',metal,1);
+        branch(top,light,.009,'#a6a8a6',metal,1);
+        branch(light,[light[0],light[1],light[2]+.10],.265,'#9d9f96',metal,.85);
+        solidBox([light[0],light[1],light[2]-.025],.30,.30,.028,'#ded7b4');
+      }
+      const bank=cycleLockers,lockers=makeWall(bank.along,bank.out,bank.along+bank.pitch*bank.count,bank.out);
+      for(let i=0;i<bank.count;i++){
+        const x=bank.pitch*(i+.5),base=point(bank.along+x,bank.out,.15)[2];
+        wallBox(details,lockers,x,1.22,base,base+1.14,'#363939',1.12,0);
+        panel(details,lockers,x,1.12,base+.10,base+1.07,'#bc3430',1.13);
+        panel(details,lockers,x-.39,.048,base+.53,base+.68,'#ddd2bd',1.14);
+        for(let slice=0;slice<6;slice++){
+          const t=(slice+.5)/6;
+          wallBox(details,lockers,x,1.22,base+1.14,base+1.14+.23*Math.sqrt(1-t*t),'#484747',bank.depth*(slice+1)/6,bank.depth*slice/6);
+        }
+      }
+      const rail=makeWall(-.2,.10,6,.10),base=rail.base;
+      for(let i=0;i<=5;i++)wallBox(metal,rail,i*1.2,.045,base+.2,base+1.35,'#505654',.12,.075);
+      for(const h of [.51,.82,1.33])wallBox(metal,rail,3,6.05,base+h,base+h+.04,'#666a66',.13,.075);
+      // The landing guard turns across the recessed red entrance behind the hedge.
+      const landing=makeWall(-.15,-7.15,-.15,-.05);
+      for(let i=0;i<=5;i++)wallBox(metal,landing,i*landing.length/5,.042,landing.base+.28,landing.base+1.51,'#515554',.10,.055);
+      for(const h of [.52,.81,1.1,1.48])wallBox(metal,landing,landing.length/2,landing.length,landing.base+h,landing.base+h+.032,'#72756c',.115,.07);
+      for(let i=0;i<25;i++){
+        const center=point(-1.55+.15*Math.sin(i*1.9),-7.3+i*.29,.54);
+        const radius=.54+.09*Math.cos(i*2),height=.56+.10*Math.sin(i);
+        const vertex=(row:number,col:number)=>{
+          const angle=col*Math.PI/4+i,lat=row*Math.PI/4-Math.PI/2;
+          return [center[0]+Math.cos(angle)*Math.cos(lat)*radius,center[1]+Math.sin(angle)*Math.cos(lat)*radius,center[2]+Math.sin(lat)*height];
+        };
+        for(let row=0;row<4;row++)for(let col=0;col<8;col++){
+          quad(hedge,vertex(row,col),vertex(row,col+1),vertex(row+1,col+1),vertex(row+1,col),'#f5f0cf',.74+.08*row,[[0,0],[.50,0],[.50,.5],[0,.5]]);
+        }
+      }
+      mesh(hedge,materialTexture('library-hedge'));
+    }
     if(city?.streets){
       for(const road of city.streets.roads){
         if(cityModel&&!campus)continue;
@@ -688,6 +758,53 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 const p0=[a[0]+(b[0]-a[0])*t0+normal[0]*.025,a[1]+(b[1]-a[1])*t0+normal[1]*.025],p1=[a[0]+(b[0]-a[0])*t1+normal[0]*.025,a[1]+(b[1]-a[1])*t1+normal[1]*.025];
                 quad(campusConcrete,[...p0,z0],[...p1,z1],[...p1,base],[...p0,base],facade,1,[[length*t0/4,z0/2],[length*t1/4,z1/2],[length*t1/4,base/2],[length*t0/4,base/2]]);
               }
+              if(observed?.kind==='libraryStone'){
+                const finish=batch();
+                panel(finish,wall,length/2,length,base+.035,height,'#ffffff',.056,[[0,0],[length/5,0],[length/5,(height-base)/5],[0,(height-base)/5]]);
+                mesh(finish,materialTexture('library-formwork'));
+              }
+              if(observed?.kind==='libraryGlass'){
+                const panes=batch(),h=height-base;
+                panel(panes,wall,length/2,length-.52,base+.23,base+h*.89,'#ffffff',.175,[[0,0],[1,0],[1,1],[0,1]]);
+                mesh(panes,materialTexture('library-glazing'));
+                // On the west end the long masonry walls extend past the glass.
+                // Carry the brick courses across the cheeks of both projecting fins.
+                if(i===0){
+                  for(const at of [.11,length-.11]){
+                    wallBox(details,wall,at,.24,base+.04,height+.10,'#c5b79e',.90,.03);
+                    for(let z=base+.10;z<height-.45;z+=1.65)
+                      wallBox(details,wall,at,.245,z,z+.38,'#c08b70',.906,.027);
+                  }
+                }
+              }
+              if(p.sourceId==='BATIMENT0000000223563541'&&(i===1||i===2)){
+                const h=height-base;
+                panel(details,wall,length/2,length,base,height,'#eae6d8',.21);
+                panel(details,wall,length/2,length,base,base+.95,'#367a63',.22);
+                wallBox(details,wall,length/2,length, height-.83,height,'#c2beac',.38,.12);
+                panel(campusGlazing,wall,length/2,length-.4,height-1.54,height-.89,'#9aa9aa',.24,[[0,.02],[.23,.02],[.23,.24],[0,.24]]);
+                panel(details,wall,length/2,length-.38,height-1.59,height-1.51,'#295281',.29);
+                for(const at of [.22,.65])wallBox(details,wall,length*at,.30,height-1.33,height-1.16,'#a8534d',.40,.18);
+                for(const [at,lo,hi,w,color] of [[.24,.20,.35,.14,'#c49d40'],[.24,.52,.66,.14,'#47836c'],[.70,.48,.73,.38,'#425555']] as const){
+                  wallBox(details,wall,length*at,length*w,base+h*lo,base+h*hi,color,.29,.20);
+                  panel(campusGlazing,wall,length*at,length*w-.15,base+h*lo+.09,base+h*hi-.09,'#aeb9ae',.30,[[0,.02],[.23,.02],[.23,.24],[0,.24]]);
+                }
+                for(const at of [.60,.70,.80])wallBox(details,wall,length*at,.065,base+h*.48,base+h*.73,'#314148',.35,.24);
+                for(const level of [.55,.64])wallBox(details,wall,length*.70,length*.38,base+h*level,base+h*level+.06,'#314148',.35,.24);
+                continue;
+              }
+              if(p.libraryPart==='west'){
+                panel(details,wall,length/2,length,base+.04,height-.08,'#a29a86',.07);
+                if(i===0||i===3){
+                  panel(details,wall,length*.50,length*.76,base+.12,height-.18,'#752e2c',.085);
+                  if(i===3){
+                    wallBox(details,wall,length*.21,length*.42,base,height,'#c6b9a0',.12,.05);
+                    campusLettering(wall,'Université de Franche-Comté',length*.21,length*.38,height-base-.75,height-base-.55,false,.14,'#725935');
+                    campusLettering(wall,'UFR Sciences et techniques',length*.21,length*.36,height-base-.98,height-base-.80,false,.14,'#725935');
+                  }
+                  for(const level of [.36,.57,.81])panel(details,wall,length/2,length*.81,base+level,base+level+.035,'#686963',.11);
+                }
+              }
               if(p.libraryPart==='lobby'&&i===0){
                 panel(campusFrames,wall,length/2,length,.05+base,height-.06,'#344b4c',.07);
                 const bays=Math.max(2,Math.round(length/1.25)),pitch=length/bays;
@@ -734,7 +851,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                   },
                   glazing:(at,w,bottom,top,depth,kind)=>{
                     const tile=campusGlassTile(at,bottom,wall.variant,kind),u=(tile%4)/4,v=Math.floor(tile/4)/4;
-                    panel(campusGlazing,wall,at,w,base+bottom,base+top,'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
+                    panel(campusGlazing,wall,at,w,base+bottom,base+top,face?.kind==='libraryGlass'?'#d3dddb':'#6b8188',depth,[[u+.006,v+.006],[u+.244,v+.006],[u+.244,v+.244],[u+.006,v+.244]]);
                   },
                 };
                 if(academic&&exposed){
@@ -1031,9 +1148,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         // Only the sky hemisphere: never replace distant mapped ground/buildings
         // with the HDR location's photographed landscape.
         const geometry=campusSkyGeometry();
-        sky=new Mesh(geometry,new MeshBasicMaterial({map:skyHDR,side:DoubleSide,depthWrite:false}));sky.frustumCulled=false;sky.renderOrder=-100;
+        sky=new Mesh(geometry,new MeshBasicMaterial({map:skyHDR,side:DoubleSide,depthWrite:false}));sky.material.onBeforeCompile=shader=>{
+          shader.uniforms.forecourtOvercast=skyOvercast;
+          shader.fragmentShader='uniform float forecourtOvercast;\n'+shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+            float luminance=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
+            diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.70,.74,.82)+vec3(min(luminance,2.0)*.15),forecourtOvercast);`);
+        };
+        sky.frustumCulled=false;sky.renderOrder=-100;
         force=true;schedule();renderer.resetState();
       }
+      skyOvercast.value=options.walking&&pose&&options.mood==='day'
+        ?Math.min(1,Math.max(0,(65-metersBetween(pose.coordinates,libraryCorner))/28)):0;
       let eye:Vector3;
       if(options.walking&&pose){
         const p=local(pose.camera);eye=new Vector3(p[0],p[1],pose.eye);

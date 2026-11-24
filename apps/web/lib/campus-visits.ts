@@ -1,3 +1,4 @@
+import {forecourtPoint} from './library-forecourt';
 import type {Position} from './walk-geometry';
 export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position;lookAt:Position;pitch:number;useExactStart?:boolean}[]=[
  {id:'crous',name:'CROUS · restaurant universitaire',center:[6.80367,47.49605],start:[6.80368147,47.49570043],lookAt:[6.8035465,47.4959318],pitch:90},
@@ -16,7 +17,7 @@ export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position
  // The former point snapped north onto this path but looked at a blank end wall.
  {id:'iut-mp',name:'IUT · Mesures physiques',center:[6.80371,47.49510],start:[6.804015,47.495204],lookAt:[6.803674,47.495291],pitch:90},
  {id:'amphi',name:'Amphithéâtre François Vion-Delphin · parvis',center:[6.80409,47.49491],start:[6.803966,47.49516],lookAt:[6.804098,47.494915],pitch:90},
- {id:'library',name:'Bibliothèque universitaire',center:[6.80372,47.49551],start:[6.803285,47.495425],lookAt:[6.80343,47.49547],pitch:90},
+ {id:'library',name:'Bibliothèque universitaire',center:[6.80372,47.49551],start:forecourtPoint(-12,13),lookAt:forecourtPoint(15,.5),pitch:110,useExactStart:true},
  // Register the start on the mapped pedestrian approach. The former point
  // was ~9.5 m off the path and silently snapped away from its stated position.
  {id:'utbm',name:'UTBM · façade bois',center:[6.80494,47.49612],start:[6.8047928043,47.4959126726],lookAt:[6.80495,47.49618],pitch:90},

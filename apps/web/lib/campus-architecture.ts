@@ -166,7 +166,8 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   }
   if(face.label)lettering(face.label,length*.46,Math.min(14,length*.72),height*.42,height*.59,false,.32);
  }else if(face.kind==='libraryGlass'){
-  const bottom=height*.22,top=height-.4;
+  const bottom=.22,top=height*.89;
+  box(length/2,length-.32,top,height+.15,'#e3dfd3',.29,.035);
   panel(length/2,length-.5,bottom,top,'#39575c',.12);
   const bays=Math.max(2,Math.round(length/1.5)),pitch=(length-.5)/bays;
   const rows=Math.max(2,Math.round((top-bottom)/.95)),rise=(top-bottom)/rows;
@@ -186,17 +187,17 @@ export function drawCampusFacade(face:CampusFace,length:number,height:number,dra
   }
   for(const fraction of [1/3,2/3]){
    const z=bottom+(top-bottom)*fraction;
-   box(length/2,length-.35,z-.09,z+.09,'#aeb2a9',.34,.10);
+   box(length/2,length-.35,z-.09,z+.09,'#303a3e',.34,.10);
   }
   for(const at of [.13,length-.13])box(at,.26,.15,height,'#a3a497',.55,.03);
-  box(length/2,length+.12,bottom-.3,bottom-.05,'#a9ac9f',.65,.03);
+  box(length/2,length+.12,Math.max(.015,bottom-.3),bottom-.05,'#a9ac9f',.65,.03);
  }else if(face.kind==='libraryStone'){
-  panel(length/2,length,.1,height,'#a9a79a',.05);
-  for(let z=1;z<height-.3;z+=1.5){
-   panel(length/2,length,z,z+.24,'#947a70',.065);
+  panel(length/2,length,.035,height,'#dbccb0',.05);
+  for(let z=.10;z<height-.45;z+=1.65){
+   panel(length/2,length,z,z+.38,'#d9a080',.065);
    // Two staggered masonry courses within the photographed reddish bands.
    // These shallow joints add close-range detail without projecting blocks.
-   drawLibraryMasonryJoints(length,z,z+.24,draw);
+   drawLibraryMasonryJoints(length,z,z+.38,draw);
   }
   if(face.openings){
    // Uneven openings observed in the courtyard photograph, measured as
