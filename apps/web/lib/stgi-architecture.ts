@@ -263,14 +263,34 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   if(garden){
    for(const t of [.20,.65])draw.box(length*t,.16,upper-.03,height*.94,'#963f40',.30,.09);
    const at=length*.36,span=length*.60,ceiling=height*.30;
-   draw.panel(at,span,.06,ceiling,frame,.14);
-   for(let i=0;i<3;i++)pane(at+span*((i+.5)/3-.5),span/3-.10,.14,ceiling-.15,.16);
-   draw.box(at,span+.22,ceiling,ceiling+.27,'#b3b6aa',.98,.04);
-   draw.box(at,span+.16,ceiling-.06,ceiling,'#743635',.975,.045);
+   // B faces the exhibition windows of C. The oblique view shows a yellow
+   // infill behind charcoal posts and a broad red soffit. Depths are estimates.
+   const bay=span/3,rail=ceiling*.37,upperRail=ceiling*.79;
+   draw.panel(at,span,.055,ceiling,frame,.14);
+   for(let i=0;i<3;i++){
+    const x=at+bay*(i-1),w=bay-.09;
+    if(draw.glazing)draw.glazing(x,w,.14,ceiling-.10,.165,'fixed');
+    else draw.panel(x,w,.14,ceiling-.10,'#57696b',.165);
+    draw.box(x,w,upperRail,upperRail+.065,frame,.21,.15);
+    draw.box(x,w,rail,rail+.115,'#4a5956',.23,.15);
+    draw.box(x,w,.08,.15,'#374143',.22,.15);
+    if(i===1){
+     const inset=Math.min(.48,w*.27),edge=x+w/2-inset/2;
+     draw.panel(edge,inset,rail+.12,ceiling-.10,'#534631',.195);
+     draw.panel(edge,inset-.045,rail+.16,ceiling-.145,'#cc9c28',.205);
+    }
+   }
+   const projection=1.78,postDepth=projection-.26;
+   draw.box(at,span+.22,ceiling,ceiling+.24,'#b3b6aa',projection,.04);
+   draw.box(at,span+.16,ceiling-.065,ceiling,'#743635',projection-.02,.045);
+   draw.box(at,span+.25,ceiling+.24,ceiling+.28,'#46504f',projection+.025,.04);
    for(const side of [-1,1]){
-    const x=at+side*(span/2-.29),depth=.74,radius=.17;
-    if(draw.column)draw.column(x,depth,radius,.03,ceiling-.06,frame);
-    else draw.box(x,radius*2,.03,ceiling-.06,frame,depth+radius,depth-radius);
+    const x=at+side*(span/2-.29),radius=.17;
+    if(draw.column)draw.column(x,postDepth,radius,.03,ceiling-.065,'#515a5c');
+    else draw.box(x,radius*2,.03,ceiling-.065,'#515a5c',postDepth+radius,postDepth-radius);
+    const lamp=x-side*.42;
+    draw.box(lamp,.36,ceiling-.106,ceiling-.064,'#343a38',postDepth+.11,postDepth-.11);
+    draw.box(lamp,.30,ceiling-.111,ceiling-.104,'#dfdfcd',postDepth+.08,postDepth-.08);
    }
   }else{
    // The near end in the garden photo is solid around the plaque and

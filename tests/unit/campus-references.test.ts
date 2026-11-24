@@ -241,7 +241,7 @@ test('observed campus facade geometry stays finite and within its envelope at re
     assert.ok([at,width,bottom,top,front,back].every(Number.isFinite));assert.ok(width>0&&width<=length+.4);
     assert.ok(at-width/2>=-.3&&at+width/2<=length+.3);
     assert.ok(bottom>=0&&bottom<top&&top<=height+.15,`${profile.label}: ${bottom}..${top}`);
-    const maxProjection=face.layout==='amphi-front'?7:face.courtyardFeature==='stgi-entry'?1.52:1;
+    const maxProjection=face.layout==='amphi-front'?7:face.layout==='garden-b'?1.82:face.courtyardFeature==='stgi-entry'?1.52:1;
     assert.match(color,/^#[0-9a-f]{6}$/i);assert.ok(front>=0&&front<maxProjection);
    }
    panes+=drawCampusFacade(face,length,height,{panel:check,box:(...args)=>{solidTrim++;check(...args);},lettering:(text,at,width,bottom,top)=>{assert.ok(text.length>0);check(at,width,bottom,top,'#ffffff');}});
@@ -471,5 +471,6 @@ test('Bâtiment B corner windows align across the photographed garden elevations
   const cornerGap=face===garden?length-edge[0]-edge[1]/2:edge[0]-edge[1]/2;
   assert.ok(cornerGap>=0&&cornerGap<.05);
   assert.equal(columns.length,face===garden?2:0);
+  for(const [,depth,radius] of columns){assert.ok(depth-radius>1.2);assert.ok(depth+radius<1.78);}
  }
 });
