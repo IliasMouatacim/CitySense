@@ -88,7 +88,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
     if(!director)return;
     const [x,y]=local(event.coordinates),[px,py]=local(event.player);
     const [cx,cy]=pose?local(pose.camera):[px,py];
-    director.place(event.coordinates,x,y,event.ground,Math.atan2(x-px,py-y),event.speaking,Math.atan2(cx-x,y-cy),options.mood==='night');
+    director.place(event.coordinates,x,y,event.ground,px,py,event.speaking,Math.atan2(cx-x,y-cy),options.mood==='night');
     map.triggerRepaint();
   }
   const scene=new Scene(),camera=new Camera();
@@ -1210,6 +1210,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       if(director){
         if(options.walking&&director.root.parent!==scene)scene.add(director.root);
         director.root.visible=options.walking;
+        if(options.walking&&director.update())map.triggerRepaint();
       }
       camera.position.copy(eye);camera.updateMatrixWorld(true);sky?.position.copy(eye);
       // Preserve clip coordinates while supplying physical shaders a real eye:
