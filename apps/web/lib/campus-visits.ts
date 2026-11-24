@@ -10,6 +10,7 @@ export const CAMPUS_VISITS:{id:string;name:string;center:Position;start:Position
  {id:'library-court',name:'Bibliothèque · côté cour',center:[6.803866,47.495489],start:[6.80389,47.49528],lookAt:[6.803866,47.495490],pitch:90},
  {id:'stgi-garden-west',name:'UFR STGI · jardin, côté ouest',center:[6.80453,47.49535],start:[6.804487,47.4952862],lookAt:[6.804590,47.4954500],pitch:86.6,useExactStart:true},
  {id:'stgi-garden-c',name:'UFR STGI · bâtiment C, côté jardin',center:[6.80465,47.49532],start:[6.804911,47.495400],lookAt:[6.80470,47.495328],pitch:90},
+ {id:'stgi-exhibition',name:'UFR STGI · entrée de l’exposition (C)',center:[6.80459,47.49539],start:[6.804559,47.495345],lookAt:[6.804590,47.495394],pitch:90,useExactStart:true},
  {id:'stgi-garden-b',name:'UFR STGI · bâtiment B, côté jardin',center:[6.80471,47.49543],start:[6.804892,47.495422],lookAt:[6.80470,47.495428],pitch:90},
  {id:'stgi-court',name:'UFR STGI · galerie de la cour',center:[6.80445,47.49525],start:[6.80436406,47.49527313],lookAt:[6.80461,47.49515],pitch:90},
  {id:'stgi-colour',name:'UFR STGI · façade turquoise',center:[6.80486,47.49525],start:[6.80500018,47.49528259],lookAt:[6.804838,47.495239],pitch:90},

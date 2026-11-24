@@ -16,7 +16,7 @@ import {campusProfile,campusFace,gardenConnectorFace} from './campus-references'
 import {drawCampusFacade,type CampusDrawing} from './campus-architecture';
 import {drawCampusEnvelope,estimatedCampusFace,campusCompletionProfile} from './campus-envelope';
 import {insidePolygon} from './walk-geometry';
-import {CAMPUS_COURTYARD,STGI_GARDEN_WAY_ID,STGI_GARDEN_WAY_IDS,STGI_GARDEN_LAWN_LIFT} from './campus-courtyard';
+import {CAMPUS_COURTYARD,STGI_GARDEN_WAY_ID,STGI_GARDEN_WAY_IDS,STGI_GARDEN_LAWN_LIFT,STGI_EXHIBITION_LIFT} from './campus-courtyard';
 import {CROUS_PLATFORM,drawCrousShelter,shelterAngle,shelterOffset} from './campus-shelter';
 import {campusZebras,streetWidth} from './campus-streetscape';
 import {campusSurface,campusGlassTile} from './campus-surfaces';
@@ -483,7 +483,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         ctx.fillText('§ STGI',256,80);ctx.font='bold 52px sans-serif';ctx.fillText('MULTIMEDIA',256,175);
         texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);
       }
-      const stencil=batch();const p=local(centerCoord),ground=(terrainHeight(...centerCoord)??0)+STGI_GARDEN_LAWN_LIFT+.012;
+      const stencil=batch();const p=local(centerCoord),ground=(terrainHeight(...centerCoord)??0)+STGI_EXHIBITION_LIFT+.008;
       const halfW=width/2,halfD=depth/2;
       quad(stencil,[p[0]-halfW,p[1]-halfD,ground],[p[0]+halfW,p[1]-halfD,ground],[p[0]+halfW,p[1]+halfD,ground],[p[0]-halfW,p[1]+halfD,ground],'#ffffff',1,[[0,1],[1,1],[1,0],[0,0]]);
       mesh(stencil,texture,false,true);
@@ -733,15 +733,16 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       const stopLine=[[6.804461,47.495278],[6.804459,47.4952775],[6.804451,47.4952995],[6.804453,47.495300]];
       groundSurface(details,stopLine,'#e8e6dd',.086);
       const plaza=CAMPUS_COURTYARD.gardenPlaza.map(p=>[...p]);
-      groundSurface(details,plaza,'#383b3e',STGI_GARDEN_LAWN_LIFT+.005,1.2);
-      const plazaLocal=plaza.map(local);
-      for(let step=1;step<10;step++){
-        const t=step/10;
-        const p1=[plazaLocal[0][0]+(plazaLocal[3][0]-plazaLocal[0][0])*t,plazaLocal[0][1]+(plazaLocal[3][1]-plazaLocal[0][1])*t];
-        const p2=[plazaLocal[1][0]+(plazaLocal[2][0]-plazaLocal[1][0])*t,plazaLocal[1][1]+(plazaLocal[2][1]-plazaLocal[1][1])*t];
-        localGroundSurface(details,[[p1[0]-.015,p1[1]],[p2[0]-.015,p2[1]],[p2[0]+.015,p2[1]],[p1[0]+.015,p1[1]]],'#252729',STGI_GARDEN_LAWN_LIFT+.008);
-      }
-      campusGardenStencil([6.80464,47.495338]);
+      const apron=batch();
+      const [east,west]=plaza.map(local);
+      const span=Math.hypot(east[0]-west[0],east[1]-west[1]);
+      const dx=(east[0]-west[0])/span,dy=(east[1]-west[1])/span;
+      groundSurface(apron,plaza,'#ffffff',STGI_EXHIBITION_LIFT,2.4,(x,y)=>[
+        ((x-west[0])*dx+(y-west[1])*dy)/2.4,
+        ((y-west[1])*dx-(x-west[0])*dy)/2.4,
+      ]);
+      mesh(apron,materialTexture('stgi-garden-slabs'),true);
+      campusGardenStencil([6.804585,47.495370]);
     }
     if(campus)for(const fixture of CAMPUS_COURTYARD.fixtures){
       const coordinates:[number,number]=[...fixture.coordinates],p=local(coordinates),ground=terrainHeight(...coordinates);if(ground===null)continue;
@@ -770,7 +771,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           const base=ground+STGI_GARDEN_LAWN_LIFT;
           solidBox([p[0],p[1],base+.44],fixture.width,fixture.depth,.10,'#c5c7bf');
           for(const side of [-1,1]){
-            solidBox([p[0]+side*(fixture.width*.32),p[1],base+.20],.20,fixture.depth-.06,.39,'#b1b4ab');
+            solidBox([p[0]+side*(fixture.width*.32),p[1],base],.20,fixture.depth-.06,.44,'#b1b4ab');
           }
         }else{
           drawCampusBench(fixture.width,furnitureAt(p,ground));
@@ -1080,7 +1081,13 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 }
                 if(face){
                   windows+=drawCampusFacade(face,length,height-base,drawing);
-                  if(face.layout==='garden-c'||face.layout==='garden-c-connector')gardenWindowArt(wall);
+                  if(face.layout==='garden-c')gardenWindowArt(wall);
+                  if(face.layout==='garden-c-connector'){
+                    const exhibition=batch();
+                    panel(exhibition,wall,length*.555,length*.77,base+.04,base+(height-base)*.298-.085,
+                      '#ffffff',.155,[[0,0],[1,0],[1,1],[0,1]]);
+                    mesh(exhibition,materialTexture('stgi-exhibition'));
+                  }
                   if(face.layout==='garden-c'){gardenBuildingPlaque(wall,'C');gardenExhibitionPoster(wall);}
                   if(face.layout==='garden-b-return')gardenBuildingPlaque(wall,'B');
                   if(observed)campusFacades++;else campusEstimatedFacades++;

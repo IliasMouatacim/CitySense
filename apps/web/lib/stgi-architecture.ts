@@ -331,11 +331,12 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   }
   const canopyLeft=length*(connector?.055:.23),canopyRight=length*.99;
   const canopyWidth=canopyRight-canopyLeft,canopyCenter=(canopyLeft+canopyRight)/2;
-  draw.box(canopyCenter,canopyWidth,soffit,soffit+.20,'#b3b6aa',.98,.035);
-  draw.box(canopyCenter,canopyWidth,soffit-.085,soffit,'#7a3738',.975,.04);
-  draw.box(canopyCenter,canopyWidth,soffit+.20,soffit+.246,'#394447',.99,.035);
+  const projection=connector?1.42:.98;
+  draw.box(canopyCenter,canopyWidth,soffit,soffit+.20,'#b3b6aa',projection,.035);
+  draw.box(canopyCenter,canopyWidth,soffit-.085,soffit,'#652e30',projection-.005,.04);
+  draw.box(canopyCenter,canopyWidth,soffit+.20,soffit+.246,'#394447',projection+.01,.035);
   for(const fraction of connector?[.085,.735]:[.252,.731]){
-   const at=length*fraction,depth=.78,radius=.15;
+   const at=length*fraction,depth=projection-.20,radius=.15;
    if(draw.column)draw.column(at,depth,radius,.03,soffit-.085,'#6c797b');
    else draw.box(at,radius*2,.03,soffit-.085,'#6c797b',depth+radius,depth-radius);
   }
@@ -345,6 +346,15 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
    if(draw.glazing)draw.glazing(at,width-.065,bottom+.045,top-.045,.175,'fixed');
    else draw.panel(at,width-.065,bottom+.045,top-.045,'#587077',.175);
   };
+  if(connector){
+   // The exhibition glazing sits behind the projecting canopy and its columns.
+   // The artwork, doors, transom and side light share a single facade texture.
+   const at=length*.33,width=length*.17;
+   glass(at,width,height*.333,height*.606);
+   draw.box(at,width,height*.437,height*.447,'#718681',.228,.168);
+   draw.panel(at-width*.32,width*.32,height*.449,height*.601,'#a74944',.198);
+   return true;
+  }
   const art=GARDEN_C_MURAL;
   for(const offset of [-.25,.25])glass(length*(art.center+offset*art.span),length*art.span/2,.12,soffit-.19);
   const door=length*.577,doorWidth=Math.max(1.45,length*.095);
@@ -359,10 +369,10 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   glass(sideDoor,sideWidth,.095,soffit-.19);
   draw.box(sideDoor+sideWidth*.40,sideWidth*.17,.10,2.18,'#28527f',.22,.10);
   draw.panel(sideDoor-sideWidth*.10,sideWidth*.44,.16,.43,'#abb0a0',.189);
-  for(const [at,width] of connector?[[.475,.17]]:[[.47,.15],[.835,.22]]){
+  for(const [at,width] of [[.47,.15],[.835,.22]]){
    glass(length*at,length*width,height*.333,height*.606);
    draw.box(length*at,length*width,height*.437,height*.447,'#718681',.228,.168);
-   draw.panel(length*(at+width*(connector?-.30:.30)),length*width*.34,height*.449,height*.601,'#a74944',.198);
+   draw.panel(length*(at+width*.30),length*width*.34,height*.449,height*.601,'#a74944',.198);
   }
   draw.panel(length*.27,.37,height*.429,height*.429+.48,'#b99842',.15);
   draw.box(length*.27,.40,height*.415,height*.429,'#75805c',.25,.09);
