@@ -2,7 +2,7 @@ import type {CampusDrawing} from './campus-architecture';
 import type {CampusFace} from './campus-references';
 type Pane=(at:number,width:number,bottom:number,top:number,depth?:number)=>void;
 
-export const GARDEN_C_MURAL={center:.405,span:.23,bottom:.30,top:.215,depth:.194};
+export const GARDEN_C_MURAL={center:.41,span:.32,bottom:.30,top:.215,depth:.194};
 
 /** Painted infill below the exposed concrete parapet, visible in both the
  * institutional colour view and Noscium's 2016 photograph. */
@@ -92,7 +92,13 @@ export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:
   const bays=Math.max(3,Math.round(length/2.1)),pitch=(length-.20)/bays;
   for(let i=0;i<bays;i++){
    pane(.10+(i+.5)*pitch,pitch-.06,upper,height*.942,.13);
-   if(i%2===1)draw.box(.10+i*pitch,.18,upper-.025,height*.94,'#963f40',.31,.06);
+   if(connector&&Math.abs(i-(bays-1)/2)<.6){
+    const mid=(upper+height*.94)/2;
+    draw.box(.10+i*pitch,.22,mid,height*.94,'#9e3532',.31,.06);
+    draw.box(.10+i*pitch,.22,upper-.025,mid,'#278a5b',.31,.06);
+   }else if(i%2===1){
+    draw.box(.10+i*pitch,.18,upper-.025,height*.94,'#963f40',.31,.06);
+   }
   }
 
   if(connector){
