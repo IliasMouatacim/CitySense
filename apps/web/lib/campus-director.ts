@@ -14,7 +14,7 @@ export async function campusDirector(){
  ctx.fillStyle='#fff';ctx.strokeStyle='#263141';ctx.lineWidth=6;
  ctx.beginPath();ctx.roundRect(5,5,502,118,28);ctx.fill();ctx.stroke();
  ctx.beginPath();ctx.moveTo(226,119);ctx.lineTo(246,149);ctx.lineTo(271,119);ctx.fill();ctx.stroke();
- ctx.fillStyle='#172536';ctx.font='bold 62px sans-serif';ctx.textAlign='center';ctx.fillText('MOUATACIM',256,85);
+ ctx.fillStyle='#172536';ctx.font='bold 50px sans-serif';ctx.textAlign='center';ctx.fillText('CELIAAAANEEE',256,83,460);
  const texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;
  const bubble=new Mesh(new PlaneGeometry(1.35,.422),new MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,toneMapped:false}));
  bubble.rotation.set(Math.PI/2,0,0,'ZXY');bubble.visible=false;root.add(bubble);
