@@ -66,6 +66,7 @@ export async function loadWalkPlayer(outfit?:'director'){
  };
  if(outfit==='director'){
   try{
+   removeBackpackAndHood(body,body.skeleton.bones.indexOf(spine));
    const atlas=await new TextureLoader().loadAsync('/city/director.jpg');
    atlas.flipY=false;atlas.colorSpace=SRGBColorSpace;
    material.map?.dispose();material.map=atlas;
@@ -75,4 +76,46 @@ export async function loadWalkPlayer(outfit?:'director'){
   }
  }
  return model;
+}
+
+/**
+ * The shared streetwear mesh carries a backpack (a separate shell behind the
+ * torso) and a hood bunched behind the neck. The director wears neither: drop
+ * the backpack triangles and round the upper back to mirror the chest depth.
+ * Each load parses its own geometry, so the player's model is untouched.
+ */
+function removeBackpackAndHood(body:SkinnedMesh,spineJoint:number){
+ const geometry=body.geometry,index=geometry.index!,position=geometry.getAttribute('position');
+ const joints=geometry.getAttribute('skinIndex'),count=position.count;
+ // Weld UV seams by position, then join triangles into connected shells.
+ const parent=Int32Array.from({length:count},(_,i)=>i);
+ const find=(i:number):number=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+ const union=(a:number,b:number)=>{parent[find(a)]=find(b);};
+ const welded=new Map<string,number>();
+ for(let i=0;i<count;i++){
+  const key=`${position.getX(i).toFixed(4)},${position.getY(i).toFixed(4)},${position.getZ(i).toFixed(4)}`;
+  const twin=welded.get(key);if(twin===undefined)welded.set(key,i);else union(i,twin);
+ }
+ for(let t=0;t<index.count;t+=3){union(index.getX(t),index.getX(t+1));union(index.getX(t),index.getX(t+2));}
+ // The backpack is the only shell lying entirely behind the body.
+ const shellMinZ=new Map<number,number>();
+ for(let i=0;i<count;i++){const root=find(i);shellMinZ.set(root,Math.min(shellMinZ.get(root)??Infinity,position.getZ(i)));}
+ const backpack=(i:number)=>(shellMinZ.get(find(i))??0)>.09;
+ const kept:number[]=[];
+ for(let t=0;t<index.count;t+=3){
+  const a=index.getX(t),b=index.getX(t+1),c=index.getX(t+2);
+  if(!(backpack(a)&&backpack(b)&&backpack(c)))kept.push(a,b,c);
+ }
+ geometry.setIndex(kept);
+ // Flatten the hood and fill the strap recess: scale each torso slice's back to its chest depth.
+ const torso:number[]=[];
+ for(let i=0;i<count;i++)if(joints.getX(i)===spineJoint&&!backpack(i)&&position.getY(i)>1)torso.push(i);
+ const depth=torso.map(i=>{
+  let front=0,back=0;const y=position.getY(i);
+  for(const j of torso)if(Math.abs(position.getY(j)-y)<.013){front=Math.min(front,position.getZ(j));back=Math.max(back,position.getZ(j));}
+  return back>0?-front/back:1;
+ });
+ torso.forEach((i,k)=>{const z=position.getZ(i);if(z>0)position.setZ(i,z*depth[k]);});
+ position.needsUpdate=true;
+ geometry.computeBoundingBox();geometry.computeBoundingSphere();
 }
