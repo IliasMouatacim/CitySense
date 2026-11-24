@@ -1,3 +1,4 @@
+import {forecourtPoint,landingLevel,libraryAxis,libraryLanding} from '../../apps/web/lib/library-forecourt';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -64,6 +65,13 @@ test('IGN terrain samples, bounds and Rapier walking agree on the detailed city 
    assert.ok(walkingGroundHeight(climber)-walkingGroundHeight(atFoot)>2.5,'The camera rises with the treads');
    for(let i=0;i<200&&distance(climber,atFoot)>.14;i++)climber=physics.move(climber,offset(climber,foot.normal[0]*.08,foot.normal[1]*.08));
    assert.ok(distance(climber,atFoot)<.4,'The flight also permits descent');
+   const landingApproach=forecourtPoint(12.95,-2);
+   let visitor=landingApproach;
+   for(let step=0;step<40;step++)visitor=physics.move(visitor,offset(visitor,-libraryAxis[0]*.08,-libraryAxis[1]*.08));
+   assert.equal(landingLevel(visitor),libraryLanding.steps,'Walk up the library landing from the east');
+   assert.ok(walkingGroundHeight(visitor)>walkingGroundHeight(landingApproach)+.35,'The camera follows the raised library landing');
+   for(let step=0;step<60&&distance(visitor,landingApproach)>.10;step++)visitor=physics.move(visitor,offset(visitor,libraryAxis[0]*.08,libraryAxis[1]*.08));
+   assert.ok(distance(visitor,landingApproach)<.35,'Walk back down the library treads');
    // Cross from the courtyard through the photographed opening to the street side.
    const start:[number,number]=[6.803735,47.495450];
    let under=start;

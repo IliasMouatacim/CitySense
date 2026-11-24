@@ -1,4 +1,4 @@
-import {cycleLockers,directoryPosition,forecourtLamps,forecourtPoint,libraryAxis} from './library-forecourt';
+import {cycleLockers,landingLevel,libraryStairFoot,libraryLanding,directoryPosition,forecourtLamps,forecourtPoint,libraryAxis} from './library-forecourt';
 import {amphitheatreStairHeight} from './amphitheatre';
 import RAPIER from '@dimforge/rapier3d-compat';
 import {terrainHeight,loadCityWorld,inMontbeliard,municipalTerrainVertices} from './city-world';
@@ -49,13 +49,29 @@ export async function createCityPhysics(){
    world.createCollider(shape.setTranslation(p.x+east,ground+solid.z+solid.height/2,p.z-north));
   }
  }
- function forecourtCollider(u:number,v:number,width:number,depth:number,height:number,yaw=0){
-  const coords=forecourtPoint(u,v),ground=terrainHeight(...coords);
+ function forecourtCollider(u:number,v:number,width:number,depth:number,height:number,yaw=0,bottom?:number){
+  const coords=forecourtPoint(u,v),ground=bottom??terrainHeight(...coords);
   if(ground===null)return;
   const p=local(coords),angle=Math.atan2(libraryAxis[1],libraryAxis[0])+yaw;
   world.createCollider(RAPIER.ColliderDesc.cuboid(width/2,height/2,depth/2)
    .setRotation({x:0,y:Math.sin(angle/2),z:0,w:Math.cos(angle/2)})
    .setTranslation(p.x,ground+height/2,p.z));
+ }
+ const landingBase=terrainHeight(...libraryStairFoot)??0,l=libraryLanding;
+ for(let step=0;step<l.steps;step++){
+  const left=step?l.east+(step-1)*l.run:l.west,right=step?left+l.run:l.east;
+  const p=local(forecourtPoint((left+right)/2,(l.south+l.north)/2));
+  const height=1+(l.steps-step)*l.rise,angle=Math.atan2(libraryAxis[1],libraryAxis[0]);
+  world.createCollider(RAPIER.ColliderDesc.cuboid((right-left)/2,height/2,(l.north-l.south)/2)
+   .setRotation({x:0,y:Math.sin(angle/2),z:0,w:Math.cos(angle/2)})
+   .setTranslation(p.x,landingBase-1+height/2,p.z));
+ }
+ const deckTop=landingBase+l.steps*l.rise;
+ forecourtCollider(5.4,.20,11.2,.055,1.05,0,deckTop);
+ forecourtCollider(-.24,-3.60,.055,7.10,1.05,0,deckTop);
+ function stairHeight(p:Position){
+  const level=landingLevel(p);
+  return level?landingBase+level*l.rise:amphitheatreStairHeight(p,data);
  }
  const sign=directoryPosition;
  forecourtCollider(sign.along+sign.alongSpan/2,sign.out+sign.outSpan/2,Math.hypot(sign.alongSpan,sign.outSpan),.19,2.88,Math.atan2(sign.outSpan,sign.alongSpan));
@@ -86,7 +102,7 @@ export async function createCityPhysics(){
    if(disposed||!inMontbeliard(to))return from;
    const terrain=terrainHeight(...to);
    if(terrain===null)return from;
-   const fromStep=amphitheatreStairHeight(from,data),toStep=amphitheatreStairHeight(to,data);
+   const fromStep=stairHeight(from),toStep=stairHeight(to);
    const ground=Math.max(terrainHeight(...from)??0,fromStep??-Infinity),target=Math.max(terrain,toStep??-Infinity);
    if((fromStep!==undefined||toStep!==undefined)&&Math.abs(target-ground)>.45)return from;
    const a=local(from),b=local(to);

@@ -1,4 +1,4 @@
-import {cycleLockers,directoryPosition,forecourtLamps,forecourtPoint,libraryCorner} from './library-forecourt';
+import {cycleLockers,libraryStairFoot,libraryLanding,directoryPosition,forecourtLamps,forecourtPoint,libraryCorner} from './library-forecourt';
 import {campusDirector} from './campus-director';
 import {GARDEN_C_MURAL} from './stgi-architecture';
 import {auditoriumId} from './amphitheatre';
@@ -421,24 +421,46 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         branch(light,[light[0],light[1],light[2]+.10],.265,'#9d9f96',metal,.85);
         solidBox([light[0],light[1],light[2]-.025],.30,.30,.028,'#ded7b4');
       }
+      const terrace=libraryLanding,datum=terrainHeight(...libraryStairFoot)??point(0,0)[2];
+      const deck=makeWall(terrace.west,terrace.south,terrace.east,terrace.south);
+      const deckDepth=terrace.north-terrace.south;
+      wallBox(campusConcrete,deck,deck.length/2,deck.length,datum-1,datum+terrace.steps*terrace.rise,'#ccc1ac',deckDepth,0,true,[3,1.5]);
+      for(let step=1;step<terrace.steps;step++){
+        const x=deck.length+(step-.5)*terrace.run,top=datum+(terrace.steps-step)*terrace.rise;
+        wallBox(campusConcrete,deck,x,terrace.run,datum-1,top,'#c6bba5',deckDepth,0,true,[3,1.5]);
+      }
       const bank=cycleLockers,lockers=makeWall(bank.along,bank.out,bank.along+bank.pitch*bank.count,bank.out);
+      const lockerEnds=batch(),capProfile=Array.from({length:13},(_,i)=>{
+        const angle=i*Math.PI/24;
+        return [bank.depth*Math.sin(angle),.88+.51*Math.cos(angle)];
+      });
+      const profile=[[0,.085],...capProfile,[bank.depth,.085]];
       for(let i=0;i<bank.count;i++){
-        const x=bank.pitch*(i+.5),base=point(bank.along+x,bank.out,.15)[2];
-        wallBox(details,lockers,x,1.22,base,base+1.14,'#363939',1.12,0);
-        panel(details,lockers,x,1.12,base+.10,base+1.07,'#bc3430',1.13);
-        panel(details,lockers,x-.39,.048,base+.53,base+.68,'#ddd2bd',1.14);
-        for(let slice=0;slice<6;slice++){
-          const t=(slice+.5)/6;
-          wallBox(details,lockers,x,1.22,base+1.14,base+1.14+.23*Math.sqrt(1-t*t),'#484747',bank.depth*(slice+1)/6,bank.depth*slice/6);
+        const start=bank.along+i*bank.pitch,x=bank.pitch*(i+.5),base=point(start,bank.out,.15)[2];
+        const edge=(u:number,p:number[])=>[...local(forecourtPoint(u,bank.out+p[0])),base+p[1]];
+        for(let j=0;j<profile.length-1;j++){
+          const a=profile[j],b=profile[j+1];
+          quad(details,edge(start,a),edge(start+1.22,a),edge(start+1.22,b),edge(start,b),'#363939');
+        }
+        // A single continuous curved shell surrounds each red roll-top door.
+        wallBox(details,lockers,x,1.22,base,base+.095,'#353535',bank.depth,0);
+        panel(details,lockers,x,1.13,base+.10,base+.87,'#bd332d',bank.depth+.012);
+        panel(details,lockers,x-.39,.048,base+.48,base+.61,'#ddd2bd',bank.depth+.018);
+        for(const u of [start,start+1.22]){
+          for(let j=1;j<profile.length-1;j++){
+            const vertices=[profile[0],profile[j],profile[j+1]];
+            triangle(lockerEnds,edge(u,vertices[0]),edge(u,vertices[1]),edge(u,vertices[2]),tint('#ffffff'),vertices.map(([d,h])=>[d/bank.depth,h/1.39]));
+          }
         }
       }
-      const rail=makeWall(-.2,.10,6,.10),base=rail.base;
-      for(let i=0;i<=5;i++)wallBox(metal,rail,i*1.2,.045,base+.2,base+1.35,'#505654',.12,.075);
-      for(const h of [.51,.82,1.33])wallBox(metal,rail,3,6.05,base+h,base+h+.04,'#666a66',.13,.075);
+      mesh(lockerEnds,materialTexture('library-cycle-locker'));
+      const rail=makeWall(-.2,.10,11,.10),base=datum+terrace.steps*terrace.rise;
+      for(let i=0;i<=9;i++)wallBox(metal,rail,i*rail.length/9,.045,base,base+1.05,'#505654',.12,.075);
+      for(const h of [.31,.65,1.03])wallBox(metal,rail,rail.length/2,rail.length,base+h,base+h+.04,'#666a66',.13,.075);
       // The landing guard turns across the recessed red entrance behind the hedge.
       const landing=makeWall(-.15,-7.15,-.15,-.05);
-      for(let i=0;i<=5;i++)wallBox(metal,landing,i*landing.length/5,.042,landing.base+.28,landing.base+1.51,'#515554',.10,.055);
-      for(const h of [.52,.81,1.1,1.48])wallBox(metal,landing,landing.length/2,landing.length,landing.base+h,landing.base+h+.032,'#72756c',.115,.07);
+      for(let i=0;i<=5;i++)wallBox(metal,landing,i*landing.length/5,.042,base,base+1.05,'#515554',.10,.055);
+      for(const h of [.31,.65,1.03])wallBox(metal,landing,landing.length/2,landing.length,base+h,base+h+.032,'#72756c',.115,.07);
       for(let i=0;i<25;i++){
         const center=point(-1.55+.15*Math.sin(i*1.9),-7.3+i*.29,.54);
         const radius=.54+.09*Math.cos(i*2),height=.56+.10*Math.sin(i);

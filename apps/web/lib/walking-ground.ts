@@ -1,3 +1,4 @@
+import {landingLevel,libraryStairFoot,libraryLanding} from './library-forecourt';
 import {amphitheatreStairHeight} from './amphitheatre';
 import {CAMPUS_COURTYARD,STGI_GARDEN_LAWN_LIFT} from './campus-courtyard';
 import {CAMPUS_NORTH_LAWN} from './campus-north-lawn';
@@ -39,5 +40,7 @@ export function walkingGroundHeight(position:Position){
   const [w,south,e,n]=s.bounds;if(s.lift<=lift||position[0]<w||position[0]>e||position[1]<south||position[1]>n)continue;
   if(s.area?insidePolygon(position,[s.line]):distance(position,nearestOnLine(position,s.line))<=s.width)lift=s.lift;
  }
+ const level=landingLevel(position);
+ if(level)return Math.max(height+lift,(terrainHeight(...libraryStairFoot)??height)+level*libraryLanding.rise);
  return Math.max(height+lift,amphitheatreStairHeight(position,world)??height);
 }
