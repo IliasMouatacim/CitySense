@@ -61,15 +61,15 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   refreshGeometry(true);
   const candidates=roads.map(road=>({point:nearestOnLine(origin,road.line),priority:road.priority,line:road.line})).filter(c=>withinPilot(c.point)&&(!physics||physics.height(c.point)!==null)&&distance(origin,c.point)<250&&!blocked(c.point,obstacles,bridges)).sort((a,b)=>distance(origin,a.point)+a.priority-distance(origin,b.point)-b.priority);
   const angleDifference=(a:number,b:number)=>Math.abs(((a-b+540)%360)-180);
-  function hasClearStart(start:Position,direction:number){
+  function hasClearStart(start:Position,direction:number,steps=6){
     let point=start,travelled=0;
-    for(let step=0;step<6;step++){
+    for(let step=0;step<steps;step++){
       const next=advance(point,direction,1,0,.5);
       if(blocked(next,obstacles,bridges)||physics&&physics.height(next)===null)return false;
       const resolved=physics?physics.move(point,next):next;
       travelled+=distance(point,resolved);point=resolved;
     }
-    return travelled>2.7;
+    return travelled>steps*.5-.3;
   }
   let chosen:{point:Position;heading:number}|undefined;
   if(useExactStart&&!blocked(origin,obstacles,bridges)){
@@ -92,12 +92,16 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
   const spawn=chosen.point,streetBearing=chosen.heading;
   let position:Position=[...spawn],bearing=streetBearing,pitch=87,meters=0,locked=false,wasLocked=false,dirty=true,collision=false,boundary=false,last=performance.now(),reported=0,frame=0,eye=walkingGroundHeight(spawn)+WALK_EYE_HEIGHT,slowTime=0;
   const initialFacing=lookAt?Math.atan2((lookAt[0]-spawn[0])*Math.cos(spawn[1]*Math.PI/180),lookAt[1]-spawn[1])*180/Math.PI:streetBearing;
-  const directorBearing=[initialFacing+18,initialFacing-18,initialFacing].find(angle=>hasClearStart(spawn,angle))??streetBearing;
-  const directorStart=advance(spawn,directorBearing,1,0,2);
-  let follow=directorTrail(directorStart,spawn);
+  const farBearing=[initialFacing+18,initialFacing-18,initialFacing].find(angle=>hasClearStart(spawn,angle,16));
+  const directorStart=advance(spawn,farBearing??streetBearing,1,0,farBearing===undefined?2:8);
+  let follow=directorTrail(directorStart,spawn),visitTime=0;
   function reportDirector(){
-    const point=follow(position);
-    map.fire('citysense-director',{coordinates:point,ground:walkingGroundHeight(point),player:position});
+    // Approach over four seconds, stay for three, then retrace the trail.
+    const phase=visitTime%24;
+    const approach=Math.max(0,Math.min(1,(phase-10)/4,(21-phase)/4));
+    const blend=approach*approach*(3-2*approach);
+    const point=follow(position,8-6.4*blend);
+    map.fire('citysense-director',{coordinates:point,ground:walkingGroundHeight(point),player:position,speaking:phase>=14&&phase<17});
   }
   map.on('citysense-request-director',reportDirector);
   const keys=new Set<string>();let sprintMode=false;
@@ -198,15 +202,23 @@ export function createWalkController(map:Map,origin:Position,onStatus:(status:Wa
     if(!animating||now-reported>150){status();reported=now;}
     if(animating&&!frame&&!disposed)frame=requestAnimationFrame(tick);
   }
+  let directorClock=performance.now();
+  const directorTimer=setInterval(()=>{
+    const now=performance.now(),elapsed=(now-directorClock)/1000;
+    directorClock=now;
+    if(paused||document.hidden)return;
+    visitTime+=Math.min(elapsed,.25);
+    reportDirector();
+  },100);
   window.addEventListener('focusin',focusIn);window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);document.addEventListener('mousemove',lockedMove);document.addEventListener('pointerlockchange',lockChange);
   canvas.addEventListener('pointerdown',down);canvas.addEventListener('pointermove',move,{passive:false});canvas.addEventListener('pointerup',up);canvas.addEventListener('pointercancel',up);canvas.addEventListener('lostpointercapture',up);map.on('sourcedata',sourceData);
   const controller={
     press(action:WalkAction,active:boolean){if(action==='sprint'){sprintMode=active;return;}if(active){keys.add('touch:'+action);wake();}else keys.delete('touch:'+action);},
     look,
     async lock(){if(canvas.requestPointerLock)await canvas.requestPointerLock();},
-    reset(){clear();sprintMode=false;stride=0;desiredFacing=facing=streetBearing;arm=3.65;position=[...spawn];follow=directorTrail(directorStart,spawn);bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
+    reset(){clear();sprintMode=false;stride=0;desiredFacing=facing=streetBearing;arm=3.65;position=[...spawn];visitTime=0;follow=directorTrail(directorStart,spawn);bearing=streetBearing;pitch=87;dirty=true;collision=false;boundary=false;wake();},
     dispose(){
-      if(disposed)return;disposed=true;map.off('citysense-request-director',reportDirector);cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-request-pose',requestPose);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
+      if(disposed)return;disposed=true;clearInterval(directorTimer);map.off('citysense-request-director',reportDirector);cancelAnimationFrame(frame);clear();map.off('sourcedata',sourceData);clearTimeout(geometryTimer);map.off('resize',resized);map.off('citysense-request-pose',requestPose);map.off('citysense-look-at',focusPlace);map.off('citysense-walk-pause',pause);
       window.removeEventListener('focusin',focusIn);window.removeEventListener('keydown',keyDown);window.removeEventListener('keyup',keyUp);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);document.removeEventListener('mousemove',lockedMove);document.removeEventListener('pointerlockchange',lockChange);
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('lostpointercapture',up);canvas.style.touchAction=originalTouchAction;if(originalLabel===null)canvas.removeAttribute('aria-label');else canvas.setAttribute('aria-label',originalLabel);
       if(document.pointerLockElement===canvas)document.exitPointerLock();

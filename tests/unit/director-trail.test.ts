@@ -12,3 +12,13 @@ test('the director follows the walked route around a corner and waits when the p
  assert.deepEqual(follow(player),companion);
  assert.ok(distance(follow(offset(corner,4,0)),offset(corner,2,0))<.001);
 });
+
+test('a visit retraces the same corner while the player stands still',()=>{
+ const start:Position=[6.804,47.495],corner=offset(start,0,5),player=offset(corner,5,0);
+ const follow=directorTrail(start,start);
+ follow(corner,8);
+ const far=follow(player,8);
+ assert.ok(distance(far,offset(corner,0,-3))<.001);
+ assert.ok(distance(follow(player,1.6),offset(corner,3.4,0))<.001);
+ assert.ok(distance(follow(player,8),far)<.001);
+});

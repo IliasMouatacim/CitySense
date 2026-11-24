@@ -71,10 +71,12 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
   let requestedCityModel=false;
   let cityModel:Awaited<ReturnType<typeof loadCityModel>>;
   let director:ReturnType<typeof campusDirector>|undefined;
-  function locateDirector(event:{coordinates:[number,number];ground:number;player:[number,number]}){
+  function locateDirector(event:{coordinates:[number,number];ground:number;player:[number,number];speaking:boolean}){
     director??=campusDirector();
     const [x,y]=local(event.coordinates),[px,py]=local(event.player);
-    director.place(x,y,event.ground,Math.atan2(x-px,py-y));
+    const [cx,cy]=pose?local(pose.camera):[px,py];
+    director.place(x,y,event.ground,Math.atan2(x-px,py-y),event.speaking,Math.atan2(cx-x,y-cy));
+    map.triggerRepaint();
   }
   const scene=new Scene(),camera=new Camera();
   const transform=new Matrix4().makeTranslation(origin.x,origin.y,0).scale(new Vector3(unit,-unit,unit));
