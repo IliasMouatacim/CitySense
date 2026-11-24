@@ -37,6 +37,210 @@ function drawStgiInfill(length:number,top:number,openings:InfillOpening[],draw:C
 /** Architectural observations from stgi-court/stgi-colour, registered by the
  * facade manifest. Dimensions and edge registration remain visual estimates. */
 export function drawStgiFacade(face:CampusFace,length:number,height:number,draw:CampusDrawing,pane:Pane){
+ if(face.layout==='stgi-east-wing'){
+  // Photographed STGI east garden classroom wings flanking the breezeway bridge:
+  // two broad dark-framed lower glazing bands with projecting red horizontal rails,
+  // a white 1st-floor spandrel band, a tall white 2nd-floor panel with narrow green
+  // and blue clerestory ribbons + corbel blocks, and a dark grey concrete parapet.
+  const wall='#eceae2',darkFrame='#20292b',redRail='#a13b35',parapet='#7e8079';
+  const g0=.08,g1=height*.248,s1=height*.318,f1=height*.546,wTop=height*.845;
+  // Ground & 1st floor dark window bands
+  const bays=Math.max(2,Math.round(length/1.85)),pitch=(length-.16)/bays;
+  for(const [bottom,top,railZ] of [[g0,g1,height*.190],[s1,f1,height*.490]] as const){
+   draw.panel(length/2,length-.08,bottom,top,darkFrame,.07);
+   for(let b=0;b<bays;b++){
+    const at=.08+(b+.5)*pitch,w=pitch-.07;
+    if(draw.glazing)draw.glazing(at,w,bottom+.04,top-.04,.10,'fixed');
+    else draw.panel(at,w,bottom+.04,top-.04,'#384e52',.10);
+    // Occasional dark solid casement panel observed inside the ribbon
+    if((b+Math.round(bottom))%3===1)draw.panel(at+w*.26,w*.36,bottom+.32,top-.30,'#182022',.115);
+   }
+   for(let b=0;b<=bays;b++)draw.box(.08+b*pitch,.055,bottom,top,darkFrame,.17,.06);
+   for(const frac of [.34,.76]){
+    const z=bottom+(top-bottom)*frac;
+    draw.box(length/2,length-.10,z-.022,z+.022,darkFrame,.175,.07);
+   }
+   // Continuous red horizontal guardrail bar in front of the dark glazing
+   draw.box(length/2,length-.04,railZ-.024,railZ+.024,redRail,.24,.15);
+  }
+  // White painted spandrel band between ground and 1st floor
+  draw.box(length/2,length,g1,s1,wall,.16,.03);
+  draw.box(length/2,length,g1-.03,g1+.02,'#6e716a',.165,.04);
+  draw.box(length/2,length,s1-.035,s1+.01,'#b5b7af',.18,.04);
+  // Tall white 2nd-floor painted panel
+  const greenBot=height*.734,greenTop=height*.768,blueBot=height*.796;
+  draw.box(length/2,length,f1,greenBot,wall,.15,.03);
+  draw.box(length/2,length,f1-.03,f1+.02,'#6e716a',.16,.04);
+  // Subtle vertical panel seams in the white spandrel
+  for(let b=1;b<bays;b++)draw.panel(.08+b*pitch,.016,f1+.04,greenBot-.04,'#d2d0c7',.155);
+  // Narrow green-framed lower clerestory strip + projecting corbel blocks
+  draw.panel(length/2,length-.12,greenBot,greenTop,'#2d5e4c',.08);
+  for(let b=0;b<bays;b++){
+   const at=.08+(b+.5)*pitch,w=pitch-.07;
+   if(draw.glazing)draw.glazing(at,w,greenBot+.03,greenTop-.03,.105,'fixed');
+   else draw.panel(at,w,greenBot+.03,greenTop-.03,'#466a5e',.105);
+  }
+  draw.box(length/2,length-.08,greenBot-.035,greenBot+.01,'#386d59',.20,.06);
+  for(const frac of length>7?[.24,.76]:[.45]){
+   draw.box(length*frac,.22,greenBot-.04,greenTop+.05,'#875e54',.28,.05);
+  }
+  // Thin white divider between green and blue clerestory ribbons
+  draw.box(length/2,length,greenTop,blueBot,wall,.15,.03);
+  // Upper blue-framed clerestory ribbon under the parapet
+  draw.panel(length/2,length-.12,blueBot,wTop,'#355f78',.08);
+  for(let b=0;b<bays;b++){
+   const at=.08+(b+.5)*pitch,w=pitch-.07;
+   if(draw.glazing)draw.glazing(at,w,blueBot+.03,wTop-.03,.105,'fixed');
+   else draw.panel(at,w,blueBot+.03,wTop-.03,'#4a6c80',.105);
+  }
+  // Top weathered dark-grey exposed concrete parapet
+  draw.box(length/2,length,wTop,height,parapet,.17,.03);
+  for(let b=1;b<bays;b++)draw.panel(.08+b*pitch,.02,wTop+.03,height-.04,'#64665f',.176);
+  draw.box(length/2,length,height-.06,height+.04,'#555c5a',.21,.03);
+  return true;
+ }
+ if(face.layout==='stgi-bridge'||face.layout==='stgi-bridge-west'){
+  // Elevated 2-storey glazed bridge over the open breezeway between STGI wings.
+  const east=face.layout==='stgi-bridge',frame='#717c7f',slab='#b0b2aa';
+  const f1Bot=.22,f1Top=height*.455,f2Bot=height*.515,f2Top=height*.90;
+  draw.box(length/2,length,0,f1Bot,slab,.14,.03);
+  draw.box(length/2,length,f1Top,f2Bot,slab,.14,.03);
+  draw.box(length/2,length,f2Top,height,'#989a92',.15,.03);
+  // Rooftop safety handrail visible above the bridge in the photographs
+  for(const z of [height+.28,height+.58])draw.box(length/2,length-.3,z,z+.03,'#8d9496',.12,.06);
+  for(const frac of [.12,.38,.62,.88])draw.box(length*frac,.035,height,height+.60,'#8d9496',.12,.06);
+  const bays=3,pitch=(length-.28)/bays;
+  for(const [bottom,top] of [[f1Bot,f1Top],[f2Bot,f2Top]] as const){
+   draw.panel(length/2,length-.20,bottom,top,frame,.07);
+   for(let b=0;b<bays;b++){
+    const at=.14+(b+.5)*pitch,w=pitch-.07;
+    if(draw.glazing)draw.glazing(at,w,bottom+.04,top-.04,.10,'fixed');
+    else draw.panel(at,w,bottom+.04,top-.04,'#687d82',.10);
+   }
+   for(let b=0;b<=bays;b++)draw.box(.14+b*pitch,.055,bottom,top,frame,.16,.06);
+   for(const frac of [.38,.74]){
+    const z=bottom+(top-bottom)*frac;
+    draw.box(length/2,length-.20,z-.022,z+.022,frame,.165,.06);
+   }
+   // Three horizontal metallic guardrail tubes across the lower glass
+   for(const r of [.13,.24,.35]){
+    const z=bottom+(top-bottom)*r;
+    draw.box(length/2,length-.22,z-.016,z+.016,'#869093',.185,.12);
+   }
+  }
+  if(east){
+   // Projecting mint-turquoise balcony box and red square panel with white centre
+   const cx=length*.50;
+   draw.box(cx,.94,f1Top-.18,f2Bot+.72,'#3a9a78',.34,.08);
+   draw.box(cx,.94,f1Top-.22,f1Top-.18,'#255d49',.34,.08);
+   draw.box(cx,.72,f2Bot+.74,f2Bot+1.46,'#b83836',.22,.08);
+   draw.panel(cx,.24,f2Bot+.98,f2Bot+1.22,'#f2f0e8',.235);
+   // Full-height vertical concrete rainwater column at the left junction
+   draw.box(.15,.24,-2.95,height,'#88867d',.23,.03);
+  }
+  return true;
+ }
+ if(face.layout==='stgi-white-tower'){
+  // Projecting rectangular white shaft rising above the north-wing parapet.
+  const top=height+1.15;
+  draw.box(length/2,length,.03,top,'#eceae2',.14,.025);
+  for(const z of [height*.32,height*.64,height*.92])draw.panel(length/2,length,z,z+.018,'#cfcdc4',.148);
+  if(length>2.5)draw.panel(length*.24,.22,height-.15,height+.18,'#3a3d3a',.155);
+  draw.box(length/2,length,top-.06,top+.04,'#606663',.18,.03);
+  return true;
+ }
+ if(face.layout==='stgi-stair-flat-left'||face.layout==='stgi-stair-flat-right'){
+  // Flat side of the curved board-marked concrete stair towers (wings A-south and A-north).
+  const top=height+.85,concrete='#c2bfb4',seam='#8c8a80',dark='#21292b';
+  draw.box(length/2,length,.03,top,concrete,.12,.025);
+  draw.panel(length/2,length,.03,.38,'#858379',.126);
+  for(const z of [height*.315,height*.635,height*.91])draw.panel(length/2,length,z,z+.024,seam,.128);
+  for(let x=.45;x<length-.3;x+=.55)draw.panel(x,.014,.38,top-.08,'#b2afa4',.125);
+  // Tall vertical dark window/channel near the inner corner turning horizontally at the top
+  const slotAt=length-.38;
+  draw.panel(slotAt,.26,height*.29,height*.89,dark,.135);
+  if(draw.glazing)draw.glazing(slotAt,.18,height*.30,height*.88,.14,'fixed');
+  const barWidth=Math.min(2.3,length*.42),barAt=slotAt-barWidth/2+.10;
+  draw.panel(barAt,barWidth,height*.865,height*.905,dark,.135);
+  draw.box(barAt-barWidth/2+.12,.22,height*.855,height*.915,'#6b453c',.20,.08);
+  // Small golden-yellow framed square peep window below the upper dark bar
+  const peepAt=length-1.45,peepZ=height*.75;
+  draw.box(peepAt,.46,peepZ-.23,peepZ+.23,'#d8ab34',.17,.08);
+  if(draw.glazing)draw.glazing(peepAt,.34,peepZ-.17,peepZ+.17,.145,'fixed');
+  else draw.panel(peepAt,.34,peepZ-.17,peepZ+.17,dark,.145);
+  // Medium teal-green framed square window at mid-height toward the curved end
+  const midAt=Math.min(1.65,length*.32),midZ=height*.39;
+  draw.box(midAt,1.12,midZ-.60,midZ+.60,'#2c6555',.18,.08);
+  if(draw.glazing)draw.glazing(midAt,.96,midZ-.52,midZ+.52,.145,'fixed');
+  else draw.panel(midAt,.96,midZ-.52,midZ+.52,'#293a3c',.145);
+  draw.box(midAt,1.16,midZ-.64,midZ-.57,'#858880',.21,.08);
+  // Ground-floor dark service door and small dark-framed square window beside it
+  const doorAt=length-.95;
+  draw.box(doorAt,.96,.04,2.14,'#232f34',.15,.06);
+  const lowAt=length-2.10;
+  draw.box(lowAt,.54,1.42,2.08,dark,.16,.07);
+  if(draw.glazing)draw.glazing(lowAt,.42,1.48,2.02,.14,'fixed');
+  draw.box(length/2,length,top-.06,top+.04,'#72756e',.16,.03);
+  return true;
+ }
+ if(face.layout==='stgi-stair-curve'||face.layout==='stgi-stair-slit'){
+  // Curved eastern nose of the board-marked concrete stair towers.
+  const top=height+.85,concrete='#c2bfb4',seam='#8c8a80';
+  draw.box(length/2,length,.03,top,concrete,.12,.025);
+  draw.panel(length/2,length,.03,.42,'#7d7b72',.126);
+  for(const z of [height*.315,height*.635,height*.91])draw.panel(length/2,length,z,z+.024,seam,.128);
+  for(let x=.22;x<length-.15;x+=.36)draw.panel(x,.014,.42,top-.08,'#b2afa4',.125);
+  if(face.layout==='stgi-stair-slit'){
+   // Full-height vertical stair window slit with green jambs and 5 bright yellow horizontal bars
+   const at=length/2,w=Math.min(.54,length*.56),bot=1.40,slitTop=height*.91;
+   draw.panel(at,w,bot,slitTop,'#21322e',.135);
+   if(draw.glazing)draw.glazing(at,w-.08,bot+.05,slitTop-.05,.142,'fixed');
+   for(const side of [-1,1])draw.box(at+side*(w/2+.035),.07,bot-.04,slitTop+.04,'#2f755e',.20,.08);
+   draw.box(at,w+.14,bot-.06,bot+.02,'#e0b832',.22,.08);
+   for(const frac of [.27,.41,.55,.69,.82]){
+    const z=height*frac;
+    draw.box(at,w+.04,z-.08,z+.08,'#e0b832',.21,.10);
+   }
+  }
+  draw.box(length/2,length,top-.06,top+.04,'#72756e',.16,.03);
+  return true;
+ }
+ if(face.layout==='library-east-striped'){
+  // South-facing concrete-and-red-brick striped return of the library east wing (Image 4 background).
+  draw.panel(length/2,length,.04,height,'#9c9b92',.06);
+  for(const at of [.35,length-.35])draw.box(at,.70,.04,height,'#8d8c84',.14,.03);
+  for(let row=0;row<6;row++){
+   const z=1.15+row*2.05;
+   if(z+.95<height-.4)draw.panel(length/2,length-1.4,z,z+.95,'#a66d5f',.075);
+  }
+  // Small red-framed square window on the lower right of this face
+  const wx=length*.82,wz=4.1;
+  draw.box(wx,.68,wz-.34,wz+.34,'#7d3935',.16,.06);
+  if(draw.glazing)draw.glazing(wx,.52,wz-.26,wz+.26,.12,'fixed');
+  draw.box(length/2,length,height-.16,height+.04,'#686b65',.18,.03);
+  return true;
+ }
+ if(face.layout==='library-east-white'){
+  // East-facing white wall of the library east wing with small punched square windows (Image 4 far right).
+  draw.panel(length/2,length,.04,height-1.35,'#eceae2',.07);
+  draw.box(length/2,length,height-1.35,height,'#7e8079',.14,.03);
+  const punched:[number,number,number,number,string][]=[
+   [.30,1.05,10.2,.95,'#c89c42'],
+   [.68,.55,10.35,.55,'#354244'],
+   [.30,1.05,7.1,.95,'#354244'],
+   [.68,.48,7.2,.48,'#7c433b'],
+   [.35,1.65,4.2,.55,'#354244'],
+   [.24,.75,2.1,1.25,'#354244'],
+  ];
+  for(const [frac,w,z,h,accent] of punched){
+   if(z+h/2>height-1.4)continue;
+   const at=length*frac;
+   draw.box(at,w+.12,z-h/2-.06,z+h/2+.06,accent,.15,.06);
+   if(draw.glazing)draw.glazing(at,w,z-h/2,z+h/2,.10,'fixed');
+  }
+  draw.box(length/2,length,height-.10,height+.04,'#5a605d',.18,.03);
+  return true;
+ }
  if(face.layout==='garden-b'||face.layout==='garden-b-return'){
   const garden=face.layout==='garden-b',wall='#eeeee8',frame='#344b4c';
   const cornerWidth=garden?length*.39:Math.min(4.2,length*.32);

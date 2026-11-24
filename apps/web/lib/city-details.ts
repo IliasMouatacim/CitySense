@@ -310,7 +310,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;materials.set(key,texture);
     }
     const poster=batch();
-    panel(poster,wall,wall.length*.885,.72,wall.base+1.05,wall.base+2.25,'#ffffff',.25,[[0,0],[1,0],[1,1],[0,1]]);
+    panel(poster,wall,wall.length*.836,.52,wall.base+.88,wall.base+1.82,'#ffffff',.182,[[0,0],[1,0],[1,1],[0,1]]);
     mesh(poster,texture,false,true);
   }
   function gardenWindowArt(wall:Wall){
@@ -701,15 +701,37 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
       }
     }
     if(campus&&metersBetween(center,[6.80466,47.49538])<280){
-      const lawn=CAMPUS_COURTYARD.gardenLawn.map(p=>[...p]);
-      groundSurface(lawns,lawn,'#bbcca5',STGI_GARDEN_LAWN_LIFT,2.5);
-      const ring=lawn.map(local);
-      for(let i=0;i<ring.length;i++){
-        const [a,b]=[ring[i],ring[(i+1)%ring.length]];
-        const span=Math.hypot(b[0]-a[0],b[1]-a[1]);
-        const nx=(b[1]-a[1])*.07/span,ny=(a[0]-b[0])*.07/span;
-        localGroundSurface(details,[[a[0]-nx,a[1]-ny],[b[0]-nx,b[1]-ny],[b[0]+nx,b[1]+ny],[a[0]+nx,a[1]+ny]],'#555a52',STGI_GARDEN_LAWN_LIFT+.01);
+      const drawLawnWithKerb=(poly:number[][],lift=STGI_GARDEN_LAWN_LIFT)=>{
+        groundSurface(lawns,poly,'#b3c69c',lift,2.5);
+        const ring=poly.map(local);
+        for(let i=0;i<ring.length;i++){
+          const [a,b]=[ring[i],ring[(i+1)%ring.length]],span=Math.hypot(b[0]-a[0],b[1]-a[1]);
+          const nx=(b[1]-a[1])*.07/span,ny=(a[0]-b[0])*.07/span;
+          localGroundSurface(details,[[a[0]-nx,a[1]-ny],[b[0]-nx,b[1]-ny],[b[0]+nx,b[1]+ny],[a[0]+nx,a[1]+ny]],'#4d524c',lift+.008);
+        }
+      };
+      drawLawnWithKerb(CAMPUS_COURTYARD.gardenLawn.map(p=>[...p]));
+      drawLawnWithKerb(CAMPUS_COURTYARD.southGardenLawn.map(p=>[...p]));
+      for(const strip of CAMPUS_COURTYARD.westWingLawns)drawLawnWithKerb(strip.map(p=>[...p]),.09);
+      // Low green groundcover shrubs along the south-wing grass strip and south garden bed
+      for(let i=0;i<7;i++){
+        const t=(i+.5)/7,lng=6.804352+(6.804382-6.804352)*t,lat=47.495168+(47.495240-47.495168)*t;
+        const gp=local([lng,lat]),gz=(terrainHeight(lng,lat)??0)+.22;
+        leaves([gp[0],gp[1],gz],.28+(i%2)*.06,20+i);
       }
+      for(let i=0;i<5;i++){
+        const lng=6.804485+i*.000010,lat=47.495252+(i%2)*.000012,gp=local([lng,lat]),gz=(terrainHeight(lng,lat)??0)+STGI_GARDEN_LAWN_LIFT+.18;
+        leaves([gp[0],gp[1],gz],.25,30+i);
+      }
+      // Round cast-iron manhole cover in the front grass (visible in Image 4)
+      const mh=local([6.804538,47.495328]),mhz=(terrainHeight(6.804538,47.495328)??0)+STGI_GARDEN_LAWN_LIFT+.012;
+      branch([mh[0],mh[1],mhz],[mh[0],mh[1],mhz+.018],.31,'#5e5c55',details,1);
+      branch([mh[0],mh[1],mhz+.018],[mh[0],mh[1],mhz+.024],.27,'#4a4943',details,1);
+      // Keep Allée Lou Blazer's asphalt carriageway continuous across the pink footpath crossing, with white road-edge line
+      const roadCross=[[6.804480,47.495218],[6.804430,47.495208],[6.804365,47.495358],[6.804415,47.495368]];
+      groundSurface(asphalt,roadCross,'#8e8f8a',.082);
+      const stopLine=[[6.804461,47.495278],[6.804459,47.4952775],[6.804451,47.4952995],[6.804453,47.495300]];
+      groundSurface(details,stopLine,'#e8e6dd',.086);
       const plaza=CAMPUS_COURTYARD.gardenPlaza.map(p=>[...p]);
       groundSurface(details,plaza,'#383b3e',STGI_GARDEN_LAWN_LIFT+.005,1.2);
       const plazaLocal=plaza.map(local);
@@ -730,20 +752,17 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         solidBox([p[0],p[1],ground+.1],2,2,.08,'#625d48');
         for(const side of [-1,1]){solidBox([p[0]+side*1.05,p[1],ground+.1],.1,2.2,.22,'#a7a99c');solidBox([p[0],p[1]+side*1.05,ground+.1],2.2,.1,.22,'#a7a99c');}
       }else if(fixture.kind==='garden-bed'||fixture.kind==='planter'){
-        const base=ground+STGI_GARDEN_LAWN_LIFT,halfW=fixture.width/2,halfD=fixture.depth/2;
+        // Render low weathered wooden plank frames (14 cm high, ~1.25 m square) flush with the grass lawn
+        const base=ground+STGI_GARDEN_LAWN_LIFT,boxW=fixture.kind==='planter'?1.28:fixture.width,boxD=fixture.kind==='planter'?1.12:fixture.depth,boxH=.14;
+        const halfW=boxW/2,halfD=boxD/2;
         for(const side of [-1,1]){
-          solidBox([p[0],p[1]+side*(halfD-.05),base+fixture.height/2],fixture.width,.10,fixture.height,'#8d7253',timber);
-          solidBox([p[0]+side*(halfW-.05),p[1],base+fixture.height/2],.10,fixture.depth-.20,fixture.height,'#8d7253',timber);
+          solidBox([p[0],p[1]+side*(halfD-.035),base+boxH/2],boxW,.07,boxH,'#8b7d65',timber);
+          solidBox([p[0]+side*(halfW-.035),p[1],base+boxH/2],.07,boxD-.14,boxH,'#8b7d65',timber);
         }
-        for(const sx of [-1,1])for(const sy of [-1,1]){
-          solidBox([p[0]+sx*(halfW-.05),p[1]+sy*(halfD-.05),base+fixture.height/2+.03],.12,.12,fixture.height+.06,'#785f43',timber);
-        }
-        solidBox([p[0],p[1],base+fixture.height*.6],fixture.width-.20,fixture.depth-.20,fixture.height*.6,'#322c1d');
-        const plants=Math.max(6,Math.round(fixture.width*fixture.depth*3));
-        for(let i=0;i<plants;i++){
-          const gx=p[0]+(Math.sin(i*2.3)*.38)*(fixture.width-.35);
-          const gy=p[1]+(Math.cos(i*1.9)*.38)*(fixture.depth-.35);
-          leaves([gx,gy,base+fixture.height+.18],.28+Math.sin(i)*.08,i);
+        solidBox([p[0],p[1],base+boxH*.5],boxW-.14,boxD-.14,boxH*.5,'#3d3828');
+        for(let i=0;i<5;i++){
+          const gx=p[0]+Math.sin(i*2.1)*(boxW*.28),gy=p[1]+Math.cos(i*1.7)*(boxD*.28);
+          leaves([gx,gy,base+boxH+.12],.20+(i%2)*.05,i);
         }
       }else if(fixture.kind==='bench'){
         const isGardenBench=Math.hypot(coordinates[0]-6.804706,coordinates[1]-47.495378)<0.0001;
@@ -757,10 +776,11 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
           drawCampusBench(fixture.width,furnitureAt(p,ground));
         }
       }else if((fixture as any).kind==='reading-desk'){
+        // Slanted weathered wooden educational lectern (pupitre pédagogique) on post
         const base=ground+STGI_GARDEN_LAWN_LIFT;
-        solidBox([p[0],p[1],base+.38],.10,.10,.76,'#745c40',timber);
-        solidBox([p[0],p[1]+.04,base+.82],fixture.width,fixture.depth,.045,'#866c4c',timber);
-        solidBox([p[0],p[1]+.04,base+.85],fixture.width-.08,fixture.depth-.08,.015,'#41543b');
+        solidBox([p[0],p[1],base+.32],.09,.09,.64,'#6e5d48',timber);
+        solidBox([p[0],p[1]+.03,base+.66],fixture.width,fixture.depth,.04,'#9e9380',timber);
+        solidBox([p[0],p[1]+.03,base+.69],fixture.width-.06,fixture.depth-.06,.015,'#b8b09f');
       }else if((fixture as any).kind==='insect-hotel'){
         const base=ground+STGI_GARDEN_LAWN_LIFT;
         for(const sx of [-1,1]){
@@ -770,13 +790,31 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
         for(let s=0;s<3;s++)solidBox([p[0],p[1],base+.82+s*.16],fixture.width-.08,fixture.depth-.06,.03,'#5e4933',timber);
         solidBox([p[0],p[1],base+1.26],fixture.width+.12,fixture.depth+.12,.05,'#665039',timber);
       }else if((fixture as any).kind==='autumn-bush'){
+        // Reddish-brown autumn shrub behind the directional streetlight
         const base=ground+STGI_GARDEN_LAWN_LIFT;
-        branch([p[0],p[1],base],[p[0],p[1],base+.35],.06,'#6b583e');
-        for(let b=0;b<8;b++){
-          const angle=b*Math.PI/4;
-          leaves([p[0]+Math.cos(angle)*.45,p[1]+Math.sin(angle)*.45,base+.65],.52+Math.sin(b)*.12,b,true);
+        for(let b=0;b<7;b++){
+          const angle=b*Math.PI*2/7;
+          branch([p[0],p[1],base+.05],[p[0]+Math.cos(angle)*.48,p[1]+Math.sin(angle)*.48,base+.95],.03,'#6b3b24');
+          leaves([p[0]+Math.cos(angle)*.42,p[1]+Math.sin(angle)*.42,base+.72],.38+(b%2)*.08,b,true);
         }
-        leaves([p[0],p[1],base+.85],.65,9,true);
+      }else if((fixture as any).kind==='yellow-bush'){
+        // Large round golden-yellow bush (forsythia) right of the breezeway entrance
+        const base=ground+.09;
+        for(let b=0;b<9;b++){
+          const angle=b*Math.PI*2/9,r=.55+(b%2)*.15;
+          leaves([p[0]+Math.cos(angle)*r,p[1]+Math.sin(angle)*r,base+.78+(b%3)*.18],.58,b,true);
+        }
+        leaves([p[0],p[1],base+1.15],.72,12,true);
+      }else if((fixture as any).kind==='sign-lamp'){
+        // Silver-grey cylindrical streetlight with flat disc top and two white directional sign blades
+        const base=ground+STGI_GARDEN_LAWN_LIFT;
+        branch([p[0],p[1],base],[p[0],p[1],base+fixture.height-.25],.052,'#b2b7b8');
+        branch([p[0],p[1],base+fixture.height-.38],[p[0],p[1],base+fixture.height-.18],.11,'#545c5e');
+        branch([p[0],p[1],base+fixture.height-.04],[p[0],p[1],base+fixture.height],.36,'#8d9496');
+        branch([p[0],p[1],base+fixture.height-.06],[p[0],p[1],base+fixture.height-.04],.28,'#e6ebe8');
+        // White directional sign blades attached to the post at mid-height
+        solidBox([p[0],p[1]-.24,base+2.42],.04,.46,.13,'#f0f2ee');
+        solidBox([p[0],p[1]+.22,base+2.42],.04,.42,.13,'#f0f2ee');
       }else if((fixture as any).kind==='trash-bin'){
         const r=fixture.width/2;
         branch([p[0],p[1],ground],[p[0],p[1],ground+fixture.height],r,'#dedad0');
@@ -940,7 +978,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 const p0=[a[0]+(b[0]-a[0])*t0+normal[0]*.025,a[1]+(b[1]-a[1])*t0+normal[1]*.025],p1=[a[0]+(b[0]-a[0])*t1+normal[0]*.025,a[1]+(b[1]-a[1])*t1+normal[1]*.025];
                 quad(campusConcrete,[...p0,z0],[...p1,z1],[...p1,base],[...p0,base],facade,1,[[length*t0/4,z0/2],[length*t1/4,z1/2],[length*t1/4,base/2],[length*t0/4,base/2]]);
               }
-              if(observed?.kind==='libraryStone'){
+              if(observed?.kind==='libraryStone'&&!gardenConnectorFace(p.sourceId,ga,gb)){
                 const finish=batch();
                 panel(finish,wall,length/2,length,base+.035,height,'#ffffff',.056,[[0,0],[length/5,0],[length/5,(height-base)/5],[0,(height-base)/5]]);
                 mesh(finish,materialTexture('library-formwork'));
@@ -1000,7 +1038,7 @@ export function createCityDetails(map:CityMap,initial:DetailOptions,onStatus:(va
                 return !campusOccluders.some(other=>other.feature!==feature&&Number(other.feature.properties?.render_height)>=height-.3&&insidePolygon(point,other.rings));
               });
               const estimated=!observed&&academic&&exposed?estimatedCampusFace(completion,p.campusUse,length,height-base):undefined;
-              const face=observed??gardenConnectorFace(p.sourceId,ga,gb)??estimated;
+              const face=gardenConnectorFace(p.sourceId,ga,gb)??observed??estimated;
               if(face||academic&&exposed){
                 const cellSize=48;
                 const cell=Math.floor((a[0]+b[0])/(2*cellSize))+','+Math.floor((a[1]+b[1])/(2*cellSize));
